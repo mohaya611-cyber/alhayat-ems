@@ -193,6 +193,7 @@ a{color:var(--info)}
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 /* ===== إعدادات Firebase: ضع هنا الإعدادات من مشروعك ===== */
 const FIREBASE_CONFIG = {
@@ -205,7 +206,7 @@ const FIREBASE_CONFIG = {
 };
 /* ===================================================== */
 const DEFAULT_CONFIG = {"ambulances": ["AMB-01", "AMB-02", "AMB-03"], "cpr": ["BVM Adult (Ambu Bag)", "BVM Pediatric (Ambu Bag)", "Laryngoscope Set (Intubation Kit)", "ETT (Endotracheal Tubes)", "Epinephrine (Adrenaline)", "LMA Adult", "LMA Pediatric", "IV Cannulas (All Sizes)", "Adhesive Tape", "AED Pads", "AED (Automated External Defibrillator)", "Syringe 5 mL", "Syringe 10 mL", "Gauze", "Gloves", "IV Set (Infusion Set)"], "meds": [{"name": "باراسيتامول Paracetamol", "qty": 3}, {"name": "دكستروز 10% Dextrose", "qty": 2}, {"name": "نورمال سلاين Normal Saline", "qty": 2}, {"name": "أدينوسين Adenosine", "qty": 3}, {"name": "أسبرين Aspirin", "qty": 2}, {"name": "ديكلوفيناك Diclofenac IM", "qty": 3}, {"name": "أدرينالين Adrenaline", "qty": 5}, {"name": "سالبيوتامول Salbutamol", "qty": 2}, {"name": "بيكربونات الصوديوم Sodium Bicarbonate", "qty": 2}], "paramedic": [{"name": "Tourniquet", "qty": 2}, {"name": "قفازات", "qty": 10}, {"name": "أزواج قفازات معقمة", "qty": 2}, {"name": "رباط شاش 4*4", "qty": 1}, {"name": "رباط شاش 4*7", "qty": 1}, {"name": "رباط مثلث", "qty": 2}, {"name": "شاش", "qty": 1}, {"name": "قسطرة وريدية 24", "qty": 3}, {"name": "I/V sets", "qty": 3}, {"name": "محلول ملحي", "qty": 1}, {"name": "محلول دكستروز 5%", "qty": 1}, {"name": "بلاستر", "qty": 1}, {"name": "مسحات كحولية", "qty": 1}, {"name": "Aluminum rescue blanket", "qty": 1}, {"name": "بطانية حروق", "qty": 1}, {"name": "سماعة طبيب", "qty": 1}, {"name": "جهاز قياس ضغط الدم للكبار", "qty": 1}, {"name": "جهاز قياس ضغط الدم للصغار", "qty": 1}, {"name": "مقص ضمادات", "qty": 1}, {"name": "قاطع خواتم", "qty": 1}, {"name": "Glass Perforator", "qty": 1}], "vehicleItems": ["مستوى الوقود", "الإطارات", "الأنوار والإشارات", "المكيف", "البطارية", "جهاز الشفط", "أسطوانات الأكسجين", "النقالة", "الكرسي المتحرك", "نظافة السيارة"]};
-const S = { db:null, user:null, assets:true, uid:null, myName:'', admin:false, canWrite:true, ready:false, noDb:false, users:{}, allowed:[], authMode:'login', authErr:'', authBusy:false, gate:null,
+const S = { db:null, user:null, assets:true, uid:null, myName:'', admin:false, canWrite:true, ready:false, noDb:false, swaps:[], users:{}, allowed:[], authMode:'login', authErr:'', authBusy:false, gate:null,
   config:null, configLoaded:false, schedules:[], anns:[], acks:{}, insp:[], reports:[], audit:[],
   view:'home', draft:null, bagType:'cpr', names:{}, asked:new Set(), seen:[], ui:{ adminTab:'ready', repFilter:'open', uploading:{} } };
 
@@ -217,6 +218,7 @@ const ST = {good:['سليم','ok'], attention:['يحتاج متابعة','warn']
 const PRI = {low:['منخفضة','neutral'], medium:['متوسطة','info'], high:['عالية','warn'], critical:['حرجة','bad']};
 const RST = {pending:['بانتظار الإجراء','bad'], progress:['قيد التنفيذ','warn'], resolved:['تم الحل','ok']};
 const SHIFTS = {morning:'صباحي', evening:'مسائي'};
+const SW = {pending_partner:['بانتظار موافقة الزميل','warn'], pending_admin:['بانتظار اعتماد المسؤول','info'], approved:['معتمد','ok'], rejected:['مرفوض من المسؤول','bad'], declined:['رفضه الزميل','bad'], cancelled:['ملغي','neutral']};
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today = () => new Date().toLocaleDateString('en-CA');
@@ -313,12 +315,12 @@ function bagAlerts(){
 
 /* ---------- render ---------- */
 function navList(){
-  const v = [['home','الرئيسية'],['schedule','المناوبات'],['announcements','التعليمات'],['vehicle','فحص السيارة'],['bags','فحص الشنط'],['reports','بلاغات الصيانة'],['history','سجلي']];
+  const v = [['home','الرئيسية'],['schedule','المناوبات'],['announcements','التعليمات'],['vehicle','فحص السيارة'],['bags','فحص الشنط'],['reports','بلاغات الصيانة'],['swaps','تبديل النوبات'],['history','سجلي']];
   if(S.admin) v.push(['admin','الإدارة']);
   return v;
 }
 function renderTabs(){
-  const badges = { announcements: unreadAnns().length, schedule: newSchedule() ? 1 : 0, reports: S.admin ? openReports().length : 0 };
+  const badges = { announcements: unreadAnns().length, schedule: newSchedule() ? 1 : 0, reports: S.admin ? openReports().length : 0, swaps: swapsNeedingMe().length };
   document.getElementById('tabs').innerHTML = navList().map(([k,l]) =>
     `<button class="tab" data-act="go" data-v="${k}" aria-current="${S.view===k}">${l}${badges[k]?`<span class="badge">${badges[k]}</span>`:''}</button>`).join('');
 }
@@ -328,7 +330,7 @@ function render(){
   S.seen = [];
   document.getElementById('whoName').textContent = S.uid ? (S.myName || 'مستخدم') + (S.admin ? ' · مسؤول' : ' · مسعف') : 'زائر';
   renderTabs();
-  const V = {home:vHome, schedule:vSchedule, announcements:vAnns, vehicle:vVehicle, bags:vBags, reports:vReports, history:vHistory, admin:vAdmin};
+  const V = {home:vHome, swaps:vSwaps, schedule:vSchedule, announcements:vAnns, vehicle:vVehicle, bags:vBags, reports:vReports, history:vHistory, admin:vAdmin};
   let html;
   document.getElementById('outBtn').hidden = !S.authUser;
   document.getElementById('tabs').hidden = !S.uid;
@@ -355,6 +357,8 @@ function vHome(){
   const banners = [];
   if(newSchedule()) banners.push(`<div class="banner"><span>نُشر جدول مناوبات جديد: <b>${esc(sch.month)}</b></span><button class="btn sm" data-act="go" data-v="schedule">عرض الجدول</button></div>`);
   if(un.length) banners.push(`<div class="banner warn"><span>لديك <b class="num">${un.length}</b> ${un.length===1?'تعليمة جديدة لم تؤكد قراءتها':'تعليمات جديدة لم تؤكد قراءتها'}</span><button class="btn sm" data-act="go" data-v="announcements">قراءة</button></div>`);
+  const swN = swapsNeedingMe().length;
+  if(swN) banners.push(`<div class="banner warn"><span>${S.admin ? `<b class="num">${swN}</b> طلب تبديل نوبة بانتظار اعتمادك` : `<b class="num">${swN}</b> طلب تبديل نوبة بانتظار موافقتك`}</span><button class="btn sm" data-act="go" data-v="swaps">مراجعة</button></div>`);
   const critical = open.filter(r => r.priority==='critical' || r.priority==='high');
   if(S.admin && critical.length) banners.push(`<div class="banner bad"><span><b class="num">${critical.length}</b> بلاغ صيانة بأولوية عالية أو حرجة مفتوح</span><button class="btn sm" data-act="go" data-v="reports">مراجعة</button></div>`);
   const tile = (v, ar, en, meta) => `<button class="tile" data-act="go" data-v="${v}"><span class="en">${en}</span><b>${ar}</b><span class="meta">${meta}</span></button>`;
@@ -364,6 +368,7 @@ function vHome(){
     tile('vehicle','فحص سيارة الإسعاف','Ambulance Inspection', mine.some(i=>i.type==='vehicle') ? chip('تم اليوم','ok') : chip('لم تفحص اليوم','neutral')),
     tile('bags','فحص الشنط والمعدات','Medical Bags', chip(`${myBags} من 3 اليوم`, myBags===3?'ok':'neutral')),
     tile('reports','بلاغات الصيانة','Maintenance Reports', chip((S.admin ? open.length : open.filter(r=>r.by===S.uid).length)+' مفتوحة', open.length?'warn':'ok')),
+    tile('swaps','تبديل النوبات','Shift Swap', swapsNeedingMe().length ? chip(swapsNeedingMe().length + (S.admin ? ' بانتظار اعتمادك' : ' بانتظار موافقتك'),'warn') : chip('لا طلبات معلقة','ok')),
     tile('history','بلاغاتي وفحوصاتي','My Reports', `<span class="muted small">${S.insp.filter(i=>i.by===S.uid).length} فحص مسجّل</span>`)
   ].join('');
   let extra = '';
@@ -402,13 +407,14 @@ function vSchedule(){
   const show = s => {
     const file = s.file ? (/^image\//.test(s.fileType||'') ? `<img class="sched-img" data-file="${s.file}" alt="جدول ${esc(s.month)}">` : `<a class="btn" href="#" data-file="${s.file}" target="_blank" rel="noopener">فتح الجدول (${esc(s.fileName||'PDF')})</a>`) : '';
     return `<div class="card stack"><div class="head-line"><div><h2>${esc(s.month)}</h2><span class="muted small">نُشر ${fmtDT(s.publishedAt)} · ${esc(nm(s.by))}</span></div>${s===cur?chip('الجدول الحالي','ok'):''}</div>
-      ${s.note ? `<p style="margin:0;white-space:pre-wrap">${esc(s.note)}</p>` : ''}${file}</div>`;
+      ${s.note ? `<p style="margin:0;white-space:pre-wrap">${esc(s.note)}</p>` : ''}${file}
+      ${S.admin ? `<div class="row"><button class="btn sm ghost danger" data-act="delSched" data-id="${s.id}">${S.ui.confirm==='sch'+s.id?'تأكيد حذف الجدول':'حذف الجدول'}</button></div>` : ''}</div>`;
   };
   const archive = S.schedules.slice(1);
   return `<div class="stack">${pageHead('جدول المناوبات','Duty Schedule')}
     ${cur ? show(cur) : '<div class="empty">لم يُنشر جدول بعد.</div>'}
     ${form}
-    ${archive.length ? `<h2>الأرشيف</h2><div class="list">${archive.map(s => `<div class="card flat row"><span class="grow"><b>${esc(s.month)}</b> <span class="muted small">· ${fmtD(s.publishedAt.slice(0,10))}</span></span>${s.file?`<a href="#" data-file="${s.file}" target="_blank" rel="noopener">فتح</a>`:''}</div>`).join('')}</div>` : ''}</div>`;
+    ${archive.length ? `<h2>الأرشيف</h2><div class="list">${archive.map(s => `<div class="card flat row"><span class="grow"><b>${esc(s.month)}</b> <span class="muted small">· ${fmtD(s.publishedAt.slice(0,10))}</span></span>${s.file?`<a href="#" data-file="${s.file}" target="_blank" rel="noopener">فتح</a>`:''}${S.admin?`<button class="btn sm ghost danger" data-act="delSched" data-id="${s.id}">${S.ui.confirm==='sch'+s.id?'تأكيد الحذف':'حذف'}</button>`:''}</div>`).join('')}</div>` : ''}</div>`;
 }
 
 /* ---------- announcements ---------- */
@@ -466,8 +472,10 @@ function photoCtl(key, photo){
   const up = S.ui.uploading[key];
   if(!S.assets) return '';
   return `<div class="photo-in">${photo ? `<a href="#" data-file="${photo}" target="_blank" rel="noopener"><img class="thumb" data-file="${photo}" alt="صورة مرفقة"></a>` : ''}
-    <label class="btn sm" for="ph-${key}">${up ? 'جارٍ الرفع…' : photo ? 'تغيير الصورة' : 'إضافة صورة'}</label>
-    <input type="file" id="ph-${key}" accept="image/*" capture="environment" data-upload="${key}"></div>`;
+    ${up ? '<span class="muted small">جارٍ الرفع…</span>' : `<label class="btn sm" for="ph-${key}">${photo ? 'إعادة التصوير' : 'تصوير'}</label>
+    <label class="btn sm" for="phg-${key}">من الاستديو</label>`}
+    <input type="file" id="ph-${key}" accept="image/*" capture="environment" data-upload="${key}">
+    <input type="file" id="phg-${key}" accept="image/*" data-upload="${key}"></div>`;
 }
 function inspHeader(d){
   return `<div class="card fields">
@@ -585,7 +593,7 @@ function vHistory(){
 function vAdmin(){
   if(!S.admin) return '<div class="empty">هذه الصفحة للمسؤول فقط.</div>';
   const t = S.ui.adminTab;
-  const tabs = [['ready','الجاهزية اليومية'],['alerts','التنبيهات'],['team','الفريق'],['lists','القوائم'],['audit','سجل التدقيق']].map(([k,l]) => `<button data-act="adminTab" data-v="${k}" aria-pressed="${t===k}">${l}</button>`).join('');
+  const tabs = [['ready','الجاهزية اليومية'],['alerts','التنبيهات'],['stats','الإحصائيات'],['team','الفريق'],['lists','القوائم'],['export','تصدير Excel'],['audit','سجل التدقيق']].map(([k,l]) => `<button data-act="adminTab" data-v="${k}" aria-pressed="${t===k}">${l}</button>`).join('');
   let body = '';
   if(t==='ready'){
     const d = S.ui.readyDate || today();
@@ -630,12 +638,229 @@ function vAdmin(){
       ${ta('cfgCpr','شنطة CPR','الاسم | الكمية (الكمية اختيارية)')}${ta('cfgPara','شنطة المسعف','الاسم | الكمية (الكمية اختيارية)')}
       ${ta('cfgMeds','شنطة الأدوية','الاسم | الكمية المطلوبة')}</div>
       <div class="row"><button class="btn primary" data-act="saveLists">حفظ القوائم</button>${c.updatedAt?`<span class="muted small">آخر تعديل ${fmtDT(c.updatedAt)} · ${esc(nm(c.updatedBy))}</span>`:''}</div>`;
+  } else if(t==='stats'){
+    const per = S.ui.stPer || 'month', rng = statRange(per), key = per + rng.from + rng.to;
+    const pers = [['week','آخر 7 أيام'],['month','هذا الشهر'],['prev','الشهر الماضي'],['all','كل الفترات']].map(([k,l]) => `<button data-act="stPer" data-v="${k}" aria-pressed="${per===k}">${l}</button>`).join('');
+    if(!S.stats || S.stats.key !== key){ if(S.statsLoading !== key) loadStats(key, rng); body = `<div class="subtabs">${pers}</div><div class="empty">جارٍ حساب الإحصائيات…</div>`; }
+    else {
+      const ids = Object.entries(S.users).filter(([id,u]) => u.active !== false).map(([id]) => id);
+      const rows = ids.map(id => { const mine = S.stats.ins.filter(i => i.by === id);
+        const notes = mine.reduce((a,i) => a + (+i.issues || 0), 0) + S.stats.reps.filter(r => r.by === id && r.source !== 'inspection').length;
+        return {id, n: mine.length, days: new Set(mine.map(i => i.date)).size, notes, last: mine.length ? mine.reduce((a,i) => i.at > a ? i.at : a, '') : ''}; });
+      const pick = (f, dir) => { if(!rows.length) return {v:0, who:[]}; const v = dir > 0 ? Math.max(...rows.map(f)) : Math.min(...rows.map(f)); return {v, who: rows.filter(r => f(r) === v).map(r => nm(r.id))}; };
+      const most = pick(r => r.n, 1), least = pick(r => r.n, -1), mostN = pick(r => r.notes, 1), leastN = pick(r => r.notes, -1);
+      const card = (title, x, unit, cls) => `<div class="card stack" style="gap:4px"><span class="muted small">${title}</span><b>${esc(x.who.join('، ') || '—')}</b>${chip(x.v + ' ' + unit, cls)}</div>`;
+      const maxN = Math.max(1, ...rows.map(r => r.n));
+      const sorted = rows.slice().sort((a,b) => b.n - a.n || b.notes - a.notes);
+      body = `<div class="subtabs">${pers}</div>
+        <p class="sub">من ${rng.from === '0000-00-00' ? 'بداية المنصة' : fmtD(rng.from)} إلى ${rng.to === '9999-12-31' ? 'اليوم' : fmtD(rng.to)} · ${S.stats.ins.length} فحص · ${ids.length} موظف</p>
+        <div class="tiles">${card('الأكثر فحصًا', most, 'فحص', 'ok')}${card('الأقل فحصًا', least, 'فحص', least.v === 0 ? 'bad' : 'warn')}${card('الأكثر تسجيلًا للملاحظات', mostN, 'ملاحظة', 'info')}${card('الأقل تسجيلًا للملاحظات', leastN, 'ملاحظة', 'neutral')}</div>
+        <p class="sub">الملاحظات = الأعطال والنواقص التي سجّلها الموظف في فحوصاته، مع بلاغات الصيانة اليدوية.</p>
+        ${rows.length ? `<div class="tbl-wrap"><table><thead><tr><th>الموظف</th><th>عدد الفحوصات</th><th>أيام الفحص</th><th>الملاحظات</th><th>آخر فحص</th></tr></thead><tbody>${sorted.map(r => `<tr><td><b>${esc(nm(r.id))}</b></td>
+          <td><span class="num">${r.n}</span><span style="display:block;height:6px;border-radius:3px;background:var(--line);margin-top:4px;max-width:160px"><span style="display:block;height:100%;border-radius:3px;background:var(--ok);width:${Math.round(r.n / maxN * 100)}%"></span></span></td>
+          <td class="num">${r.days}</td><td class="num">${r.notes}</td><td>${r.last ? fmtDT(r.last) : chip('لا يوجد','bad')}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لا يوجد أعضاء بعد.</div>'}`;
+    }
+  } else if(t==='export'){
+    const ms = today().slice(0,8) + '01';
+    const f = S.ui.expFrom || ms, to = S.ui.expTo || today();
+    body = `<div class="card stack"><h2>تحميل البيانات كملف Excel</h2>
+      <p class="sub">ملف واحد فيه ورقة لكل قسم: ملخص الفحوصات، تفاصيل كل عنصر، بلاغات الصيانة، التعليمات ومن قرأها، الفريق، وسجل التدقيق.</p>
+      <div class="fields"><label class="f">من تاريخ<input type="date" id="expFrom" data-bind="expFrom" value="${f}"></label>
+      <label class="f">إلى تاريخ<input type="date" id="expTo" data-bind="expTo" value="${to}"></label></div>
+      <div class="row"><button class="btn sm ghost" data-act="expRange" data-v="today">اليوم</button><button class="btn sm ghost" data-act="expRange" data-v="week">آخر 7 أيام</button><button class="btn sm ghost" data-act="expRange" data-v="month">هذا الشهر</button></div>
+      <div class="row"><button class="btn primary" data-act="exportXlsx">تحميل ملف Excel</button></div>
+      <p class="sub">على الآيباد والجوال يُحفظ الملف في مجلد التنزيلات، ويفتح في Excel أو Numbers.</p></div>
+      <div class="card stack"><h2>نسخة كاملة من كل البيانات</h2>
+      <p class="sub">كل شيء منذ بداية المنصة في ملف واحد: الفحوصات وتفاصيلها، البلاغات، تبديل النوبات، التعليمات، جداول المناوبات، الفريق، قوائم الفحص، وسجل التدقيق. يُنصح بتحميلها نهاية كل شهر وحفظها.</p>
+      <div class="row"><button class="btn primary" data-act="exportAll">تحميل كامل البيانات</button></div></div>
+      <div class="card stack"><h2>الأرشيف الشهري</h2>
+      <p class="sub">البيانات محفوظة في المنصة ولا تُحذف تلقائيًا. حمّل أي شهر كملف Excel مستقل.</p>
+      <div class="list">${archiveMonths().map(m => `<div class="card flat row"><span class="grow"><b class="num">${m}</b> <span class="muted small">· ${new Date(m + '-15').toLocaleDateString(LOC, {month:'long', year:'numeric'})}</span></span><button class="btn sm" data-act="exportMonth" data-v="${m}">تحميل</button></div>`).join('')}</div></div>`;
   } else {
     body = S.audit.length ? `<div class="tbl-wrap"><table><thead><tr><th>الوقت</th><th>الموظف</th><th>الإجراء</th><th>التفاصيل</th></tr></thead><tbody>${S.audit.map(a=>`<tr><td class="num">${fmtDT(a.at)}</td><td>${esc(nm(a.by))}</td><td>${esc(a.action)}</td><td>${esc(a.detail)}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لا توجد إجراءات مسجلة بعد.</div>';
   }
   return `<div class="stack">${pageHead('لوحة الإدارة','Admin')}<div class="subtabs">${tabs}</div>${body}</div>`;
 }
 
+
+
+/* ---------- shift swaps ---------- */
+function swapsNeedingMe(){
+  if(!S.uid) return [];
+  return S.swaps.filter(w => S.admin ? w.status==='pending_admin' : (w.status==='pending_partner' && w.partner===S.uid));
+}
+function fileLink(f, label){
+  if(!f || !f.id) return '';
+  return /^image\//.test(f.type||'') ? `<a href="#" data-file="${f.id}" target="_blank" rel="noopener"><img class="thumb" data-file="${f.id}" alt="${esc(label)}"></a>`
+    : `<a class="btn sm" href="#" data-file="${f.id}" target="_blank" rel="noopener">${esc(label)}</a>`;
+}
+function fileCtl(key, f){
+  const up = S.ui.uploading[key];
+  return `<div class="photo-in">${f ? fileLink(f, f.name || 'الملف المرفق') : ''}
+    ${up ? '<span class="muted small">جارٍ الرفع…</span>' : `<label class="btn sm" for="fc-${key}">تصوير</label>
+    <label class="btn sm" for="fg-${key}">${f ? 'تغيير الملف' : 'من الاستديو أو الملفات'}</label>`}
+    <input type="file" id="fc-${key}" accept="image/*" capture="environment" data-upload="${key}">
+    <input type="file" id="fg-${key}" accept="image/*,application/pdf" data-upload="${key}"></div>`;
+}
+function swapCard(w){
+  const st = SW[w.status] || [w.status,'neutral'];
+  const mine = w.by===S.uid, partner = w.partner===S.uid;
+  let acts = '';
+  if(partner && w.status==='pending_partner') acts += `<button class="btn primary sm" data-act="swapPartner" data-id="${w.id}" data-v="pending_admin">أوافق على التبديل</button><button class="btn sm ghost danger" data-act="swapPartner" data-id="${w.id}" data-v="declined">أرفض</button>`;
+  if(mine && (w.status==='pending_partner' || w.status==='pending_admin')) acts += `<button class="btn sm ghost" data-act="swapCancel" data-id="${w.id}">${S.ui.confirm==='swc'+w.id?'تأكيد الإلغاء':'إلغاء الطلب'}</button>`;
+  if(S.admin && w.status!=='approved' && w.status!=='rejected' && w.status!=='cancelled') acts += `<button class="btn primary sm" data-act="swapAdmin" data-id="${w.id}" data-v="approved">اعتماد</button><button class="btn sm ghost danger" data-act="swapAdmin" data-id="${w.id}" data-v="rejected">رفض</button>`;
+  if(S.admin) acts += `<button class="btn sm ghost danger" data-act="swapDelete" data-id="${w.id}">${S.ui.confirm==='swd'+w.id?'تأكيد الحذف':'حذف'}</button>`;
+  return `<div class="card stack" style="gap:8px"><div class="row"><span class="grow"><b>${esc(nm(w.by))}</b> ⇄ <b>${esc(nm(w.partner))}</b></span>${chip(st[0], st[1])}</div>
+    <div class="kv"><dt>نوبة ${esc(nm(w.by))}</dt><dd>${fmtD(w.myDate)} · ${SHIFTS[w.myShift]||''}</dd>
+    <dt>نوبة ${esc(nm(w.partner))}</dt><dd>${fmtD(w.partnerDate)} · ${SHIFTS[w.partnerShift]||''}</dd>
+    ${w.reason ? `<dt>السبب</dt><dd style="white-space:pre-wrap">${esc(w.reason)}</dd>` : ''}
+    ${w.adminNote ? `<dt>ملاحظة المسؤول</dt><dd>${esc(w.adminNote)}</dd>` : ''}</div>
+    ${w.form ? `<div class="row small"><span class="muted">النموذج المرفق:</span>${fileLink(w.form, 'فتح النموذج')}</div>` : ''}
+    <span class="muted small">قُدّم ${fmtDT(w.at)}${(w.history||[]).length>1 ? ' · ' + w.history.slice(1).map(h => `${(SW[h.status]||[h.status])[0]} ${fmtDT(h.at)} (${esc(nm(h.by))})`).join(' ← ') : ''}</span>
+    ${S.admin && w.status!=='approved' && w.status!=='rejected' && w.status!=='cancelled' ? `<input type="text" id="swn-${w.id}" data-bind="swn_${w.id}" placeholder="ملاحظة للطلب (اختياري)" value="${esc(S.ui['swn_'+w.id]||'')}">` : ''}
+    ${acts ? `<div class="row">${acts}</div>` : ''}</div>`;
+}
+function vSwaps(){
+  const c = cfg(), tpl = c.swapForm;
+  const others = Object.entries(S.users).filter(([id,u]) => id!==S.uid && u.active!==false).sort((a,b) => (a[1].name||'').localeCompare(b[1].name||'', 'ar'));
+  const f = S.ui.sw || {};
+  const ready = f.partner && f.myDate && f.partnerDate && (!tpl || f.form) && S.uid;
+  const form = S.ui.swOpen ? `<div class="card stack"><h2>طلب تبديل نوبة</h2>
+    ${tpl ? `<div class="row small"><span>1. حمّل النموذج واملأه ووقّعه أنت وزميلك:</span>${fileLink(tpl, 'تحميل نموذج التبديل')}</div>` : ''}
+    <div class="fields">
+      <label class="f">الموظف الأول (أنت)<input type="text" id="swMe" value="${esc(S.myName||'')}" disabled></label>
+      <label class="f">الموظف الثاني (الزميل)<select id="swPartner" data-sw="partner"><option value="">اختر الزميل</option>${others.map(([id,u]) => `<option value="${id}" ${f.partner===id?'selected':''}>${esc(u.name||u.email||'')}</option>`).join('')}</select></label>
+    </div>
+    <div class="fields">
+      <label class="f">تاريخ نوبتك<input type="date" id="swMyDate" data-sw="myDate" value="${esc(f.myDate||'')}"></label>
+      <label class="f">شفت نوبتك<select id="swMyShift" data-sw="myShift">${Object.entries(SHIFTS).map(([k,l]) => `<option value="${k}" ${(f.myShift||'morning')===k?'selected':''}>${l}</option>`).join('')}</select></label>
+      <label class="f">تاريخ نوبة الزميل<input type="date" id="swPDate" data-sw="partnerDate" value="${esc(f.partnerDate||'')}"></label>
+      <label class="f">شفت نوبة الزميل<select id="swPShift" data-sw="partnerShift">${Object.entries(SHIFTS).map(([k,l]) => `<option value="${k}" ${(f.partnerShift||'morning')===k?'selected':''}>${l}</option>`).join('')}</select></label>
+    </div>
+    <label class="f">السبب (اختياري)<textarea id="swReason" data-sw="reason">${esc(f.reason||'')}</textarea></label>
+    <div class="stack" style="gap:6px"><span class="small"><b>${tpl ? '2. ' : ''}إرفاق النموذج الموقّع</b> ${tpl ? '(مطلوب)' : '(اختياري)'}</span>${fileCtl('swap', f.form)}</div>
+    <div class="row"><button class="btn primary" data-act="swapSubmit" ${ready?'':'disabled'}>إرسال الطلب</button><button class="btn ghost" data-act="toggle" data-k="swOpen" data-id="1">إلغاء</button></div>
+    <p class="sub">يصل الطلب لزميلك ليوافق عليه، ثم للمسؤول ليعتمده.</p></div>` : '';
+  const needMe = swapsNeedingMe();
+  const filt = S.ui.swFilter || 'open';
+  let list = S.admin ? S.swaps : S.swaps.filter(w => w.by===S.uid || w.partner===S.uid);
+  if(filt==='open') list = list.filter(w => w.status==='pending_partner' || w.status==='pending_admin');
+  else if(filt==='done') list = list.filter(w => !(w.status==='pending_partner' || w.status==='pending_admin'));
+  const fl = [['open','المعلقة'],['done','المنتهية'],['all','الكل']].map(([k,l]) => `<button data-act="swFilter" data-v="${k}" aria-pressed="${filt===k}">${l}</button>`).join('');
+  const tplAdmin = S.admin ? `<div class="card flat stack"><h2>نموذج التبديل الرسمي</h2>
+    <p class="sub">ارفع نموذج تبديل النوبة الخاص بالقسم (PDF أو صورة). يظهر للمسعفين ليحملوه ويرفقوه موقّعًا مع الطلب.</p>
+    ${fileCtl('swtpl', tpl)}${tpl ? `<div class="row"><button class="btn sm ghost danger" data-act="swapTplRemove">${S.ui.confirm==='swt'?'تأكيد إزالة النموذج':'إزالة النموذج'}</button></div>` : ''}</div>` : '';
+  return `<div class="stack">${pageHead('تبديل النوبات','Shift Swap', S.ui.swOpen ? '' : `<button class="btn primary" data-act="swapOpen">طلب تبديل جديد</button>`)}
+    ${!S.admin && tpl && !S.ui.swOpen ? `<div class="banner"><span>نموذج التبديل الرسمي متاح للتحميل</span>${fileLink(tpl, 'تحميل النموذج')}</div>` : ''}
+    ${form}
+    ${needMe.length ? `<h2>${S.admin ? 'بانتظار اعتمادك' : 'بانتظار موافقتك'}</h2><div class="list">${needMe.map(swapCard).join('')}</div>` : ''}
+    <h2>${S.admin ? 'كل الطلبات' : 'طلباتي'}</h2><div class="subtabs">${fl}</div>
+    ${list.length ? `<div class="list">${list.filter(w => !needMe.includes(w)).map(swapCard).join('') || '<div class="empty">لا توجد طلبات أخرى.</div>'}</div>` : '<div class="empty">لا توجد طلبات هنا.</div>'}
+    ${tplAdmin}</div>`;
+}
+
+
+/* ---------- Excel export ---------- */
+async function runExport(b, from, to, fname, full){
+  if(!window.XLSX){ toast('تعذّر تحميل أداة Excel. تأكد من الإنترنت ثم أعد تحميل الصفحة.'); return; }
+  const label = b.textContent; b.disabled = true; b.textContent = 'جارٍ تجهيز الملف…';
+  try {
+    const db = S.db;
+    const D = iso => iso ? new Date(iso).toLocaleDateString('en-CA') : '';
+    const T = iso => iso ? new Date(iso).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'}) : '';
+    const stl = k => (ST[k] ? ST[k][0] : (k || ''));
+    const byRange = async (col, field, lo, hi) => { const q = await db.collection(col).where(field,'>=',lo).where(field,'<=',hi).get();
+      return q.docs.map(d => Object.assign({id:d.id}, d.data())).sort((x,y) => (x[field]||'') < (y[field]||'') ? -1 : 1); };
+    const hi = to + '~';
+    const ins = await byRange('inspections', 'date', from, to);
+    const reps = await byRange('reports', 'at', from, hi);
+    const anns = await byRange('announcements', 'at', from, hi);
+    const auds = await byRange('audit', 'at', from, hi);
+    let swaps = [];
+    try { swaps = await byRange('swaps', 'at', from, hi); } catch(e){}
+    const scheds = full ? await byRange('schedules', 'publishedAt', from, hi) : [];
+
+    const summary = ins.map(i => ({'التاريخ': i.date, 'الوقت': T(i.at), 'السيارة': i.ambulance, 'نوع الفحص': TYPES[i.type] || i.type,
+      'الشفت': SHIFTS[i.shift] || '', 'الموظف': nm(i.by), 'عدد العناصر': i.total, 'النواقص والأعطال': i.issues,
+      'الحالة': i.status === 'ready' ? 'جاهز' : 'يحتاج إجراء'}));
+    const detail = [];
+    ins.forEach(i => (i.items || []).forEach(x => detail.push({'التاريخ': i.date, 'الوقت': T(i.at), 'السيارة': i.ambulance,
+      'نوع الفحص': TYPES[i.type] || i.type, 'الموظف': nm(i.by), 'العنصر': x.name, 'الحالة': stl(x.status),
+      'المطلوب': x.req ?? '', 'الموجود': x.qty ?? '', 'الصلاحية': x.exp ? expLabel(x.exp) : '',
+      'الأولوية': x.priority ? PRI[x.priority][0] : '', 'ملاحظة': x.note || '', 'صورة مرفقة': x.photo ? 'نعم' : ''})));
+    const reports = reps.map(r => { const last = (r.history || []).slice(-1)[0];
+      return {'تاريخ البلاغ': D(r.at), 'الوقت': T(r.at), 'السيارة': r.ambulance, 'العنصر': r.item, 'الوصف': r.desc || '',
+        'الأولوية': PRI[r.priority || 'medium'][0], 'الحالة': RST[r.status][0], 'المُبلّغ': nm(r.by),
+        'المصدر': r.source === 'inspection' ? 'من فحص السيارة' : 'بلاغ يدوي',
+        'آخر تحديث': last ? `${D(last.at)} ${T(last.at)}` : '', 'حدّثه': last ? nm(last.by) : '', 'صورة مرفقة': r.photo ? 'نعم' : ''}; });
+    const members = Object.entries(S.users).filter(([id,u]) => u.active !== false).map(([id]) => id);
+    const annRows = anns.map(a => { const readers = members.filter(u => S.acks[u] && S.acks[u][a.id]);
+      const unread = members.filter(u => u !== a.by && !(S.acks[u] && S.acks[u][a.id]));
+      return {'التاريخ': D(a.at), 'التعليمة': a.body, 'الناشر': nm(a.by), 'عدد من قرأ': readers.length,
+        'قرأها': readers.map(nm).join('، '), 'لم يقرأها': unread.map(nm).join('، ')}; });
+    const swapRows = swaps.map(w => ({'تاريخ الطلب': D(w.at), 'الوقت': T(w.at), 'الموظف الأول': nm(w.by), 'نوبته': `${w.myDate} ${SHIFTS[w.myShift]||''}`,
+      'الموظف الثاني': nm(w.partner), 'نوبته ': `${w.partnerDate} ${SHIFTS[w.partnerShift]||''}`, 'السبب': w.reason || '',
+      'الحالة': (SW[w.status]||[w.status])[0], 'ملاحظة المسؤول': w.adminNote || '', 'نموذج مرفق': w.form ? 'نعم' : ''}));
+    const team = Object.entries(S.users).map(([id,u]) => { const mine = ins.filter(i => i.by === id);
+      return {'الاسم': u.name || '', 'الإيميل': u.email || '', 'الصلاحية': u.role === 'admin' ? 'مسؤول' : 'مسعف',
+        'الحالة': u.active === false ? 'موقوف' : 'فعّال', 'تاريخ الانضمام': D(u.at), 'فحوصات الفترة': mine.length,
+        'آخر فحص في الفترة': mine.length ? `${mine[mine.length-1].date} ${T(mine[mine.length-1].at)}` : ''}; });
+    const audRows = auds.map(a => ({'التاريخ': D(a.at), 'الوقت': T(a.at), 'الموظف': nm(a.by), 'الإجراء': a.action, 'التفاصيل': a.detail || ''}));
+    const schedRows = scheds.map(x => ({'الشهر': x.month, 'تاريخ النشر': D(x.publishedAt), 'الناشر': nm(x.by), 'الملاحظات': x.note || '', 'اسم الملف': x.fileName || ''}));
+    const c = cfg(), listRows = [];
+    (c.ambulances||[]).forEach(n => listRows.push({'القائمة': 'السيارات', 'العنصر': n, 'الكمية المطلوبة': ''}));
+    (c.vehicleItems||[]).forEach(n => listRows.push({'القائمة': 'فحص السيارة', 'العنصر': n, 'الكمية المطلوبة': ''}));
+    [['cpr','شنطة CPR'],['paramedic','شنطة المسعف'],['meds','شنطة الأدوية']].forEach(([k,l]) => (c[k]||[]).forEach(n => listRows.push({'القائمة': l, 'العنصر': typeof n==='string' ? n : n.name, 'الكمية المطلوبة': typeof n==='string' ? '' : n.qty})));
+
+    const wb = XLSX.utils.book_new();
+    wb.Workbook = {Views: [{RTL: true}]};
+    const add = (rows, name, empty) => {
+      const ws = rows.length ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.aoa_to_sheet([[empty]]);
+      if(rows.length){ const keys = Object.keys(rows[0]);
+        ws['!cols'] = keys.map(k => ({wch: Math.min(60, Math.max(k.length, ...rows.map(r => String(r[k] ?? '').length)) + 2)}));
+        ws['!autofilter'] = {ref: ws['!ref']}; }
+      XLSX.utils.book_append_sheet(wb, ws, name);
+    };
+    add(summary, 'ملخص الفحوصات', 'لا توجد فحوصات في هذه الفترة');
+    add(detail, 'تفاصيل الفحوصات', 'لا توجد فحوصات في هذه الفترة');
+    add(reports, 'بلاغات الصيانة', 'لا توجد بلاغات في هذه الفترة');
+    add(swapRows, 'تبديل النوبات', 'لا توجد طلبات تبديل في هذه الفترة');
+    add(annRows, 'التعليمات', 'لا توجد تعليمات في هذه الفترة');
+    if(full) add(schedRows, 'جداول المناوبات', 'لا توجد جداول في هذه الفترة');
+    add(team, 'الفريق', 'لا يوجد أعضاء');
+    if(full) add(listRows, 'قوائم الفحص', 'لا توجد قوائم');
+    add(audRows, 'سجل التدقيق', 'لا توجد إجراءات في هذه الفترة');
+    XLSX.writeFile(wb, fname);
+    audit('تصدير Excel', fname);
+    toast(`تم تجهيز الملف: ${ins.length} فحص، ${reps.length} بلاغ، ${swaps.length} طلب تبديل`);
+  } catch(e){ console.error(e); toast('تعذّر تجهيز الملف. أعد المحاولة.'); }
+  b.disabled = false; b.textContent = label;
+}
+function archiveMonths(){
+  const starts = Object.values(S.users).map(u => u.at).filter(Boolean).sort();
+  const first = starts[0] ? new Date(starts[0]) : new Date();
+  const out = [], d = new Date(first.getFullYear(), first.getMonth(), 1), now = new Date();
+  while(d <= now && out.length < 120){ out.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`); d.setMonth(d.getMonth()+1); }
+  return out.reverse();
+}
+
+/* ---------- statistics ---------- */
+function statRange(per){
+  const d = new Date(), iso = x => x.toLocaleDateString('en-CA');
+  if(per === 'week'){ const w = new Date(); w.setDate(w.getDate() - 6); return {from: iso(w), to: iso(d)}; }
+  if(per === 'prev'){ const a = new Date(d.getFullYear(), d.getMonth() - 1, 1), z = new Date(d.getFullYear(), d.getMonth(), 0); return {from: iso(a), to: iso(z)}; }
+  if(per === 'all') return {from: '0000-00-00', to: '9999-12-31'};
+  return {from: iso(d).slice(0,8) + '01', to: iso(d)};
+}
+async function loadStats(key, rng){
+  S.statsLoading = key;
+  try {
+    const q1 = await S.db.collection('inspections').where('date','>=',rng.from).where('date','<=',rng.to).get();
+    const q2 = await S.db.collection('reports').where('at','>=',rng.from).where('at','<=',rng.to + '~').get();
+    S.stats = {key, ins: q1.docs.map(d => d.data()), reps: q2.docs.map(d => d.data())};
+  } catch(e){ console.error(e); toast('تعذّر تحميل الإحصائيات. أعد المحاولة.'); }
+  S.statsLoading = null; render();
+}
 
 /* ---------- login ---------- */
 function vGate(){
@@ -708,6 +933,55 @@ async function enterApp(u){
 
 /* ---------- actions ---------- */
 const ACT = {
+  swapOpen(){ S.ui.swOpen = '1'; S.ui.sw = {myShift:'morning', partnerShift:'morning'}; render(); },
+  stPer(b){ S.ui.stPer = b.dataset.v; render(); },
+  swFilter(b){ S.ui.swFilter = b.dataset.v; render(); },
+  async swapSubmit(b){
+    const f = S.ui.sw || {}; const now = new Date().toISOString();
+    if(!f.partner || !f.myDate || !f.partnerDate) return;
+    b.disabled = true;
+    try {
+      await S.db.collection('swaps').add({by:S.uid, partner:f.partner, myDate:f.myDate, myShift:f.myShift||'morning', partnerDate:f.partnerDate, partnerShift:f.partnerShift||'morning',
+        reason:(f.reason||'').trim(), form:f.form||null, status:'pending_partner', at:now, history:[{at:now, by:S.uid, status:'pending_partner'}]});
+      audit('طلب تبديل نوبة', `${nm(S.uid)} ⇄ ${nm(f.partner)} · ${f.myDate} / ${f.partnerDate}`);
+      S.ui.swOpen = null; S.ui.sw = null; render(); toast('تم إرسال الطلب لزميلك');
+    } catch(e){ b.disabled = false; e && e.code==='permission-denied' ? toast('تعذّر الإرسال: حدّث قواعد الأمان في Firebase (الخطوة الموضحة في الدليل).') : failMsg(e); }
+  },
+  async swapPartner(b){
+    const w = S.swaps.find(x => x.id===b.dataset.id); if(!w) return; const now = new Date().toISOString(), v = b.dataset.v;
+    try { await S.db.doc('swaps/'+w.id).update({status:v, partnerAt:now, history:[...(w.history||[]), {at:now, by:S.uid, status:v}]});
+      audit(v==='declined' ? 'رفض تبديل نوبة' : 'موافقة على تبديل نوبة', `${nm(w.by)} ⇄ ${nm(w.partner)}`); toast(v==='declined' ? 'تم رفض الطلب' : 'تمت موافقتك، الطلب الآن عند المسؤول'); } catch(e){ failMsg(e); }
+  },
+  async swapCancel(b){
+    const id = b.dataset.id;
+    if(S.ui.confirm !== 'swc'+id){ S.ui.confirm = 'swc'+id; render(); return; }
+    S.ui.confirm = null; const w = S.swaps.find(x => x.id===id); if(!w) return; const now = new Date().toISOString();
+    try { await S.db.doc('swaps/'+id).update({status:'cancelled', history:[...(w.history||[]), {at:now, by:S.uid, status:'cancelled'}]}); audit('إلغاء طلب تبديل', `${nm(w.by)} ⇄ ${nm(w.partner)}`); } catch(e){ failMsg(e); }
+  },
+  async swapAdmin(b){
+    const w = S.swaps.find(x => x.id===b.dataset.id); if(!w) return; const now = new Date().toISOString(), v = b.dataset.v;
+    const note = (S.ui['swn_'+w.id]||'').trim();
+    const upd = {status:v, adminAt:now, history:[...(w.history||[]), {at:now, by:S.uid, status:v}]}; if(note) upd.adminNote = note;
+    try { await S.db.doc('swaps/'+w.id).update(upd); audit(v==='approved' ? 'اعتماد تبديل نوبة' : 'رفض تبديل نوبة', `${nm(w.by)} ⇄ ${nm(w.partner)} · ${w.myDate} / ${w.partnerDate}`); toast(v==='approved' ? 'تم اعتماد التبديل' : 'تم رفض الطلب'); } catch(e){ failMsg(e); }
+  },
+  async swapDelete(b){
+    const id = b.dataset.id;
+    if(S.ui.confirm !== 'swd'+id){ S.ui.confirm = 'swd'+id; render(); return; }
+    S.ui.confirm = null; const w = S.swaps.find(x => x.id===id);
+    try { await S.db.doc('swaps/'+id).delete(); audit('حذف طلب تبديل', w ? `${nm(w.by)} ⇄ ${nm(w.partner)}` : id); } catch(e){ failMsg(e); }
+  },
+  async swapTplRemove(){
+    if(S.ui.confirm !== 'swt'){ S.ui.confirm = 'swt'; render(); return; }
+    S.ui.confirm = null; const c = Object.assign({}, cfg()); delete c.swapForm;
+    try { await S.db.doc('config/main').set(c); audit('إزالة نموذج تبديل النوبة', ''); } catch(e){ failMsg(e); }
+  },
+  async delSched(b){
+    const id = b.dataset.id;
+    if(S.ui.confirm !== 'sch'+id){ S.ui.confirm = 'sch'+id; render(); return; }
+    S.ui.confirm = null; const sc = S.schedules.find(x => x.id===id);
+    try { await S.db.doc('schedules/'+id).delete(); if(sc && sc.file){ try { await S.db.doc('files/'+sc.file).delete(); } catch(e){} }
+      audit('حذف جدول مناوبات', sc ? sc.month : id); toast('تم حذف الجدول'); } catch(e){ failMsg(e); }
+  },
   authMode(b){ S.authMode = b.dataset.v; S.authErr = ''; render(); },
   logout(){ firebase.auth().signOut().then(() => location.reload()); },
   retryGate(){ if(S.authUser) enterApp(S.authUser); },
@@ -736,7 +1010,7 @@ const ACT = {
   },
   go(b){ S.view = b.dataset.v; if(b.dataset.tab) S.ui.adminTab = b.dataset.tab; S.ui.confirm = null; render(); window.scrollTo(0,0); },
   bag(b){ S.bagType = b.dataset.v; render(); },
-  adminTab(b){ S.ui.adminTab = b.dataset.v; render(); },
+  adminTab(b){ S.ui.adminTab = b.dataset.v; S.stats = null; render(); },
   repFilter(b){ S.ui.repFilter = b.dataset.v; render(); },
   toggle(b){ const k = b.dataset.k; S.ui[k] = S.ui[k]===b.dataset.id ? null : b.dataset.id; render(); },
   dismissSaved(){ S.ui.saved = null; render(); },
@@ -801,6 +1075,22 @@ const ACT = {
     try { await S.db.collection('schedules').add({month:S.ui.schMonth.trim(), note:(S.ui.schNote||'').trim(), file:f.id, fileName:f.name, fileType:f.type, publishedAt:new Date().toISOString(), by:S.uid});
       audit('نشر جدول مناوبات', S.ui.schMonth.trim()); Object.assign(S.ui, {schMonth:'', schNote:'', schFile:null}); render(); toast('تم نشر الجدول'); } catch(e){ b.disabled = false; failMsg(e); }
   },
+  expRange(b){
+    const d = new Date(), iso = x => x.toLocaleDateString('en-CA');
+    S.ui.expTo = iso(d);
+    if(b.dataset.v==='today') S.ui.expFrom = iso(d);
+    else if(b.dataset.v==='week'){ const w = new Date(); w.setDate(w.getDate()-6); S.ui.expFrom = iso(w); }
+    else S.ui.expFrom = iso(d).slice(0,8) + '01';
+    render();
+  },
+  async exportXlsx(b){
+    const from = S.ui.expFrom || today().slice(0,8) + '01', to = S.ui.expTo || today();
+    if(from > to){ toast('تاريخ البداية بعد تاريخ النهاية.'); return; }
+    await runExport(b, from, to, `EMS_${from}_${to}.xlsx`, false);
+  },
+  async exportAll(b){ await runExport(b, '0000-00-00', '9999-12-31', `EMS_كامل_البيانات_${today()}.xlsx`, true); },
+  async exportMonth(b){ const m = b.dataset.v; const last = new Date(+m.slice(0,4), +m.slice(5,7), 0).getDate();
+    await runExport(b, m + '-01', m + '-' + String(last).padStart(2,'0'), `EMS_أرشيف_${m}.xlsx`, true); },
   async saveLists(b){
     const lines = k => (S.ui[k]||'').split('\n').map(s => s.trim()).filter(Boolean);
     const meds = lines('cfgMeds').map(l => { const [n,q] = l.split('|').map(s => s.trim()); return {name:n, qty: Math.max(0, parseInt(q,10)||1)}; }).filter(m => m.name);
@@ -817,6 +1107,7 @@ document.addEventListener('input', e => {
   const t = e.target;
   if(t.dataset.bind){ S.ui[t.dataset.bind] = t.value; if(t.dataset.live || t.tagName==='SELECT') render(); else syncButtons(); }
   else if(t.dataset.d !== undefined){ const x = S.draft.items[t.dataset.d] = S.draft.items[t.dataset.d]||{}; x[t.dataset.k] = t.value; render(); }
+  else if(t.dataset.sw){ S.ui.sw = S.ui.sw || {}; S.ui.sw[t.dataset.sw] = t.value; if(t.tagName!=='TEXTAREA') render(); }
   else if(t.dataset.dh){ S.draft[t.dataset.dh] = t.value; if(t.dataset.dh==='ambulance') lsSet('ems.amb', t.value); render(); }
 });
 function syncButtons(){ const v = S.view; if(v==='announcements'||v==='schedule'||v==='reports'){ render(); } }
@@ -829,6 +1120,8 @@ document.addEventListener('change', async e => {
     const res = await uploadFile(file);
     if(key==='sched') S.ui.schFile = {id:res.id, name:file.name, type:res.contentType};
     else if(key==='rep') S.ui.repPhoto = res.id;
+    else if(key==='swap'){ S.ui.sw = S.ui.sw || {}; S.ui.sw.form = {id:res.id, name:file.name, type:res.contentType}; }
+    else if(key==='swtpl'){ await S.db.doc('config/main').set(Object.assign({}, cfg(), {swapForm:{id:res.id, name:file.name, type:res.contentType}})); audit('رفع نموذج تبديل النوبة', file.name); toast('تم رفع النموذج'); }
     else { const i = key.slice(1); const x = S.draft.items[i] = S.draft.items[i]||{}; x.photo = res.id; }
   } catch(err){
     console.error(err);
@@ -861,6 +1154,7 @@ function startData(){
   list('announcements','at',30,'anns');
   list('inspections','at',150,'insp');
   list('reports','at',120,'reports');
+  list('swaps','at',150,'swaps');
   if(S.admin){ list('audit','at',100,'audit'); db.collection('allowed').onSnapshot(q => { S.allowed = q.docs.map(d => d.id); render(); }, err); }
   db.collection('acks').onSnapshot(q => { const a = {}; q.docs.forEach(d => a[d.id] = d.data()); S.acks = a; render(); }, err);
 }
