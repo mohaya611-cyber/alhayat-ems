@@ -1735,13 +1735,14 @@ function startData(){
   const db = S.db;
   const h = (location.hash||'').slice(1); if(navList().some(([k]) => k===h)) S.view = h;
   const err = e => { console.error(e); if(e.code==='permission-denied'){ S.noDb = 'انتهت صلاحية دخولك أو تم إيقاف حسابك. أعد تحميل الصفحة.'; render(); } };
-  const list = (path, field, n, key) => db.collection(path).orderBy(field,'desc').limit(n).onSnapshot(q => { S[key] = q.docs.map(d => Object.assign({id:d.id}, d.data())); render(); }, err);
+  const soft = key => e => { console.warn(key, e && e.code); if(e && e.code==='permission-denied'){ S[key] = []; render(); } else err(e); };
+  const list = (path, field, n, key) => db.collection(path).orderBy(field,'desc').limit(n).onSnapshot(q => { S[key] = q.docs.map(d => Object.assign({id:d.id}, d.data())); render(); }, soft(key));
   db.doc('config/main').onSnapshot(s => { S.config = s.exists ? s.data() : null; S.configLoaded = true; S.ready = true; if(S.ui.adminTab!=='lists') S.ui.cfgInit = false; render(); }, err);
   db.collection('users').onSnapshot(q => { const u = {}; q.docs.forEach(d => u[d.id] = d.data()); S.users = u;
     const me = u[S.uid]; if(me){ S.myName = me.name; const wasAdmin = S.admin; S.admin = me.role==='admin'; if(me.active===false || (me.role==='maintenance') !== S.maint){ location.reload(); return; } if(S.admin && !wasAdmin) location.reload(); }
     render(); }, err);
   if(S.maint){ list('reports','at',300,'reports'); db.collection('mchecks').where('by','==',S.uid).onSnapshot(q => { S.mchecks = q.docs.map(d => Object.assign({id:d.id}, d.data())).sort((a,b) => a.at < b.at ? 1 : -1); render(); }, err); watchNewReports(); return; }
-  list('mchecks','at',300,'mchecks');
+  if(S.admin) list('mchecks','at',300,'mchecks');
   list('schedules','publishedAt',12,'schedules');
   list('announcements','at',30,'anns');
   list('inspections','at',150,'insp');
