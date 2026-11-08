@@ -126,6 +126,10 @@ td .tiny{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 .prog-in{max-width:980px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;width:160px;max-width:40vw}
 .bar i{display:block;height:100%;background:var(--ok)}
+.bar.full{width:100%;max-width:none;height:8px}
+.pdfv{display:flex;flex-direction:column;gap:10px}.pdfv img{width:100%;border:1px solid var(--line);border-radius:6px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.sigpad{width:100%;height:200px;border:2px dashed var(--muted);border-radius:10px;background:var(--surface);touch-action:none;cursor:crosshair;display:block}
+button.card{font:inherit;color:inherit;width:100%}
 
 .items{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
 .item{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px;border-inline-start:4px solid transparent}
@@ -219,19 +223,12 @@ a{color:var(--info)}
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 /* ===== إعدادات Firebase: ضع هنا الإعدادات من مشروعك ===== */
-const FIREBASE_CONFIG = {
-  "apiKey": "AIzaSyDAAagIzTQb8CRn1p76PkDC6rTKOaLoRc0",
-  "authDomain": "alhayat-ems.firebaseapp.com",
-  "projectId": "alhayat-ems",
-  "storageBucket": "alhayat-ems.firebasestorage.app",
-  "messagingSenderId": "337030615209",
-  "appId": "1:337030615209:web:e003312f1528bcf4ac59b8"
-};
+const FIREBASE_CONFIG = /*CONFIG_START*/{"apiKey":"AIzaSyDAAagIzTQb8CRn1p76PkDC6rTKOaLoRc0","authDomain":"alhayat-ems.firebaseapp.com","projectId":"alhayat-ems","storageBucket":"alhayat-ems.firebasestorage.app","messagingSenderId":"337030615209","appId":"1:337030615209:web:e003312f1528bcf4ac59b8"}/*CONFIG_END*/;
 /* ===================================================== */
 const DEFAULT_CONFIG = {"ambulances": ["AMB-01", "AMB-02", "AMB-03"], "cpr": ["BVM Adult (Ambu Bag)", "BVM Pediatric (Ambu Bag)", "Laryngoscope Set (Intubation Kit)", "ETT (Endotracheal Tubes)", "Epinephrine (Adrenaline)", "LMA Adult", "LMA Pediatric", "IV Cannulas (All Sizes)", "Adhesive Tape", "AED Pads", "AED (Automated External Defibrillator)", "Syringe 5 mL", "Syringe 10 mL", "Gauze", "Gloves", "IV Set (Infusion Set)"], "meds": [{"name": "باراسيتامول Paracetamol", "qty": 3}, {"name": "دكستروز 10% Dextrose", "qty": 2}, {"name": "نورمال سلاين Normal Saline", "qty": 2}, {"name": "أدينوسين Adenosine", "qty": 3}, {"name": "أسبرين Aspirin", "qty": 2}, {"name": "ديكلوفيناك Diclofenac IM", "qty": 3}, {"name": "أدرينالين Adrenaline", "qty": 5}, {"name": "سالبيوتامول Salbutamol", "qty": 2}, {"name": "بيكربونات الصوديوم Sodium Bicarbonate", "qty": 2}], "paramedic": [{"name": "Tourniquet", "qty": 2}, {"name": "قفازات", "qty": 10}, {"name": "أزواج قفازات معقمة", "qty": 2}, {"name": "رباط شاش 4*4", "qty": 1}, {"name": "رباط شاش 4*7", "qty": 1}, {"name": "رباط مثلث", "qty": 2}, {"name": "شاش", "qty": 1}, {"name": "قسطرة وريدية 24", "qty": 3}, {"name": "I/V sets", "qty": 3}, {"name": "محلول ملحي", "qty": 1}, {"name": "محلول دكستروز 5%", "qty": 1}, {"name": "بلاستر", "qty": 1}, {"name": "مسحات كحولية", "qty": 1}, {"name": "Aluminum rescue blanket", "qty": 1}, {"name": "بطانية حروق", "qty": 1}, {"name": "سماعة طبيب", "qty": 1}, {"name": "جهاز قياس ضغط الدم للكبار", "qty": 1}, {"name": "جهاز قياس ضغط الدم للصغار", "qty": 1}, {"name": "مقص ضمادات", "qty": 1}, {"name": "قاطع خواتم", "qty": 1}, {"name": "Glass Perforator", "qty": 1}], "vehicleItems": ["مستوى الوقود", "الإطارات", "الأنوار والإشارات", "المكيف", "البطارية", "جهاز الشفط", "أسطوانات الأكسجين", "النقالة", "الكرسي المتحرك", "نظافة السيارة"]};
 const S = { db:null, user:null, assets:true, uid:null, myName:'', admin:false, canWrite:true, ready:false, noDb:false, swaps:[], pathways:[], checkouts:[], records:[], rosc:[], mchecks:[], maint:false, schedCfg:null, myPref:null, rosters:[], prefsAll:[], draft:null, proposals:null, users:{}, allowed:[], authMode:'login', authErr:'', authBusy:false, gate:null,
   config:null, configLoaded:false, schedules:[], anns:[], acks:{}, insp:[], reports:[], audit:[],
-  view:'home', draft:null, bagType:'cpr', names:{}, asked:new Set(), seen:[], ui:{ adminTab:'ready', repFilter:'open', uploading:{} } };
+  view:'home', staff:[], linkreqs:[], circs:[], csigs:[], cviews:[], csigMap:{}, cviewMap:{}, myLinkReq:null, sup:false, mySector:'', draft:null, bagType:'cpr', names:{}, asked:new Set(), seen:[], ui:{ adminTab:'ready', repFilter:'open', uploading:{} } };
 
 const TYPES = {vehicle:'السيارة', cpr:'شنطة CPR', meds:'شنطة الأدوية', paramedic:'شنطة المسعف', golf:'عربة القولف'};
 const TYPES_EN = {vehicle:'Ambulance', cpr:'CPR Bag', meds:'Medication Bag', paramedic:'Paramedic Bag'};
@@ -242,7 +239,7 @@ const PW = {stemi:['مسار الجلطة القلبية','STEMI Pathway','bad']
 const CO = {pending:['بانتظار الاعتماد','info'], approved:['معتمد','ok'], rejected:['مرفوض','bad'], cancelled:['ملغي','neutral']};
 const REC_TYPES = ['ملاحظة إدارية','مخالفة سلوكية','خطأ مهني','خطأ تشغيلي','تأخير أو غياب','شكوى','أخرى'];
 const M_ITEMS = ["الهيكل الخارجي", "زجاج السيارة", "المرايا الجانبية", "مساحات الزجاج", "الانوار التحذيرية (السفتي)", "الاصوات التحذيرية (الونان)", "الانوار الأمامية", "الانوار الخلفية", "الكشافات الجانبية اليسرى", "الكشافات الجانبية اليمنى", "أطارات الدواليب الأربعة", "الفرامل", "زيت المحرك", "زيت القير", "زيت الدركسيون", "زيت الفرامل", "سائل الريدتير", "سائل مساحات الزجاج", "التكييف الداخلي", "بطاريات السيارة", "المثلث وأسلاك الاشتراك", "طفاية الحريق عدد 2", "الإطار الإحتياطي", "العفريتة ومفتاح العجل", "الجهاز اللاسلكي الثابت في السيارة", "الجهاز اللاسلكي اليدوي + الشاحن"];
-const ROLES = {admin:['مسؤول','info'], paramedic:['مسعف','ok'], maintenance:['صيانة','warn']};
+const ROLES = {admin:['مسؤول','info'], paramedic:['مسعف','ok'], supervisor:['مشرف قطاع','info'], maintenance:['صيانة','warn']};
 const GOLF_ITEMS = ['جهاز لوكاس (LUCAS)','جهاز لايف باك (LIFEPAK)','الأدوية (Medications)'];
 const fmtMin = m => `${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`;
 function coMinutes(a, b){ if(!a || !b) return 0; const [h1,m1] = a.split(':').map(Number), [h2,m2] = b.split(':').map(Number); let d = (h2*60+m2) - (h1*60+m1); if(d < 0) d += 1440; return d; }
@@ -256,6 +253,7 @@ const today = () => new Date().toLocaleDateString('en-CA');
 const LANG = (() => { try { return localStorage.getItem('ems.lang') === 'en' ? 'en' : 'ar'; } catch(e){ return 'ar'; } })();
 const LOC = LANG === 'en' ? 'en-GB' : 'ar-SA-u-ca-gregory-nu-latn';
 const I18N = {"تفضيلات المناوبات": "Shift Preferences", "الجدولة الذكية": "Smart Scheduling", "تم الإرسال": "Submitted", "الفترة مفتوحة": "Window open", "الفترة مغلقة": "Window closed", "صباحي": "Morning", "مسائي": "Evening", "أي مناوبة": "Any shift", "طلب راحة": "Rest request", "لا أستطيع": "Unavailable", "ساعات إضافية": "Overtime", "مسح": "Clear", "أحد": "Sun", "اثنين": "Mon", "ثلاثاء": "Tue", "أربعاء": "Wed", "خميس": "Thu", "جمعة": "Fri", "سبت": "Sat", "شهر": "Month", "آخر موعد": "Deadline", "اختياراتك تفضيلات تساعد في الجدولة، والقرار النهائي للإدارة": "Your choices are preferences that guide scheduling; final decisions are made by management", "فترة استقبال التفضيلات مغلقة": "The preferences window is closed", "هذه تفضيلاتك المحفوظة": "These are your saved preferences", "اختر نوع التفضيل ثم اضغط على الأيام": "Pick a preference type, then tap days", "تطبيق على كل:": "Apply to every:", "كل الأيام": "All days", "تفاصيل إضافية": "More details", "أيام العمل المتتالية المفضلة": "Preferred consecutive work days", "أيام الراحة المتتالية المفضلة": "Preferred consecutive rest days", "مستعد للعمل الإضافي (Overtime)": "Willing to work overtime", "في الأيام المحددة بعلامة +OT": "on days marked +OT", "في أي يوم": "on any day", "ملاحظات أو ظروف خاصة": "Notes or special circumstances", "تحديث تفضيلاتي": "Update my preferences", "إرسال تفضيلاتي": "Submit my preferences", "آخر حفظ": "Last saved", "تم حفظ تفضيلاتك": "Your preferences were saved", "فترة تفضيلات المناوبات لشهر": "Shift preferences window for", "مفتوحة": "is open", "حتى": "until", "تُغلق قريبًا": "closing soon", "تم إرسال تفضيلاتك": "your preferences are submitted", "تحديد تفضيلاتي": "Set my preferences", "تم تعديل": "Updated:", "تم نشر": "Published:", "جدول مناوبات شهر": "duty roster for", "عرض جدولي": "View my roster", "جدولي": "My roster", "ساعة": "hours", "إضافي": "Overtime", "معدّل": "Updated", "اليوم": "Day", "الموقع": "Site", "المناوبة": "Shift", "الوقت": "Time", "الساعات": "Hours", "أيام العمل": "Work days", "أيام الراحة": "Rest days", "ليست لديك مناوبات في هذا الجدول": "You have no shifts in this roster", "جدول الفريق": "Team roster", "إخفاء جدول الفريق": "Hide team roster", "ساعات": "Hours", "التوافق": "Match", "نقص": "Short", "ص = صباحي · م = مسائي": "ص = morning · م = evening", "الإضافي": "Overtime", "اسمح بالنوافذ المنبثقة ثم أعد المحاولة": "Allow pop-ups and try again", "الجدول": "Roster", "تفضيلات الموظفين": "Staff preferences", "الإعدادات": "Settings", "اسم الجهة": "Site name", "الرمز في الجدول": "Code in roster", "النوع": "Type", "من": "From", "إلى": "To", "العدد المطلوب": "Required staff", "مسائي/ليلي": "Evening/night", "إضافة مناوبة": "Add shift", "حذف الجهة": "Delete site", "تأكيد حذف الجهة": "Confirm delete site", "فترة استقبال التفضيلات": "Preferences window", "شهر الجدول": "Roster month", "آخر موعد للتفضيلات": "Preferences deadline", "استقبال التفضيلات مفتوح للموظفين": "Preferences window open for staff", "عند الفتح يظهر للموظفين تنبيه في الرئيسية، ويظهر تنبيه آخر قبل الإغلاق بيومين": "When open, staff see an alert on Home, and another two days before closing", "قواعد العمل": "Work rules", "الساعات المستهدفة شهريًا": "Monthly target hours", "مثال: 208": "e.g. 208", "أقصى ساعات إضافية": "Max overtime hours", "للمستعدين للإضافي فقط": "Only for staff willing to do overtime", "أقصى أيام عمل متتالية": "Max consecutive work days", "أقل راحة بين مناوبتين (ساعة)": "Min rest between shifts (hours)", "أقل عدد أيام راحة في الشهر": "Min rest days per month", "الجهات والمناوبات": "Sites and shifts", "إضافة جهة": "Add site", "الموظفون والجهات المؤهلين لها": "Staff and eligible sites", "مشمول بالجدول": "In roster", "الجهة الأساسية": "Home site", "حفظ الإعدادات": "Save settings", "تراجع عن التغييرات": "Discard changes", "تم حفظ الإعدادات": "Settings saved", "أرسلوا تفضيلاتهم": "submitted preferences", "يوم بنقص محتمل": "days at risk of shortage", "لا نقص محتمل": "No expected shortage", "لم يرسلوا بعد:": "Not submitted yet:", "مستعد لساعات إضافية": "willing to do overtime", "متاح صباحًا / المطلوب": "Available morning / needed", "متاح مساءً / المطلوب": "Available evening / needed", "طلبات الراحة": "Rest requests", "نقص محتمل": "Possible shortage", "الملاحظات والإضافي": "Notes and overtime", "مستعد للإضافي": "Willing to do overtime", "عمل متتالي": "consecutive work", "راحة متتالية": "consecutive rest", "آخر تحديث": "Last update", "لا يوجد موظفون مشمولون بالجدول. افتح الإعدادات": "No staff included in the roster. Open settings", "إنشاء الجدول الذكي": "Generate Smart Schedule", "جارٍ إنشاء المقترحات…": "Generating proposals…", "إعادة تحسين الجدول": "Re-Optimize Schedule", "ينشئ النظام 3 مقترحات: أولوية الرغبات، العدالة، والتوازن. التغطية وقواعد الراحة شروط لا يتجاوزها، والرغبات يحققها بأعلى نسبة ممكنة": "The system creates 3 proposals: preferences first, fairness, and balanced. Coverage and rest rules are hard limits; preferences are met as much as possible", "منشور": "Published", "آخر نشر": "Last published", "نسخة": "Version", "المقترحات": "Proposals", "التغطية": "Coverage", "توافق الرغبات": "Preference match", "تفاوت الساعات": "Hours spread", "الساعات الإضافية": "Overtime hours", "مناوبات ناقصة": "Uncovered shifts", "اعتماد كمسودة": "Use as draft", "لا توجد مسودة بعد. اضغط «إنشاء الجدول الذكي»": "No draft yet. Tap «Generate Smart Schedule»", "المسودة": "Draft", "تعارض": "conflicts", "مناوبة بدون تغطية كاملة. لا يمكن نشر جدول فيه نقص قبل معالجته أو تأكيد ذلك": "shifts without full coverage. Fix them or confirm before publishing", "ينقص": "short by", "اقتراح: أضف موظفًا للجهة، أو خفّض العدد المطلوب، أو خفّف قيود الراحة والساعات": "Suggestion: add staff to the site, lower the required number, or relax rest and hours rules", "تعديلات يدوية خالفت القواعد:": "Manual edits that break rules:", "يوم": "day", "لا يستطيع": "unavailable", "غير مؤهل": "not eligible", "راحة غير كافية": "insufficient rest", "أيام متتالية": "consecutive days", "تجاوز الساعات": "hours exceeded", "مكرر": "duplicate", "اضغط على أي خانة لتعديلها. التعديل اليدوي يُثبَّت تلقائيًا ولا يغيّره «إعادة التحسين». الإطار الأسود = مثبّت · الإطار الأحمر = تعارض · النقطة = رغبة لم تتحقق": "Tap any cell to edit it. Manual edits are locked automatically and kept by «Re-Optimize». Black frame = locked · red frame = conflict · dot = unmet preference", "اعتماد ونشر الجدول": "Approve & Publish Schedule", "تأكيد الاعتماد والنشر": "Confirm approve & publish", "تأكيد النشر رغم النقص": "Confirm publish despite shortage", "حذف المسودة": "Delete draft", "تأكيد حذف المسودة": "Confirm delete draft", "الرغبات غير المتحققة": "Unmet preferences", "تحققت كل الرغبات المعلنة": "All stated preferences were met", "رغبته:": "Wants:", "راحة": "Rest", "تثبيت هذه الخانة": "Lock this cell", "تعارض طلبات الراحة في هذا اليوم": "Conflicting rest requests on this day", "مطلوب لتغطية المناوبات": "Needed for coverage", "المناوبة المطلوبة مكتملة": "Requested shift was full", "اكتمال الساعات المستهدفة": "Target hours reached", "لا يوجد احتياج إضافي في هذا اليوم": "No extra need on this day", "قيود الراحة والأيام المتتالية": "Rest and consecutive-day rules", "الحد الأدنى لأيام الراحة": "Minimum rest days", "غير مؤهل للموقع": "Not eligible for site", "إضافة صلاحية الموقع:": "Add site eligibility:", "ساعات إضافية:": "Overtime:", "أولوية الرغبات": "Preferences first", "يحقق أكبر قدر من رغبات الموظفين": "Meets the most staff preferences", "العدالة في التوزيع": "Fair distribution", "يقرّب ساعات الجميع من المستهدف": "Keeps everyone close to target hours", "متوازن": "Balanced", "توازن بين الرغبات والعدالة والتشغيل": "Balances preferences, fairness and operations", "تم حفظ المسودة": "Draft saved", "تمت إعادة التحسين:": "Re-optimized:", "تغيير": "changes", "تم اعتماد الجدول ونشره للموظفين": "Schedule approved and published to staff", "إسعاف الحرم": "Haram Ambulance", "جهة قباء": "Quba", "عربة الساحات": "Squares Cart", "العيادة": "Clinic", "جهة جديدة": "New site", "مناوبة": "Shift", "تفضيلات المناوبات ومسودات الجداول": "Shift preferences and roster drafts", "الجداول المنشورة (الجدولة الذكية)": "Published rosters (smart scheduling)", "حفظ تفضيلات المناوبات": "Saved shift preferences", "تعديل إعدادات الجدولة": "Edited scheduling settings", "فتح استقبال التفضيلات": "Opened preferences window", "إنشاء مقترحات الجدول": "Generated roster proposals", "اعتماد مقترح كمسودة": "Proposal used as draft", "تعديل يدوي في الجدول": "Manual roster edit", "تعديل جدول منشور": "Edited published roster", "حذف مسودة الجدول": "Deleted roster draft", "تعذّر الحفظ: فترة التفضيلات مغلقة أو قواعد الأمان غير محدثة": "Could not save: window closed or security rules not updated", "التفضيلات مفتوحة": "preferences open", "التفضيلات مغلقة": "preferences closed", "فحص الصيانة": "Maintenance Check", "موظف صيانة": "Maintenance staff", "صيانة": "Maintenance", "جعله صيانة": "Make maintenance", "فحوصات الصيانة": "Maintenance checks", "تصفير الشهر": "Monthly reset", "مفتاح السيارة الأساسي": "Basic key", "مفتاح السيارة الاحتياطي": "Spare key", "نظافة السيارة الخارجية": "External cleanliness", "نظافة السيارة الداخلية": "Internal cleanliness", "كمية الوقود": "Fuel level", "موجود": "Available", "غير موجود": "Not available", "نظيف": "Clean", "غير نظيف": "Not clean", "غير سليم": "Not OK", "أقل من 25%": "Below 25%", "التاريخ واليوم": "Day & date", "الفترة": "Shift", "كود السيارة (Car Code)": "Car Code", "رقم اللوحة (Plate No)": "Plate No", "الموديل (Model)": "Model", "نوع السيارة (Vehicle type)": "Vehicle type", "اسم المسعف (EMT)": "EMT name", "اسم السائق (Driver)": "Driver name", "اسم مدير الحركة": "Transportation manager", "البنود المفحوصة": "Items checked", "أكمل المفاتيح والنظافة والوقود": "Complete keys, cleanliness and fuel", "بند غير سليم": "items not OK", "كل البنود سليمة": "All items OK", "يوجد": "There are", "بلاغ صيانة جديد من المسعفين": "new maintenance reports from paramedics", "عرض البلاغات": "View reports", "بدء العمل": "Start work", "تم الانتهاء": "Done", "ما تم عمله (اختياري)": "Work done (optional)", "الأرشيف (تم الانتهاء)": "Archive (done)", "لا توجد بلاغات مفتوحة": "No open reports", "لا توجد بلاغات منتهية": "No finished reports", "أنهاه": "Finished by", "تاريخ الانتهاء": "Finished at", "ما تم عمله": "Work done", "تم نقل البلاغ إلى الأرشيف": "Report moved to archive", "تم تحديث البلاغ": "Report updated", "بلاغ صيانة جديد:": "New maintenance report:", "فعّل التنبيهات لتصلك البلاغات الجديدة أثناء فتح المنصة": "Enable alerts to be notified of new reports while the platform is open", "فحوصات موظفي الصيانة": "Maintenance staff checks", "لا توجد فحوصات": "No checks", "تفاصيل الفحص": "Check details", "بنود غير سليمة": "Items not OK", "موظف الصيانة": "Maintenance staff", "مدير الحركة": "Transportation manager", "المفتاح الأساسي": "Basic key", "المفتاح الاحتياطي": "Spare key", "النظافة الخارجية": "External cleanliness", "النظافة الداخلية": "Internal cleanliness", "الوقود": "Fuel", "البند": "Item", "م": "#", "اللوحة / الموديل / النوع": "Plate / model / type", "المفتاح الأساسي / الاحتياطي": "Basic / spare key", "النظافة الخارجية / الداخلية": "External / internal cleanliness", "المسعف / السائق / مدير الحركة": "EMT / driver / manager", "تصفير الشهر:": "Monthly reset:", "يحذف البيانات المحددة نهائيًا من المنصة. الحسابات والفريق والقوائم والإعدادات تبقى كما هي": "Permanently deletes the selected data. Accounts, team, lists and settings stay", "حمّل نسخة كاملة أولًا": "Download a full copy first", "النسخة تحفظ كل شيء في ملف Excel عندك قبل المسح": "The copy saves everything to an Excel file before deleting", "تم تحميل النسخة": "Copy downloaded", "حمّلت النسخة الكاملة وحفظتها": "I downloaded and saved the full copy", "اختر ما يُمسح": "Choose what to delete", "سجل الموظفين وجداول المناوبات غير محددة افتراضيًا لأنها تراكمية": "Employee records and schedules are unchecked by default because they are cumulative", "التأكيد": "Confirm", "اكتب كلمة": "Type the word", "للتأكيد": "to confirm", "مسح البيانات المحددة": "Delete selected data", "جارٍ المسح…": "Deleting…", "تم مسح البيانات المحددة": "Selected data deleted", "فحوصات السيارات والشنط والقولف": "Ambulance, bag and golf checks", "فحوصات موظفي الصيانة ": "Maintenance staff checks", "طلبات ساعات الخروج": "Checkout requests", "طلبات تبديل النوبات": "Shift swap requests", "التعليمات وتأكيدات القراءة": "Announcements and read receipts", "الصور والمرفقات (غير جداول المناوبات)": "Photos and attachments (except schedules)", "سجل الموظفين السري": "Confidential employee records", "بنود نموذج فحص السيارة لموظفي الصيانة": "Vehicle check items for maintenance staff", "فحص صيانة": "Maintenance check", "إنهاء بلاغ صيانة": "Finished maintenance report", "بدء العمل على بلاغ": "Started work on report", "تعذّر المسح": "Could not delete", "لا توجد فحوصات صيانة في هذه الفترة": "No maintenance checks in this period", "تفاصيل فحص الصيانة": "Maintenance check details", "فحص سيارة الإسعاف": "Ambulance Inspection", "تفعيل": "Enable", "زميل مشارك في نفس البلاغ": "Colleague on the same case", "يُسجَّل التفعيل برقم البلاغ نفسه لك وللزميل الذي تختاره": "The activation is recorded under the same case number for you and the colleague you choose", "اسمي في المنصة": "My name on the platform", "الاسم الجديد": "New name", "تغيير الاسم": "Changed name", "يمكنك تغيير اسمك مرة واحدة في الشهر، ويبقى نفس الإيميل": "You can change your name once a month; your email stays the same", "يظهر التغيير للمسؤول": "The admin will see the change", "غيّرت اسمك هذا الشهر": "You changed your name this month", "يمكنك التغيير مرة أخرى من": "You can change it again from", "غيّر اسمه": "Changed name", "كان:": "was:", "تغيير أسماء خلال 7 أيام:": "Name changes in the last 7 days:", "تم تغيير اسمك": "Your name was changed", "لا يمكن تغيير الاسم الآن: مسموح مرة واحدة في الشهر": "Can't change name now: allowed once a month", "شنطة CPR": "CPR Bag", "رقم البلاغ (Case Number)": "Case Number", "حالات ROSC": "ROSC Cases", "تسجيل حالة ROSC": "Recorded ROSC case", "حذف حالة ROSC": "Deleted ROSC case", "الفحوصات وتفاصيلها، البلاغات، تبديل النوبات، التعليمات، جداول المناوبات، الفريق، قوائم الفحص، وسجل التدقيق": "inspections and their details, reports, shift swaps, announcements, duty schedules, team, checklists, and the audit log", "إذا استمر عملك بعد نهاية الدوام بسبب بلاغ إسعافي، سجّل الطلب هنا ليُراجع ويُعتمد من المسؤول": "If you kept working after your shift ended because of an emergency call, submit a request here for the admin to review and approve", "ملخص الفحوصات، تفاصيل كل عنصر، بلاغات الصيانة، التعليمات ومن قرأها، الفريق، وسجل التدقيق": "inspection summary, item details, maintenance reports, announcements and who read them, team, and the audit log", "الأعطال والنواقص التي سجّلها الموظف في فحوصاته، مع بلاغات الصيانة اليدوية": "defects and shortages the employee recorded in inspections, plus manual maintenance reports", "على الآيباد والجوال يُحفظ الملف في مجلد التنزيلات، ويفتح في": "On iPad and phone the file is saved to Downloads and opens in", "سليم أو توجد ملاحظة، مع إمكانية كتابة الملاحظة وإرفاق صورة": "Good or Has a note, with an optional note and photo", "يرجى التأكد من فحص جميع المعدات الطبية قبل بداية المناوبة": "Please check all medical equipment before the shift starts", "التعديل يظهر للمسعفين فورًا ولا يغيّر الفحوصات السابقة": "Changes appear to paramedics immediately and do not alter past inspections", "يظهر للمسؤولين فقط، ولا يستطيع المسعفون الوصول إليه": "visible to admins only; paramedics cannot access it", "يُسجَّل أي تعديل في سجل التدقيق مع النسخة السابقة": "Every edit is recorded in the audit log with the previous version.", "نقص يتطلب إجراءً تصحيحيًا قبل الاعتماد للاستخدام": "shortage(s) requiring corrective action before use", "يصل الطلب لزميلك ليوافق عليه، ثم للمسؤول ليعتمده": "The request goes to your colleague to accept, then to the admin to approve", "الأدوية الخاضعة للرقابة لها سجل الصيدلية الخاص": "Controlled drugs follow the pharmacy's own register", "يظهر للمسعفين ليحملوه ويرفقوه موقّعًا مع الطلب": "Paramedics download it and attach it signed to their request", "اطلب من مسؤول القسم مشاركة المنصة معك بصلاحية": "Ask the department admin to share the platform with you as", "البيانات محفوظة في المنصة ولا تُحذف تلقائيًا": "Data is kept on the platform and never deleted automatically", "أرسلنا رابط استعادة كلمة المرور إلى بريدك": "We sent a password reset link to your email", "استخدم نفس الإيميل الذي أضافه مسؤول القسم": "Use the same email the department admin added", "المسؤول يتابع جميع البلاغات ويحدّث حالتها": "The admin follows up on all reports and updates their status", "أضف إيميل الزميل، ثم أرسل له رابط المنصة": "Add the colleague's email, then send them the platform link", "إيقاف الحساب يمنع صاحبه من الدخول فورًا": "Suspending an account blocks sign-in immediately", "بلاغ صيانة بأولوية عالية أو حرجة مفتوح": "open high or critical maintenance report(s)", "وقت الانتهاء الفعلي يساوي نهاية الدوام": "Actual end time equals shift end", "تأكد من الإنترنت ومن نشر قواعد الأمان": "Check your connection and that the security rules are published", "تبديلات، مناوبات احتياط، تعليمات خاصة": "Swaps, standby shifts, special instructions", "حمّل النموذج واملأه ووقّعه أنت وزميلك": "Download the form, fill it in and sign it with your colleague", "ارفع نموذج تبديل النوبة الخاص بالقسم": "Upload the department's shift swap form", "انتهت صلاحية دخولك أو تم إيقاف حسابك": "Your session expired or your account was suspended", "تأكد من الإنترنت ثم أعد تحميل الصفحة": "Check your connection, then reload the page", "من آخر فحص لشنطة الأدوية في كل سيارة": "From the latest medication bag check of each ambulance", "تمت موافقتك، الطلب الآن عند المسؤول": "Accepted. The request is now with the admin", "كل شيء منذ بداية المنصة في ملف واحد": "Everything since the platform started, in one file", "يُحفظ اسمك والتاريخ والوقت تلقائيًا": "Your name, date and time are saved automatically.", "عدّلها المسؤول وفق التجهيز المعتمد": "the admin adjusts it to the approved setup", "يُنصح بتحميلها نهاية كل شهر وحفظها": "Download and keep one at the end of each month", "كيلوبايت، والصور تُصغَّر تلقائيًا": "KB; images are resized automatically", "لا توجد طلبات تبديل في هذه الفترة": "No swap requests in this period", "لا توجد ملاحظات في سجل هذا الموظف": "No notes in this employee's record.", "نموذج التبديل الرسمي متاح للتحميل": "The official swap form is available to download", "لم يجهّز المسؤول قوائم الفحص بعد": "The admin has not set up the checklists yet", "البريد أو كلمة المرور غير صحيحة": "Wrong email or password", "تاريخ البداية بعد تاريخ النهاية": "Start date is after end date", "لا بلاغات عالية الأولوية مفتوحة": "No open high-priority reports", "طلب تبديل نوبة بانتظار اعتمادك": "shift swap request(s) awaiting your approval", "طلب تبديل نوبة بانتظار موافقتك": "shift swap request(s) awaiting your acceptance", "اطلب من مسؤول القسم إضافته من": "Ask the department admin to add it from", "بحث برقم البلاغ أو اسم المسعف": "Search by case number or paramedic name", "تعذّر الاتصال بقاعدة البيانات": "Could not connect to the database", "تعليمات جديدة لم تؤكد قراءتها": "new announcements you haven't confirmed", "حاول غدًا أو احذف ملفات قديمة": "Try tomorrow or delete old files", "رقم البلاغ المتسبب في التأخير": "Case number that caused the delay", "طلب ساعة خروج بانتظار اعتمادك": "checkout request(s) awaiting your approval", "لا توجد إجراءات في هذه الفترة": "No actions in this period", "لا توجد تعليمات في هذه الفترة": "No announcements in this period", "لا توجد تفعيلات في هذه الفترة": "No activations in this period", "لا توجد ملاحظات تطابق التصفية": "No notes match the filter.", "ليست لديك صلاحية لهذا الإجراء": "You don't have permission for this action", "انتظر قليلًا ثم أعد المحاولة": "wait a moment and try again", "تعليمة جديدة لم تؤكد قراءتها": "new announcement you haven't confirmed", "لا توجد بلاغات في هذه الفترة": "No reports in this period", "لا توجد فحوصات في هذه الفترة": "No inspections in this period", "لا يمكنك تغيير صلاحيتك بنفسك": "You can't change your own role", "أضف أو عدّل أو احذف العناصر": "Add, edit or remove items", "تجاوزتم الحد اليومي المجاني": "The free daily limit was reached", "رفع الملفات غير متاح لحسابك": "File upload isn't available for your account", "لا توجد جداول في هذه الفترة": "No schedules in this period", "لا توجد طلبات في هذه الفترة": "No requests in this period", "لا توجد فحوصات في هذا اليوم": "No inspections on this day.", "الساعات المعتمدة هذا الشهر": "Approved hours this month", "ضع هنا الإعدادات من مشروعك": "put your project settings here", "تأكد من الاتصال بالإنترنت": "Check your internet connection", "جهاز قياس ضغط الدم للصغار": "Pediatric BP monitor", "جهاز قياس ضغط الدم للكبار": "Adult BP monitor", "شعار مستشفى الحياة الوطني": "Al Hayat National Hospital logo", "غير مضاف إلى فريق الإسعاف": "is not on the EMS team", "لا توجد إجراءات مسجلة بعد": "No actions recorded yet.", "ملاحظة أُرسلت كبلاغ صيانة": "note(s) sent as maintenance reports", "ملف واحد فيه ورقة لكل قسم": "One file with a sheet per section", "نسخة كاملة من كل البيانات": "Full copy of all data", "، ثم اضغط إعادة المحاولة": ", then tap Retry", "إزالة نموذج تبديل النوبة": "Removed shift swap form", "افحص العربة قبل استلامها": "Check the cart before taking it over", "الأكثر تسجيلًا للملاحظات": "Most notes recorded", "الخطوة الموضحة في الدليل": "the step in the guide", "لا يوجد حساب بهذا البريد": "No account with this email", "نشر الجدول وإشعار الفريق": "Publish schedule and notify team", "نوع الملاحظة أو المخالفة": "Note or violation type", "الأقل تسجيلًا للملاحظات": "Fewest notes recorded", "بلاغات الصيانة والنواقص": "Maintenance & Shortage Reports", "تعويض التأخر بعد الدوام": "Compensation for staying late", "لا يوجد اتصال بالإنترنت": "No internet connection", "لا يوجد موظف بهذا الاسم": "No employee with this name.", "بانتظار اعتماد المسؤول": "Awaiting admin approval", "تعذّر تحميل الإحصائيات": "Could not load statistics", "تم إرسال الطلب للمسؤول": "Request sent to the admin", "رفع نموذج تبديل النوبة": "Uploaded shift swap form", "سبب التأخير أو ملاحظات": "Reason for delay or notes", "لا توجد تعليمات منشورة": "No announcements published.", "لا توجد ملاحظات إدارية": "No administrative notes", "لحذف حساب نهائيًا افتح": "To delete an account permanently, open", "من الاستديو أو الملفات": "From photos or files", "نُشر جدول مناوبات جديد": "New duty schedule published", "هذه الصفحة للمسؤول فقط": "This page is for admins only.", "وأضف السيارات والعناصر": "and add ambulances and items.", "إرفاق النموذج الموقّع": "Attach the signed form", "بانتظار موافقة الزميل": "Awaiting colleague", "بلاغات عالية الأولوية": "High-priority reports", "تفعيل المسارات الطبية": "Medical Pathway Activation", "تم إرسال الطلب لزميلك": "Request sent to your colleague", "صيغة البريد غير صحيحة": "Invalid email format", "ملاحظات على المناوبات": "Notes on shifts", "موافقة على تبديل نوبة": "Accepted shift swap", "آخر فحص لهذه السيارة": "Last check of this unit", "إرسال رابط الاستعادة": "Send reset link", "الإعلانات والتعليمات": "Announcements", "بانتظار إنشاء الحساب": "Waiting to sign up", "تظهر هنا بلاغاتك فقط": "Only your reports appear here", "تمت القراءة والاطلاع": "Read and acknowledged", "تواصل مع مسؤول القسم": "Contact the department admin", "جارٍ حساب الإحصائيات": "Calculating statistics…", "حدّث قواعد الأمان في": "update the security rules in", "حذف إيميل من القائمة": "Removed email from list", "لا يمكنك إيقاف حسابك": "You can't suspend your own account", "لم تُضبط القوائم بعد": "Lists are not set up yet", "مسار الجلطة الدماغية": "Stroke Pathway", "نموذج التبديل الرسمي": "Official swap form", "هذا البريد لديه حساب": "This email already has an account", "وصف الخطأ أو المشكلة": "Description of the error or problem", "أرسل له رابط المنصة": "send them the platform link", "أول مرة؟ أنشئ حسابك": "First time? Create your account", "إضافة ملاحظة إدارية": "Add administrative note", "إلغاء طلب ساعة خروج": "Cancelled checkout request", "استخدم تسجيل الدخول": "Use sign in", "استعادة كلمة المرور": "Reset password", "اكتب إيميلًا صحيحًا": "Enter a valid email", "تأكيد إزالة النموذج": "Confirm remove form", "تحميل البيانات كملف": "Download data as an", "تحميل كامل البيانات": "Download all data", "تحميل نموذج التبديل": "Download swap form", "تعديل ملاحظة إدارية": "Edited administrative note", "ثم أعد تحميل الصفحة": "then reload the page", "جاهزية عربات القولف": "Golf cart readiness", "رقم أو اسم كل سيارة": "Number or name of each ambulance", "عنصر واحد في كل سطر": "One item per line", "لا توجد تفعيلات هنا": "No activations here.", "لا توجد طلبات سابقة": "No previous requests.", "لا يوجد لك دخول بعد": "You don't have access yet", "لم تسجّل أي فحص بعد": "You haven't recorded any inspection yet.", "مسار الجلطة القلبية": "STEMI Pathway", "نهاية الدوام الرسمي": "Official shift end", "نوع الملف غير مدعوم": "File type not supported", "وقت الانتهاء الفعلي": "Actual end time", "وقود، إطارات، أنوار": "Fuel, tyres, lights", "أزواج قفازات معقمة": "Pairs of sterile gloves", "أنشئ حسابًا جديدًا": "Create a new account", "إضافة إيميل للفريق": "Added email to team", "بيكربونات الصوديوم": "Sodium bicarbonate", "تاريخ ووقت الواقعة": "Incident date and time", "تعذّر تحميل الصورة": "Could not load image", "تعذّر تحميل مكتبات": "Could not load", "حتى تسجّل الفحوصات": "to record inspections", "رقم أو اسم كل عربة": "Number or name of each cart", "طلبات ساعات الخروج": "Checkout requests", "فحص الشنط والمعدات": "Bags & Equipment Check", "لا توجد بلاغات هنا": "No reports here.", "لا توجد طلبات أخرى": "No other requests.", "من قرأ ومن لم يقرأ": "Who read it and who didn't", "آخر فحص في الفترة": "Last check in period", "أسطوانات الأكسجين": "Oxygen cylinders", "أوافق على التبديل": "Accept swap", "اختيار ملف الجدول": "Choose schedule file", "اعتماد تبديل نوبة": "Approved shift swap", "الأنوار والإشارات": "Lights and signals", "البريد الإلكتروني": "Email", "الصورة كبيرة جدًا": "Image is too large", "بلاغ صيانة أو نقص": "Maintenance or shortage report", "تاريخ نوبة الزميل": "Colleague's shift date", "تعذّر تجهيز الملف": "Could not prepare the file", "تم اعتماد التبديل": "Swap approved", "جارٍ تحميل المنصة": "Loading platform", "حذف طلب ساعة خروج": "Deleted checkout request", "حذف ملاحظة إدارية": "Deleted administrative note", "حسابك للاطلاع فقط": "Your account is view-only", "صدّر الجدول كصورة": "Export the schedule as an image", "فحص سيارة الإسعاف": "Ambulance Inspection", "كلمة المرور قصيرة": "Password is too short", "لا توجد طلبات هنا": "No requests here.", "لا نواقص في الشنط": "No bag shortages.", "لا يوجد أعضاء بعد": "No members yet.", "لم يُنشر جدول بعد": "No schedule published yet.", "وارفعها بدلًا منه": "and upload it instead", "يفتح الرابط ويضغط": "They open the link and tap", "أعد تحميل الصفحة": "Reload the page", "اعتماد ساعة خروج": "Approved checkout hours", "اكتب اسمك الكامل": "Enter your full name", "اكتب كلمة المرور": "Enter your password", "الجاهزية اليومية": "Daily readiness", "العناصر المفحوصة": "Items checked", "النواقص والأعطال": "Shortages & defects", "بانتظار الاعتماد": "Awaiting approval", "بلاغاتي المفتوحة": "My open reports", "بلاغاتي وفحوصاتي": "My Reports & Checks", "تأكيد حذف الجدول": "Confirm delete schedule", "تعذّر تحميل أداة": "Could not load the", "تم تسجيل التفعيل": "Activation recorded", "توثيق تفعيل مسار": "Record a pathway activation", "جارٍ تجهيز الملف": "Preparing file…", "حذف جدول مناوبات": "Deleted duty schedule", "حمّل أي شهر كملف": "Download any month as a separate", "طلب قيد المراجعة": "Request under review", "فحص الشنط الطبية": "Medical Bags Check", "كل العناصر سليمة": "All items are fine.", "لا تنبيهات أدوية": "No medication alerts.", "لم تُضبط إعدادات": "Not configured:", "مرفوض من المسؤول": "Rejected by admin", "نسيت كلمة المرور": "Forgot password", "نشر جدول مناوبات": "Published duty schedule", "إلغاء طلب تبديل": "Cancelled swap request", "اكتب نوع المسار": "Type the pathway", "الانتهاء الفعلي": "Actual end", "الكمية اختيارية": "quantity optional", "الكمية المطلوبة": "Required quantity", "الكمية الموجودة": "Quantity present", "بانتظار اعتمادك": "awaiting your approval", "بانتظار الإجراء": "Pending", "بانتظار موافقتك": "awaiting your acceptance", "بحث باسم الموظف": "Search by employee name", "تعذّر رفع الملف": "Could not upload the file", "تفاصيل الفحوصات": "Inspection details", "تم إرسال البلاغ": "Report sent", "تم اعتماد الطلب": "Request approved", "تم اعتماد الفحص": "Inspection submitted", "تم تسجيل اطلاعك": "Your acknowledgement was recorded", "تم نشر التعليمة": "Announcement published", "جداول المناوبات": "Duty schedules", "شفت نوبة الزميل": "Colleague's shift", "فحص عربة القولف": "Golf Cart Inspection", "لا توجد تفعيلات": "No activations", "لا توجد ملاحظات": "No notes", "ملاحظة في السجل": "notes in record", "أحرف على الأقل": "characters minimum", "إعادة المحاولة": "Retry", "إن كان معروفًا": "if known", "الأرشيف الشهري": "Monthly archive", "الإجراء المتخذ": "Action taken", "التاريخ والوقت": "Date & time", "الكرسي المتحرك": "Wheelchair", "النموذج المرفق": "Attached form", "بلاغات الصيانة": "Maintenance", "تاريخ الانضمام": "Joined", "تاريخ المناوبة": "Shift date", "تفعيل المسارات": "Pathways", "تم إيقاف حسابك": "Your account has been suspended", "تم تجهيز الملف": "File ready", "تم حفظ القوائم": "Lists saved", "تم رفع النموذج": "Form uploaded", "جاهز للاستخدام": "Ready for use.", "جدول المناوبات": "Duty Schedule", "جرّب صورة أخرى": "Try another image", "حذف تفعيل مسار": "Deleted pathway activation", "رفض تبديل نوبة": "Rejected shift swap", "طلب تبديل جديد": "New swap request", "طلب تبديل نوبة": "Shift swap request", "لا توجد بلاغات": "No reports", "لا طلبات معلقة": "No pending requests", "ملاحظة المسؤول": "Admin note", "من فحص السيارة": "from ambulance inspection", "منتهي الصلاحية": "Expired", "أو صورة أولًا": "or an image first", "إزالة النموذج": "Remove form", "إعادة التصوير": "Retake photo", "اكتب الملاحظة": "Write the note", "الجدول الحالي": "Current schedule", "الموظف الثاني": "Second employee", "تأخير أو غياب": "Lateness or absence", "تأكيد الإلغاء": "Confirm cancel", "تاريخ الإضافة": "Date added", "تاريخ الواقعة": "Incident date", "تبديل النوبات": "Shift Swaps", "تحميل النموذج": "Download form", "تسجيل التفعيل": "Record activation", "تعديل القوائم": "Edited lists", "تعذّر الإجراء": "Action failed", "تعذّر الإرسال": "Could not send", "تفاصيل المسار": "Pathway details", "تم حذف البلاغ": "Report deleted", "تم حذف الجدول": "Schedule deleted", "تم نشر الجدول": "Schedule published", "جهاز لايف باك": "LIFEPAK monitor", "حاول مرة أخرى": "Try again", "حذف طلب تبديل": "Deleted swap request", "رفض ساعة خروج": "Rejected checkout hours", "طلب ساعة خروج": "Delayed Checkout Request", "فحص لم يُسجّل": "checks not recorded", "فحوصات الفترة": "Checks in period", "لا توجد طلبات": "No requests", "لا توجد قوائم": "No lists", "لا يوجد أعضاء": "No members", "لم تفحص اليوم": "Not checked today", "محاولات كثيرة": "Too many attempts", "محلول دكستروز": "Dextrose solution", "مخالفة سلوكية": "Conduct violation", "مسار الإصابات": "Trauma Pathway", "ملاحظة إدارية": "Administrative note", "ملخص الفحوصات": "Inspection summary", "نشر جدول جديد": "Publish a new schedule", "نظافة السيارة": "Vehicle cleanliness", "أعد المحاولة": "Try again", "أعضاء الفريق": "Team members", "إرسال البلاغ": "Send report", "إسعاف الحياة": "Al Hayat EMS", "إضافة ملاحظة": "Add note", "إنشاء الحساب": "Create account", "إيقاف الحساب": "Suspend account", "اعتماد الفحص": "Submit inspection", "الأكثر فحصًا": "Most checks", "الاسم الكامل": "Full name", "الجميع قرأها": "Everyone read it", "الشهر الماضي": "Last month", "الملف المرفق": "Attached file", "الموظف الأول": "First employee", "بداية المنصة": "the start", "بنفس الإيميل": "with the same email", "تاريخ البلاغ": "Report date", "تسجيل الدخول": "Sign in", "تعديل ملاحظة": "Edit note", "تعليمة جديدة": "New announcement", "تغيير صلاحية": "Changed role", "تم رفض الطلب": "Request rejected", "توجد ملاحظات": "Has notes", "جارٍ التحميل": "Loading", "جاهزية اليوم": "Today's readiness", "جعله مسؤولًا": "Make admin", "حفظ الملاحظة": "Save note", "ساعات الخروج": "Checkout hours", "سجل الموظفين": "Employee Records", "شنطة الأدوية": "Medication Bag", "عدد الفحوصات": "Checks", "عربات القولف": "Golf carts", "فحوصات اليوم": "Today's checks", "في الملف بعد": "in the file yet", "قائمة مبدئية": "Starter list", "قسطرة وريدية": "IV cannula", "كل التفعيلات": "All activations", "لا يوجد جدول": "No schedule", "لم يسجّل بعد": "Not signed up yet", "لوحة الإدارة": "Admin Panel", "مرفقات داعمة": "Supporting attachments", "مستوى الوقود": "Fuel level", "مسحات كحولية": "Alcohol swabs", "ملاحظة للطلب": "Note for this request", "نشر التعليمة": "Publish announcement", "نهاية الدوام": "Shift end", "نورمال سلاين": "Normal saline", "نوع الملاحظة": "Note type", "يحتاج متابعة": "Needs attention", "ينتهي قريبًا": "Expires soon", "إرسال الطلب": "Send request", "إلغاء الطلب": "Cancel request", "اختر الزميل": "Choose colleague", "الأقل فحصًا": "Fewest checks", "باراسيتامول": "Paracetamol", "بدء التنفيذ": "Start work", "بطانية حروق": "Burn blanket", "تأكيد الحذف": "Confirm delete", "تاريخ الطلب": "Request date", "تاريخ النشر": "Published", "تاريخ نوبتك": "Your shift date", "تصدير السجل": "Export record", "تعذّر الحفظ": "Could not save", "تغيير الملف": "Change file", "تفعيل اليوم": "activations today", "تمت الإضافة": "Added", "تمت القراءة": "Read", "توجد ملاحظة": "Has a note", "جعله مسعفًا": "Make paramedic", "حفظ التعديل": "Save changes", "حفظ القوائم": "Save lists", "رفضه الزميل": "Declined by colleague", "سالبيوتامول": "Salbutamol", "سجل التدقيق": "Audit log", "شنطة المسعف": "Paramedic Bag", "صورة البلاغ": "Report photo", "عدد العناصر": "Items", "عربة القولف": "Golf cart", "فتح النموذج": "Open form", "فحص السيارة": "Ambulance Check", "قوائم الفحص": "Checklists", "قيد التنفيذ": "In progress", "كل الموظفين": "All employees", "كلمة المرور": "Password", "مدة التأخير": "Delay", "من الاستديو": "From photos", "نص التعليمة": "Announcement text", "نواقص الشنط": "Bag shortages", "وصف المشكلة": "Problem description", "يحتاج إجراء": "Needs action", "أنشئ حسابك": "Create your account", "أيام الفحص": "Check days", "إضافة زميل": "Add a colleague", "إيقاف حساب": "Suspended account", "الإحصائيات": "Statistics", "تحديث بلاغ": "Updated report", "تفعيل حساب": "Activated account", "تفعيل مسار": "Pathway activation", "تم حفظ فحص": "Saved inspection:", "جارٍ الرفع": "Uploading…", "جهاز الشفط": "Suction unit", "جهاز لوكاس": "LUCAS device", "حذف الجدول": "Delete schedule", "حذف تعليمة": "Deleted announcement", "خطأ تشغيلي": "Operational error", "ديكلوفيناك": "Diclofenac", "رقم البلاغ": "Case number", "سجل الموظف": "Employee record", "سماعة طبيب": "Stethoscope", "صورة مرفقة": "Attached photo", "عدد من قرأ": "Read count", "عرض الجدول": "View schedule", "غير مقروءة": "unread", "فتح الجدول": "Open schedule", "فحص القولف": "Golf Cart", "قاطع خواتم": "Ring cutter", "كل الطلبات": "All requests", "كل الفترات": "All time", "كمية ناقصة": "Short", "لا أحد بعد": "No one yet", "محلول ملحي": "Saline solution", "مقص ضمادات": "Bandage scissors", "نشر تعليمة": "Published announcement", "نموذج مرفق": "Form attached", "نوع المسار": "Pathway type", "آخر تحديث": "Last update", "آخر تعديل": "Last edit", "آخر واقعة": "last incident", "أدرينالين": "Adrenaline", "إعادة فتح": "Reopen", "إلى تاريخ": "To date", "اسم الملف": "File name", "التعليمات": "Announcements", "التنبيهات": "Alerts", "الملاحظات": "Notes", "المناوبات": "Schedule", "بلاغ جديد": "New report", "بلاغ يدوي": "Manual report", "تحميل ملف": "Download", "حساب جديد": "New account", "رباط مثلث": "Triangular bandage", "ساعة خروج": "Checkout", "سبب الخطأ": "Cause of error", "شفت نوبتك": "Your shift", "طلب تبديل": "Swap request", "غير مكتمل": "Incomplete", "فتح السجل": "Open record", "فحص الشنط": "Bags Check", "فحص اليوم": "Today's check", "فحص مسجّل": "checks recorded", "لقطة شاشة": "screenshot", "لم يقرأها": "Not read", "نوع الفحص": "Check type", "هذا الشهر": "This month", "أدينوسين": "Adenosine", "الأولوية": "Priority", "الإطارات": "Tyres", "البطارية": "Battery", "البلاغات": "Reports", "البيانات": "Data", "التعليمة": "Announcement", "التفاصيل": "Details", "الرئيسية": "Home", "السيارات": "Ambulances", "الصلاحية": "Expiry", "الفحوصات": "Inspections", "المرفقات": "Attachments", "المرفوضة": "Rejected", "المسارات": "Pathways", "المعتمدة": "Approved", "المفتوحة": "Open", "المنتهية": "Closed", "المُبلّغ": "Reported by", "تفعيلاتي": "My activations", "تم الحذف": "Deleted", "تم الحفظ": "Saved", "تم اليوم": "Done today", "حذف بلاغ": "Deleted report", "خطأ مهني": "Professional error", "رباط شاش": "Gauze bandage", "لدي حساب": "I have an account", "لكل عنصر": "For each item", "لم يُفحص": "Not checked", "مسار آخر": "Other pathway", "من تاريخ": "From date", "يوجد خلل": "Defective", "آخر فحص": "Last check", "أو صورة": "or image", "إعدادات": "settings", "اختياري": "optional", "الأدوية": "Medications", "الأرشيف": "Archive", "الأقسام": "Sections", "الإجراء": "Action", "الإدارة": "Admin", "الإيميل": "Email", "التاريخ": "Date", "الدقائق": "Minutes", "السيارة": "Ambulance", "القائمة": "List", "القوائم": "Lists", "المطلوب": "Required", "المعلقة": "Pending", "الموجود": "Present", "النقالة": "Stretcher", "النواقص": "Shortages", "تم الحل": "Resolved", "تم حلها": "Resolved", "دكستروز": "Dextrose", "فحوصاتي": "My checks", "قسم سري": "Confidential section", "لا جديد": "Nothing new", "لا يوجد": "None", "أسبرين": "Aspirin", "أضافها": "Added by", "أولوية": "Priority", "إيميلك": "Your email", "استخدم": "Use", "اعتماد": "Approve", "الأقصى": "max", "الحالة": "Status", "الخروج": "Checkout", "الدواء": "Drug", "الزميل": "colleague", "الشنطة": "Bag", "العربة": "Cart", "العنصر": "Item", "الفريق": "Team", "الكمية": "Quantity", "المسعف": "Paramedic", "المصدر": "Source", "المكيف": "Air conditioning", "الموظف": "Employee", "الناشر": "Published by", "بلاستر": "Adhesive tape", "سيارات": "ambulances", "صور أو": "Images or", "طلباتي": "My requests", "قفازات": "Gloves", "لسيارة": "for ambulance", "للعربة": "for cart", "متوسطة": "Medium", "مراجعة": "Review", "مستخدم": "User", "معدّلة": "Edited", "مفتوحة": "open", "ملاحظة": "Note", "منخفضة": "Low", "نوفمبر": "November", "أدوية": "medications", "أرشيف": "Archive", "أهلًا": "Welcome", "إخفاء": "Hide", "إضافة": "Add", "إغلاق": "Close", "إلغاء": "Cancel", "احفظه": "Save it as", "الاسم": "Name", "السبب": "Reason", "الشفت": "Shift", "الشهر": "Month", "النوع": "Type", "الوصف": "Description", "الوقت": "Time", "اليوم": "Today", "بلاغ،": "reports,", "تحميل": "Download", "تصدير": "Export", "تصوير": "Take photo", "تعديل": "Edit", "تفعيل": "Activate", "حدّثه": "Updated by", "دقيقة": "minute", "ساعات": "hours", "صباحي": "Morning", "عالية": "High", "فعّال": "Active", "قرأها": "Read by", "قراءة": "Read", "قُدّم": "Submitted", "متوفر": "Available", "مرفوض": "Rejected", "مسؤول": "Admin", "مسائي": "Evening", "مستقل": "file", "مطلوب": "required", "معتمد": "Approved", "منتهي": "Expired", "موقوف": "Suspended", "نوبته": "Their shift", "أخرى": "Other", "أرفض": "Decline", "أيام": "days", "افتح": "Open", "الكل": "All", "تالف": "Damaged", "جاهز": "Ready", "جدول": "schedule", "حرجة": "Critical", "خروج": "Sign out", "دخول": "Sign in", "زائر": "Guest", "ساعة": "hours", "سجلي": "My Record", "سليم": "Good", "شكوى": "Complaint", "شنطة": "bag", "فحص،": "checks,", "كامل": "full", "كبير": "large", "لديك": "You have", "مثال": "e.g.", "مرفق": "Attachment", "مسعف": "Paramedic", "ملغي": "Cancelled", "موظف": "Employee", "ناقص": "Missing", "نوبة": "Shift of", "نُشر": "Published", "يوجد": "There are", "آخر": "last", "أنت": "You", "إلى": "to", "حجم": "size", "حذف": "Delete", "رفض": "Reject", "سجل": "record", "شاش": "Gauze", "فتح": "Open", "فحص": "check", "كان": "was", "ملف": "file", "نعم": "Yes", "أو": "or", "من": "from", "سجّل الحالة التي عاد فيها النبض بعد الإنعاش، وأرفق الورقة المعتمدة": "Record a case where pulse returned after resuscitation, and attach the approved sheet", "تُحسب الحالة لك ولكل زميل تختاره من المشاركين": "The case counts for you and every colleague you select as a participant", "لا توجد حالات في هذه الفترة": "No cases in this period", "أرفق الورقة لتفعيل التسجيل": "Attach the sheet to enable saving.", "حالة عاد فيها النبض معك": "cases with return of pulse", "عدد الحالات لكل مسعف": "Cases per paramedic", "المشاركون في الحالة": "Participants in the case", "تسجيل حالة عودة نبض": "Record a ROSC case", "لم تُسجّل حالات بعد": "No cases recorded yet.", "إجمالي حالات القسم": "Department total", "تاريخ ووقت الحالة": "Case date and time", "لا توجد حالات هنا": "No cases here.", "منذ بداية التسجيل": "since recording began", "حالات عودة النبض": "ROSC Cases", "تم تسجيل الحالة": "Case recorded", "الورقة المرفقة": "Attached sheet", "تاريخ التسجيل": "Recorded at", "لا توجد حالات": "No cases", "الورقة مرفقة": "Sheet attached", "تسجيل الحالة": "Record case", "عدد الحالات": "Cases", "تسجيل حالة": "Recorded case", "فتح الورقة": "Open sheet", "كل الحالات": "All cases", "المشاركون": "Participants", "حالة معك": "cases with you", "حذف حالة": "Deleted case", "ملاحظات": "Notes", "الورقة": "Sheet", "حالاتك": "Your cases", "حالاتي": "My cases", "حالات": "Cases", "المطلوب:": "Required:", "آخر فحص:": "Last check:", "قرأها:": "Read by:", "لم يقرأها:": "Not read by:", "المرفقات:": "Attachments:", "النموذج المرفق:": "Attached form:"};
+Object.assign(I18N, {"العمليات الميدانية": "Field Operations", "الملاحظات والصيانة": "Notes & Maintenance", "خدمات الموظفين": "Staff Services", "التعاميم والإقرارات": "Circulars", "ملفي": "My Profile", "قطاعي": "My Sector", "قطاع المسجد النبوي": "Prophet's Mosque Sector", "قطاع المركزية": "Central Sector", "قطاع أحد": "Uhud Sector", "العيادة": "Clinic", "عربات القولف": "Golf carts", "إسعاف الحرم والفحوصات": "Haram ambulance & checks", "قباء": "Quba", "فحص عربات القولف": "Golf Cart Checks", "فحص سيارات الإسعاف": "Ambulance Checks", "فحص الشنط والمعدات الطبية": "Medical Bags & Equipment", "تسجيل حالات ROSC": "ROSC Cases", "قطاعك": "Your sector", "القطاع": "Sector", "فحص اليوم": "checks today", "مسار اليوم": "pathways today", "ROSC هذا الشهر": "ROSC this month", "اختر القطاع قبل التسجيل": "Choose the sector before saving", "كل فحص أو تفعيل يُسجَّل باسمك ورقمك الوظيفي والقطاع والتاريخ، وتبقى السجلات السابقة محفوظة.": "Every check or activation is saved with your name, employee number, sector and date. Past records are kept.", "طلبات تبديل النوبات": "Shift Swap Requests", "ساعات الخروج والاستئذان": "Checkout & Leave Hours", "تفضيلات الجداول الشهرية": "Monthly Preferences", "طلبات استخدام التايم باك": "Time-back Requests", "ضمن المرحلة الثانية": "Coming in phase 2", "صفحة موحدة لجميع القطاعات. تُرسل الطلبات للاعتماد (المسؤول أو مشرف القطاع)، ويُحفظ سجل كامل للموافقات.": "One page for all sectors. Requests go to the admin or sector supervisor for approval, with a full approval log.", "اربط حسابك برقمك الوظيفي": "Link your account to your employee number", "ربط الحساب": "Link account", "الرقم الوظيفي": "Employee No.", "ربط الآن": "Link now", "حالة الربط": "Link status", "مربوط بالقائمة المرجعية": "Linked to reference list", "غير مربوط": "Not linked", "مربوط": "Linked", "التعاميم والإقرارات الموقعة": "Signed circulars & acknowledgments", "الساعات والأوفر تايم والتايم باك": "Hours, overtime & time-back", "ملف الموظف": "Employee profile", "المسمى": "Title", "التعاميم والإقرارات الإدارية": "Administrative Circulars & Acknowledgments", "تعاميمي": "My circulars", "لوحة المتابعة": "Tracking board", "متابعة قطاعي": "My sector tracking", "تعميم جديد": "New circular", "نسخة محدثة": "New version", "الأرشيف": "Archive", "بانتظار اطلاعك وتوقيعك": "Waiting for you to read and sign", "تم توقيعها أو الإقرار بها": "Signed or acknowledged", "لا توجد تعاميم بانتظارك.": "No circulars waiting for you.", "تعميم إداري": "Administrative circular", "تعليمات تشغيلية": "Operational instructions", "إقرار بالاطلاع والالتزام": "Acknowledgment & commitment", "سياسة داخلية": "Internal policy", "نموذج يتطلب توقيع الموظفين": "Form requiring staff signature", "لم يطلع على التعميم": "Not opened", "تم الاطلاع ولم يتم التوقيع": "Opened, not signed", "تم التوقيع": "Signed", "تم التوقيع بعد الموعد": "Signed after deadline", "تأخر عن الموعد المحدد": "Past deadline", "تم الإقرار": "Acknowledged", "تم الاطلاع ولم يتم التأكيد": "Opened, not confirmed", "التوقيع والإقرار": "Sign & acknowledge", "التوقيع الإلكتروني": "Electronic signature", "تأكيد التوقيع": "Confirm signature", "مسح التوقيع": "Clear signature", "اسم الموظف": "Employee name", "مرجع التعميم": "Circular reference", "تاريخ ووقت التوقيع": "Signature date & time", "ارسم توقيعك داخل المربع بإصبعك أو بالقلم أو بالماوس.": "Draw your signature in the box with your finger, pen or mouse.", "تنزيل النسخة الموقعة": "Download signed copy", "فتح / طباعة": "Open / Print", "فتح ملف PDF الأصلي": "Open original PDF", "متابعة التوقيعات": "Track signatures", "عنوان التعميم": "Circular title", "الوصف": "Description", "النوع": "Type", "تاريخ الإصدار": "Issue date", "الموعد النهائي (اختياري)": "Deadline (optional)", "الموعد النهائي": "Deadline", "الإجراء المطلوب من الموظف": "Required action", "توقيع إلكتروني على المستند": "E-signature on document", "اطلاع وتأكيد فقط": "Read & confirm only", "المستند": "Document", "رفع ملف PDF": "Upload PDF", "كتابة التعميم داخل المنصة": "Write in the platform", "اختيار ملف PDF": "Choose PDF", "تغيير الملف": "Change file", "مكان التوقيع": "Signature placement", "نص التعميم": "Circular text", "معاينة PDF": "Preview PDF", "الموظفون المستهدفون": "Target staff", "جميع الموظفين": "All staff", "قطاع معين": "Specific sector", "مجموعة محددة": "Specific group", "موظف مستهدف": "targeted staff", "نشر التعميم": "Publish circular", "النشطة": "Active", "مستهدف": "targeted", "وقّع": "signed", "متبقٍ": "remaining", "متأخر": "late", "المستهدفون": "Targeted", "الموقعون": "Signed", "المتبقون": "Remaining", "نسبة الاكتمال": "Completion", "إرسال تذكير لغير الموقعين": "Remind non-signers", "كشف التوقيع Excel": "Signature sheet Excel", "تقرير الالتزام PDF": "Compliance report PDF", "تنزيل جميع النسخ الموقعة": "Download all signed copies", "عرض المستند": "View document", "إصدار نسخة محدثة": "Issue new version", "إغلاق التعميم": "Close circular", "لم يوقعوا": "Not signed", "وقّعوا": "Signed", "الاطلاع": "Opened", "التوقيع": "Signed at", "تذكير / إعادة إرسال": "Remind / resend", "تقرير الالتزام بالتوقيع": "Signature compliance report", "قاعدة الموظفين": "Staff Directory", "استيراد القائمة": "Import list", "لصق القائمة": "Paste list", "معاينة": "Preview", "إضافة موظف": "Add employee", "الاسم الكامل": "Full name", "القائمة المرجعية": "Reference list", "فصل الربط": "Unlink", "طلبات ربط بانتظار المراجعة": "Link requests to review", "اعتماد الربط": "Approve link", "حسابات مسجلة بلا رقم وظيفي": "Registered accounts without employee No.", "اعتماد الاستيراد": "Apply import", "الحساب المطابق": "Matched account", "جديد": "New", "موجود ومطابق": "Exists & matches", "اختلاف في الاسم": "Name differs", "رقم وظيفي مكرر في الملف": "Duplicate number in file", "بيانات ناقصة": "Missing data", "الاسم مسجّل برقم آخر": "Name registered under another number", "اسم مكرر في الملف": "Duplicate name in file", "تخطي": "Skip", "تحديث الاسم": "Update name", "إضافة رغم ذلك": "Add anyway", "لا تغيير": "No change", "مشرف قطاع": "Sector supervisor", "جعله مشرف قطاع": "Make sector supervisor", "موظفو القطاع": "Sector staff", "إسعاف الحياة": "Al Hayat EMS", "المرجع": "Ref", "رمز التحقق": "Verification code", "موقّع إلكترونيًا": "Electronically signed", "صفحة التوقيع والإقرار": "Signature & acknowledgment page", "توقيع وإقرار إلكتروني": "Electronic signature & acknowledgment", "إقرار بالاطلاع": "Acknowledgment of reading", "أقر أنا الموقع أدناه بأنني اطلعت على": "I, the undersigned, confirm that I have fully read", "اطلاعًا كاملًا، وأن هذا توقيعي الإلكتروني، وألتزم بما ورد فيه.": ", that this is my electronic signature, and that I commit to its content.", "بصمة المستند الأصلي SHA-256": "Original document SHA-256", "سُجّلت عملية التوقيع من حساب الموظف نفسه، مع الوقت من الخادم وسجل تدقيق إلكتروني.": "Signed from the employee's own account, with server time and an electronic audit log.", "خانة توقيع الموظف — تُملأ تلقائيًا عند التوقيع الإلكتروني": "Employee signature box — filled automatically on e-signing", "جارٍ تجهيز الملف…": "Preparing file…", "تحميل PDF": "Download PDF"});
 const I18N_RE = (() => { const ks = Object.keys(I18N).sort((a,b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   return new RegExp('(^|[^\\u0600-\\u06FF])(' + ks.join('|') + ')(?![\\u0600-\\u06FF])', 'g'); })();
 function tr(str){
@@ -320,7 +318,7 @@ async function uploadFile(file, col){
 const lsGet = k => { try { return localStorage.getItem(k); } catch(e) { return null; } };
 const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(e) {} };
 
-function nm(id){ if(!id) return '—'; const u = S.users[id]; if(id===S.uid) return S.myName || (u && u.name) || 'أنت'; return (u && u.name) || 'موظف'; }
+function nm(id){ if(!id) return '—'; const u = S.users[id]; if(id===S.uid) return S.myName || (u && u.name) || 'أنت'; return (u && (u.officialName || u.name)) || 'موظف'; }
 function ensureNames(){}
 function toast(msg){ const t = document.getElementById('toast'); t.textContent = tr(msg); t.hidden = false; clearTimeout(S.tt); S.tt = setTimeout(()=>t.hidden = true, 3200); }
 function failMsg(e){ console.error(e); toast(e && e.code==='resource-exhausted' ? 'تجاوزتم الحد اليومي المجاني. حاول غدًا أو احذف ملفات قديمة.' : e && e.code==='permission-denied' ? 'ليست لديك صلاحية لهذا الإجراء.' : e && e.code==='unavailable' ? 'لا يوجد اتصال بالإنترنت. أعد المحاولة.' : 'تعذّر الحفظ. أعد المحاولة.'); }
@@ -372,22 +370,23 @@ function bagAlerts(){
 /* ---------- render ---------- */
 function navList(){
   if(S.maint) return [['mcheck','فحص الصيانة'],['mreports','بلاغات الصيانة'],['mhistory','فحوصاتي']];
-  const v = [['home','الرئيسية'],['schedule','المناوبات'],['prefs','تفضيلات المناوبات'],['announcements','التعليمات'],['vehicle','فحص السيارة'],['bags','فحص الشنط'],['golf','فحص القولف'],['pathways','تفعيل المسارات'],['rosc','حالات ROSC'],['reports','بلاغات الصيانة'],['swaps','تبديل النوبات'],['checkout','ساعة خروج'],['history','سجلي']];
+  const v = [['home','الرئيسية'],['ops','العمليات الميدانية'],['reports','الملاحظات والصيانة'],['services','خدمات الموظفين'],['circulars','التعاميم والإقرارات'],['schedule','المناوبات'],['announcements','التعليمات'],['profile','ملفي']];
+  if(S.sup) v.push(['sector','قطاعي']);
   if(S.admin) v.push(['admin','الإدارة']);
   return v;
 }
 function renderTabs(){
-  const badges = { mreports: S.maint ? S.reports.filter(r => r.status==='pending').length : 0, announcements: unreadAnns().length, schedule: newSchedule() ? 1 : 0, reports: S.admin ? openReports().length : 0, swaps: swapsNeedingMe().length, checkout: S.admin ? pendingCheckouts().length : 0 };
+  const badges = { mreports: S.maint ? S.reports.filter(r => r.status==='pending').length : 0, announcements: unreadAnns().length, schedule: newSchedule() ? 1 : 0, reports: S.admin ? openReports().length : 0, swaps: swapsNeedingMe().length, checkout: S.admin ? pendingCheckouts().length : 0, services: swapsNeedingMe().length + ((S.admin||S.sup) ? pendingCheckouts().length : 0), circulars: myPendingCircs().length, admin: (S.linkreqs||[]).filter(x => x.status==='pending').length };
   document.getElementById('tabs').innerHTML = navList().map(([k,l]) =>
-    `<button class="tab" data-act="go" data-v="${k}" aria-current="${S.view===k}">${l}${badges[k]?`<span class="badge">${badges[k]}</span>`:''}</button>`).join('');
+    `<button class="tab" data-act="go" data-v="${k}" aria-current="${S.view===k || PARENT[S.view]===k}">${l}${badges[k]?`<span class="badge">${badges[k]}</span>`:''}</button>`).join('');
 }
 function render(){
   const a = document.activeElement, fid = a && a.id;
   let ss=null, se=null; try { ss = a.selectionStart; se = a.selectionEnd; } catch(e){}
   S.seen = [];
-  document.getElementById('whoName').textContent = S.uid ? (S.myName || 'مستخدم') + (S.admin ? ' · مسؤول' : S.maint ? ' · صيانة' : ' · مسعف') : 'زائر';
+  document.getElementById('whoName').textContent = S.uid ? (S.myName || 'مستخدم') + (S.admin ? ' · مسؤول' : S.maint ? ' · صيانة' : S.sup ? ' · مشرف قطاع' : ' · مسعف') : 'زائر';
   renderTabs();
-  const V = {home:vHome, prefs:vPrefs, rosc:vRosc, golf:vGolf, pathways:vPathways, checkout:vCheckout, swaps:vSwaps, schedule:vSchedule, announcements:vAnns, vehicle:vVehicle, bags:vBags, reports:vReports, history:vHistory, admin:vAdmin};
+  const V = {home:vHome, prefs:vPrefs, rosc:vRosc, golf:vGolf, pathways:vPathways, checkout:vCheckout, swaps:vSwaps, schedule:vSchedule, announcements:vAnns, vehicle:vVehicle, bags:vBags, reports:vReports, history:vHistory, admin:vAdmin, ops:vOps, services:vServices, circulars:vCirculars, profile:vProfile, sector:vSector};
   let html;
   document.getElementById('outBtn').hidden = !S.authUser;
   document.getElementById('tabs').hidden = !S.uid;
@@ -400,6 +399,7 @@ function render(){
   document.getElementById('view').innerHTML = html;
   if(fid){ const n = document.getElementById(fid); if(n && n !== document.activeElement){ n.focus({preventScroll:true}); try { if(ss!=null) n.setSelectionRange(ss,se); } catch(e){} } }
   const lb = document.getElementById('langBtn'); if(lb) lb.textContent = LANG === 'en' ? 'العربية' : 'English';
+  if(S.ready && !S.maint && S.uid) v7After();
   applyLang(document.getElementById('app'));
   if(S.maint){ notifyNew(); if(S.ui.askNotif && S.ready && !document.getElementById('notifBan')){ const v = document.getElementById('view'); v.insertAdjacentHTML('afterbegin', `<div class="banner" id="notifBan"><span>${tr('فعّل التنبيهات لتصلك البلاغات الجديدة أثناء فتح المنصة')}</span><button class="btn sm" data-act="notifOn">${tr('تفعيل')}</button></div>`); } }
   hydrate();
@@ -418,6 +418,7 @@ function vHome(){
   const banners = [];
   if(newSchedule()) banners.push(`<div class="banner"><span>نُشر جدول مناوبات جديد: <b>${esc(sch.month)}</b></span><button class="btn sm" data-act="go" data-v="schedule">عرض الجدول</button></div>`);
   if(un.length) banners.push(`<div class="banner warn"><span>لديك <b class="num">${un.length}</b> ${un.length===1?'تعليمة جديدة لم تؤكد قراءتها':'تعليمات جديدة لم تؤكد قراءتها'}</span><button class="btn sm" data-act="go" data-v="announcements">قراءة</button></div>`);
+  v7Banners().forEach(x => banners.push(x));
   schedBanners().forEach(x => banners.push(x));
   const swN = swapsNeedingMe().length;
   if(swN) banners.push(`<div class="banner warn"><span>${S.admin ? `<b class="num">${swN}</b> طلب تبديل نوبة بانتظار اعتمادك` : `<b class="num">${swN}</b> طلب تبديل نوبة بانتظار موافقتك`}</span><button class="btn sm" data-act="go" data-v="swaps">مراجعة</button></div>`);
@@ -427,6 +428,7 @@ function vHome(){
   if(S.admin && critical.length) banners.push(`<div class="banner bad"><span><b class="num">${critical.length}</b> بلاغ صيانة بأولوية عالية أو حرجة مفتوح</span><button class="btn sm" data-act="go" data-v="reports">مراجعة</button></div>`);
   const tile = (v, ar, en, meta) => `<button class="tile" data-act="go" data-v="${v}"><span class="en">${en}</span><b>${ar}</b><span class="meta">${meta}</span></button>`;
   const tiles = [
+    ...v7Tiles(tile),
     tile('prefs','تفضيلات المناوبات','Shift Preferences', prefOpenNow() ? (S.myPref ? chip('تم الإرسال','ok') : chip('الفترة مفتوحة','warn')) : chip('الفترة مغلقة','neutral')),
     tile('schedule','جدول المناوبات','Duty Schedule', sch ? `<span class="muted small">${esc(sch.month)}</span>` : chip('لا يوجد جدول','neutral')),
     tile('announcements','الإعلانات والتعليمات','Announcements', un.length ? chip(un.length+' غير مقروءة','warn') : chip('لا جديد','ok')),
@@ -627,10 +629,11 @@ function inspCard(i, showBy){
 function doneLine(r){ return r.doneBy ? `<span class="muted small">أنهاه <span translate="no">${esc(nm(r.doneBy))}</span> · ${fmtDT(r.doneAt)}${r.doneNote ? ` · <span translate="no">${esc(r.doneNote)}</span>` : ''}</span>` : ''; }
 function vReports(){
   const f = S.ui.repFilter;
-  let list = S.admin ? S.reports : S.reports.filter(r => r.by===S.uid);
+  let list = f==='mine' ? S.reports.filter(r => r.by===S.uid) : S.reports;
   if(f==='open') list = list.filter(r => r.status!=='resolved'); else if(f==='resolved') list = list.filter(r => r.status==='resolved');
   const form = S.ui.repForm ? `<div class="card stack"><h2>بلاغ صيانة أو نقص</h2>
-    <div class="fields"><label class="f">السيارة<select id="repAmb" data-bind="repAmb">${ambulances().map(a=>`<option ${a===(S.ui.repAmb||ambulances()[0])?'selected':''}>${esc(a)}</option>`).join('')}</select></label>
+    <div class="fields"><label class="f">القطاع<select id="repSec" data-bind="repSec">${FIELD_SECTORS.concat(['clinic']).map(k => `<option value="${k}" ${k===(S.ui.repSec||S.mySector||'central')?'selected':''}>${SECTORS[k].ar}</option>`).join('')}</select></label>
+    <label class="f">السيارة / الوحدة<select id="repAmb" data-bind="repAmb"><option value="">— عام / بدون وحدة —</option>${ambulances().concat(golfCarts()).map(a=>`<option ${a===(S.ui.repAmb ?? '')?'selected':''}>${esc(a)}</option>`).join('')}</select></label>
     <label class="f">العنصر<input type="text" id="repItem" data-bind="repItem" value="${esc(S.ui.repItem||'')}" placeholder="مثال: جهاز الشفط"></label>
     <label class="f">الأولوية<select id="repPri" data-bind="repPri">${Object.entries(PRI).map(([k,v])=>`<option value="${k}" ${(S.ui.repPri||'medium')===k?'selected':''}>${v[0]}</option>`).join('')}</select></label></div>
     <label class="f">وصف المشكلة<textarea id="repDesc" data-bind="repDesc">${esc(S.ui.repDesc||'')}</textarea></label>
@@ -639,17 +642,17 @@ function vReports(){
   const items = list.map(r => {
     const next = r.status==='pending' ? ['progress','بدء التنفيذ'] : r.status==='progress' ? ['resolved','تم الحل'] : null;
     return `<div class="card rep">${r.photo?`<a href="#" data-file="${r.photo}" target="_blank" rel="noopener"><img class="thumb" data-file="${r.photo}" alt="صورة البلاغ"></a>`:''}
-      <div class="body"><div class="row">${chip(RST[r.status][0],RST[r.status][1])}${chip('أولوية '+PRI[r.priority||'medium'][0], PRI[r.priority||'medium'][1])}<span class="muted small">${esc(r.ambulance)}</span></div>
+      <div class="body"><div class="row">${chip(RST[r.status][0],RST[r.status][1])}${chip('أولوية '+PRI[r.priority||'medium'][0], PRI[r.priority||'medium'][1])}<span class="muted small">${esc(r.ambulance)}</span>${r.sector ? `<span class="muted small">· ${esc(secName(r.sector))}</span>` : ''}</div>
       <b>${esc(r.item)}</b>${r.desc?`<span translate="no">${esc(r.desc)}</span>`:''}
       <span class="muted small">${esc(nm(r.by))} · ${fmtDT(r.at)}${r.source==='inspection'?' · من فحص السيارة':''}</span>${doneLine(r)}
       ${(r.history||[]).length>1 ? `<span class="muted small">${r.history.slice(1).map(h=>`${RST[h.status][0]} ${fmtDT(h.at)} (${esc(nm(h.by))})`).join(' ← ')}</span>` : ''}
-      ${S.admin ? `<div class="row">${next?`<button class="btn sm" data-act="repStatus" data-id="${r.id}" data-v="${next[0]}">${next[1]}</button>`:''}
+      ${canDecide(r) ? `<div class="row">${next?`<button class="btn sm" data-act="repStatus" data-id="${r.id}" data-v="${next[0]}">${next[1]}</button>`:''}
         ${r.status!=='pending'?`<button class="btn sm ghost" data-act="repStatus" data-id="${r.id}" data-v="pending">إعادة فتح</button>`:''}
-        <button class="btn sm ghost danger" data-act="delRep" data-id="${r.id}">${S.ui.confirm==='rep'+r.id?'تأكيد الحذف':'حذف'}</button></div>` : ''}</div></div>`;
+        ${S.admin ? `<button class="btn sm ghost danger" data-act="delRep" data-id="${r.id}">${S.ui.confirm==='rep'+r.id?'تأكيد الحذف':'حذف'}</button>` : ''}</div>` : ''}</div></div>`;
   }).join('');
-  const fl = [['open','المفتوحة'],['resolved','تم حلها'],['all','الكل']].map(([k,l]) => `<button data-act="repFilter" data-v="${k}" aria-pressed="${f===k}">${l}</button>`).join('');
-  return `<div class="stack">${pageHead('بلاغات الصيانة والنواقص','Maintenance Reports', S.ui.repForm?'':`<button class="btn primary" data-act="toggle" data-k="repForm" data-id="1">بلاغ جديد</button>`)}
-    ${!S.admin ? '<p class="sub">تظهر هنا بلاغاتك فقط. المسؤول يتابع جميع البلاغات ويحدّث حالتها.</p>' : ''}
+  const fl = [['open','المفتوحة'],['resolved','تم حلها'],['mine','بلاغاتي'],['all','الكل']].map(([k,l]) => `<button data-act="repFilter" data-v="${k}" aria-pressed="${f===k}">${l}</button>`).join('');
+  return `<div class="stack">${pageHead('الملاحظات وبلاغات الصيانة','Notes & Maintenance Reports', S.ui.repForm?'':`<button class="btn primary" data-act="toggle" data-k="repForm" data-id="1">بلاغ جديد</button>`)}
+    <p class="sub">صفحة مشتركة لجميع الموظفين: سجّل أي عطل أو نقص أو ملاحظة تشغيلية مع صورة، وتابع حالة البلاغ حتى إغلاقه.</p>
     ${form}<div class="subtabs">${fl}</div>${list.length ? `<div class="list">${items}</div>` : '<div class="empty">لا توجد بلاغات هنا.</div>'}</div>`;
 }
 
@@ -668,7 +671,7 @@ function vHistory(){
 function vAdmin(){
   if(!S.admin) return '<div class="empty">هذه الصفحة للمسؤول فقط.</div>';
   const t = S.ui.adminTab;
-  const tabs = [['ready','الجاهزية اليومية'],['alerts','التنبيهات'],['stats','الإحصائيات'],['records','سجل الموظفين'],['adPathways','المسارات'],['adRosc','حالات ROSC'],['adCheckouts','ساعات الخروج'],['smart','الجدولة الذكية'],['mchecksAd','فحوصات الصيانة'],['team','الفريق'],['lists','القوائم'],['export','تصدير Excel'],['reset','تصفير الشهر'],['audit','سجل التدقيق']].map(([k,l]) => `<button data-act="adminTab" data-v="${k}" aria-pressed="${t===k}">${l}</button>`).join('');
+  const tabs = [['ready','الجاهزية اليومية'],['alerts','التنبيهات'],['stats','الإحصائيات'],['records','سجل الموظفين'],['adPathways','المسارات'],['adRosc','حالات ROSC'],['adCheckouts','ساعات الخروج'],['staffDir','قاعدة الموظفين'],['smart','الجدولة الذكية'],['mchecksAd','فحوصات الصيانة'],['team','الفريق'],['lists','القوائم'],['export','تصدير Excel'],['reset','تصفير الشهر'],['audit','سجل التدقيق']].map(([k,l]) => `<button data-act="adminTab" data-v="${k}" aria-pressed="${t===k}">${l}</button>`).join('');
   let body = '';
   if(t==='ready'){
     const d = S.ui.readyDate || today();
@@ -683,6 +686,7 @@ function vAdmin(){
       ${meds.length ? `<div class="tbl-wrap"><table><thead><tr><th>السيارة</th><th>الدواء</th><th>الحالة</th><th>الكمية</th><th>الصلاحية</th><th>آخر فحص</th></tr></thead><tbody>${meds.map(m=>`<tr><td>${esc(m.amb)}</td><td><b>${esc(m.it.name)}</b></td><td>${chip(ST[m.it.status][0],ST[m.it.status][1])}</td><td class="num">${m.it.qty}/${m.it.req}</td><td>${esc(expLabel(m.it.exp))}</td><td>${fmtDT(m.insp.at)}<span class="tiny">${esc(nm(m.insp.by))}</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لا تنبيهات أدوية.</div>'}
       <h2>نواقص الشنط</h2>${bags.length ? `<div class="tbl-wrap"><table><thead><tr><th>السيارة</th><th>الشنطة</th><th>العنصر</th><th>الحالة</th><th>آخر فحص</th></tr></thead><tbody>${bags.map(b=>`<tr><td>${esc(b.amb)}</td><td>${TYPES[b.type]}</td><td><b>${esc(b.it.name)}</b>${b.it.note?`<span class="tiny">${esc(b.it.note)}</span>`:''}</td><td>${chip(ST[b.it.status][0],ST[b.it.status][1])}</td><td>${fmtDT(b.insp.at)}<span class="tiny">${esc(nm(b.insp.by))}</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لا نواقص في الشنط.</div>'}
       <h2>بلاغات عالية الأولوية</h2>${hi.length ? `<div class="list">${hi.map(r=>`<div class="card flat row"><span class="grow"><b>${esc(r.item)}</b> <span class="muted small">· ${esc(r.ambulance)} · ${fmtDT(r.at)}</span></span>${chip(PRI[r.priority][0],PRI[r.priority][1])}${chip(RST[r.status][0],RST[r.status][1])}</div>`).join('')}</div>` : '<div class="empty">لا بلاغات عالية الأولوية مفتوحة.</div>'}`;
+  } else if(t==='staffDir'){ body = vStaffDir();
   } else if(t==='team'){
     const users = Object.entries(S.users).map(([id,u]) => Object.assign({id}, u)).sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ar'));
     const regEmails = new Set(users.map(u => (u.email||'').toLowerCase()));
@@ -697,7 +701,7 @@ function vAdmin(){
       ${users.length ? `<div class="list">${users.map(u => { const li = S.insp.find(x => x.by===u.id); return `<div class="card flat stack" style="gap:8px"><div class="row"><span class="grow"><b translate="no">${esc(u.name||'—')}</b> <span class="mono small muted">${esc(u.email||'')}</span>${(u.nameHistory||[]).length ? `<span class="tiny">غيّر اسمه ${fmtD(lastNameChange(u).at.slice(0,10))} · كان: <span translate="no">${esc(lastNameChange(u).from)}</span></span>` : ''}</span>
         ${u.active===false ? chip('موقوف','bad') : chip((ROLES[u.role]||ROLES.paramedic)[0], (ROLES[u.role]||ROLES.paramedic)[1])}</div>
         <div class="row small"><span class="muted grow">آخر فحص: ${li ? fmtDT(li.at) : 'لا يوجد'}</span>
-        ${u.id!==S.uid ? `${[['paramedic','جعله مسعفًا'],['maintenance','جعله صيانة'],['admin','جعله مسؤولًا']].filter(([r]) => r !== (u.role||'paramedic')).map(([r,l]) => `<button class="btn sm ghost" data-act="setRole" data-id="${u.id}" data-v="${r}">${l}</button>`).join('')}
+        ${u.id!==S.uid ? `${[['paramedic','جعله مسعفًا'],['supervisor','جعله مشرف قطاع'],['maintenance','جعله صيانة'],['admin','جعله مسؤولًا']].filter(([r]) => r !== (u.role||'paramedic')).map(([r,l]) => `<button class="btn sm ghost" data-act="setRole" data-id="${u.id}" data-v="${r}">${l}</button>`).join('')}
         ${u.active===false ? `<button class="btn sm" data-act="setActive" data-id="${u.id}" data-v="1">تفعيل</button>` : `<button class="btn sm ghost danger" data-act="setActive" data-id="${u.id}" data-v="0">إيقاف الحساب</button>`}` : '<span class="muted">أنت</span>'}</div></div>`; }).join('')}</div>` : '<div class="empty">لا يوجد أعضاء بعد.</div>'}
       <p class="sub">إيقاف الحساب يمنع صاحبه من الدخول فورًا. لحذف حساب نهائيًا افتح Firebase ← Authentication.</p>`;
   } else if(t==='lists'){
@@ -772,7 +776,7 @@ function vAdmin(){
 /* ---------- shift swaps ---------- */
 function swapsNeedingMe(){
   if(!S.uid) return [];
-  return S.swaps.filter(w => S.admin ? w.status==='pending_admin' : (w.status==='pending_partner' && w.partner===S.uid));
+  return S.swaps.filter(w => S.admin ? w.status==='pending_admin' : ((w.status==='pending_partner' && w.partner===S.uid) || (w.status==='pending_admin' && isSupFor(w.sector))));
 }
 function fileLink(f, label){
   if(!f || !f.id) return '';
@@ -793,7 +797,7 @@ function swapCard(w){
   let acts = '';
   if(partner && w.status==='pending_partner') acts += `<button class="btn primary sm" data-act="swapPartner" data-id="${w.id}" data-v="pending_admin">أوافق على التبديل</button><button class="btn sm ghost danger" data-act="swapPartner" data-id="${w.id}" data-v="declined">أرفض</button>`;
   if(mine && (w.status==='pending_partner' || w.status==='pending_admin')) acts += `<button class="btn sm ghost" data-act="swapCancel" data-id="${w.id}">${S.ui.confirm==='swc'+w.id?'تأكيد الإلغاء':'إلغاء الطلب'}</button>`;
-  if(S.admin && w.status!=='approved' && w.status!=='rejected' && w.status!=='cancelled') acts += `<button class="btn primary sm" data-act="swapAdmin" data-id="${w.id}" data-v="approved">اعتماد</button><button class="btn sm ghost danger" data-act="swapAdmin" data-id="${w.id}" data-v="rejected">رفض</button>`;
+  if(canDecide(w) && (S.admin ? (w.status!=='approved' && w.status!=='rejected' && w.status!=='cancelled') : w.status==='pending_admin')) acts += `<button class="btn primary sm" data-act="swapAdmin" data-id="${w.id}" data-v="approved">اعتماد</button><button class="btn sm ghost danger" data-act="swapAdmin" data-id="${w.id}" data-v="rejected">رفض</button>`;
   if(S.admin) acts += `<button class="btn sm ghost danger" data-act="swapDelete" data-id="${w.id}">${S.ui.confirm==='swd'+w.id?'تأكيد الحذف':'حذف'}</button>`;
   return `<div class="card stack" style="gap:8px"><div class="row"><span class="grow"><b>${esc(nm(w.by))}</b> ⇄ <b>${esc(nm(w.partner))}</b></span>${chip(st[0], st[1])}</div>
     <div class="kv"><dt>نوبة ${esc(nm(w.by))}</dt><dd>${fmtD(w.myDate)} · ${SHIFTS[w.myShift]||''}</dd>
@@ -802,7 +806,7 @@ function swapCard(w){
     ${w.adminNote ? `<dt>ملاحظة المسؤول</dt><dd translate="no">${esc(w.adminNote)}</dd>` : ''}</div>
     ${w.form ? `<div class="row small"><span class="muted">النموذج المرفق:</span>${fileLink(w.form, 'فتح النموذج')}</div>` : ''}
     <span class="muted small">قُدّم ${fmtDT(w.at)}${(w.history||[]).length>1 ? ' · ' + w.history.slice(1).map(h => `${(SW[h.status]||[h.status])[0]} ${fmtDT(h.at)} (${esc(nm(h.by))})`).join(' ← ') : ''}</span>
-    ${S.admin && w.status!=='approved' && w.status!=='rejected' && w.status!=='cancelled' ? `<input type="text" id="swn-${w.id}" data-bind="swn_${w.id}" placeholder="ملاحظة للطلب (اختياري)" value="${esc(S.ui['swn_'+w.id]||'')}">` : ''}
+    ${canDecide(w) && w.status!=='approved' && w.status!=='rejected' && w.status!=='cancelled' ? `<input type="text" id="swn-${w.id}" data-bind="swn_${w.id}" placeholder="ملاحظة للطلب (اختياري)" value="${esc(S.ui['swn_'+w.id]||'')}">` : ''}
     ${acts ? `<div class="row">${acts}</div>` : ''}</div>`;
 }
 function vSwaps(){
@@ -828,7 +832,7 @@ function vSwaps(){
     <p class="sub">يصل الطلب لزميلك ليوافق عليه، ثم للمسؤول ليعتمده.</p></div>` : '';
   const needMe = swapsNeedingMe();
   const filt = S.ui.swFilter || 'open';
-  let list = S.admin ? S.swaps : S.swaps.filter(w => w.by===S.uid || w.partner===S.uid);
+  let list = S.admin ? S.swaps : S.swaps.filter(w => w.by===S.uid || w.partner===S.uid || isSupFor(w.sector));
   if(filt==='open') list = list.filter(w => w.status==='pending_partner' || w.status==='pending_admin');
   else if(filt==='done') list = list.filter(w => !(w.status==='pending_partner' || w.status==='pending_admin'));
   const fl = [['open','المعلقة'],['done','المنتهية'],['all','الكل']].map(([k,l]) => `<button data-act="swFilter" data-v="${k}" aria-pressed="${filt===k}">${l}</button>`).join('');
@@ -927,6 +931,7 @@ async function runExport(b, from, to, fname, full){
     if(full) add(schedRows, 'جداول المناوبات', 'لا توجد جداول في هذه الفترة');
     add(team, 'الفريق', 'لا يوجد أعضاء');
     if(full) add(listRows, 'قوائم الفحص', 'لا توجد قوائم');
+    if(full){ add(staffRows(), 'قاعدة الموظفين', 'لا يوجد موظفون'); add(circListRows(S.circs), 'التعاميم', 'لا توجد تعاميم'); add(csigRows(S.csigs), 'توقيعات التعاميم', 'لا توجد توقيعات'); }
     add(audRows, 'سجل التدقيق', 'لا توجد إجراءات في هذه الفترة');
     XLSX.writeFile(wb, fname);
     audit('تصدير Excel', fname);
@@ -978,7 +983,7 @@ function vPathways(){
   const f = S.ui.pw || {};
   const ok = (f.caseNo||'').trim() && f.type && (f.type!=='other' || (f.other||'').trim()) && S.uid;
   const types = Object.entries(PW).map(([k,v]) => `<button data-act="pwType" data-v="${k}" class="${f.type===k?'on '+v[2]:''}" aria-pressed="${f.type===k}">${v[0]}</button>`).join('');
-  return `<div class="stack">${pageHead('تفعيل المسارات الطبية','Pathway Activation')}
+  return `<div class="stack">${secPicker()}${pageHead('تفعيل المسارات الطبية','Pathway Activation')}
     <div class="card stack"><h2>توثيق تفعيل مسار</h2>
       <div class="fields"><label class="f">الموظف<input type="text" id="pwName" value="${esc(S.myName||'')}" disabled></label>
       <label class="f">رقم البلاغ (Case Number)<input type="text" id="pwCase" data-pw="caseNo" inputmode="numeric" dir="ltr" value="${esc(f.caseNo||'')}" autocomplete="off"></label></div>
@@ -1012,7 +1017,7 @@ function pathwaysList(admin){
 }
 
 /* ---------- delayed checkout ---------- */
-function pendingCheckouts(){ return S.checkouts.filter(c => c.status==='pending'); }
+function pendingCheckouts(){ return S.checkouts.filter(c => c.status==='pending' && (S.admin || isSupFor(c.sector))); }
 function vCheckout(){
   const f = S.ui.co || {};
   const date = f.date || today(), mins = coMinutes(f.shiftEnd, f.actualEnd);
@@ -1029,13 +1034,14 @@ function vCheckout(){
     <div class="row">${mins > 0 ? chip('مدة التأخير ' + fmtMin(mins) + ' ساعة', 'info') : (f.shiftEnd && f.actualEnd ? chip('وقت الانتهاء الفعلي يساوي نهاية الدوام','bad') : '')}
       <button class="btn primary" data-act="coSubmit" ${ok?'':'disabled'}>إرسال الطلب</button></div></div>`;
   return `<div class="stack">${pageHead('طلب ساعة خروج','Delayed Checkout Request')}${form}
+    ${S.sup && !S.admin ? (() => { const sl = S.checkouts.filter(c => isSupFor(c.sector) && c.by!==S.uid); return sl.length ? `<h2>طلبات قطاعي</h2><div class="list">${sl.map(coCard).join('')}</div>` : ''; })() : ''}
     ${S.admin ? checkoutList(true) : `<h2>طلباتي</h2>${mine.length ? `<div class="list">${mine.map(coCard).join('')}</div>` : '<div class="empty">لا توجد طلبات سابقة.</div>'}`}</div>`;
 }
 function coCard(c){
   const st = CO[c.status] || [c.status,'neutral'];
   let acts = '';
   if(c.by===S.uid && c.status==='pending') acts += `<button class="btn sm ghost" data-act="coCancel" data-id="${c.id}">${S.ui.confirm==='coc'+c.id?'تأكيد الإلغاء':'إلغاء الطلب'}</button>`;
-  if(S.admin && c.status==='pending') acts += `<button class="btn primary sm" data-act="coAdmin" data-id="${c.id}" data-v="approved">اعتماد</button><button class="btn sm ghost danger" data-act="coAdmin" data-id="${c.id}" data-v="rejected">رفض</button>`;
+  if(canDecide(c) && c.status==='pending') acts += `<button class="btn primary sm" data-act="coAdmin" data-id="${c.id}" data-v="approved">اعتماد</button><button class="btn sm ghost danger" data-act="coAdmin" data-id="${c.id}" data-v="rejected">رفض</button>`;
   if(S.admin) acts += `<button class="btn sm ghost danger" data-act="coDelete" data-id="${c.id}">${S.ui.confirm==='cod'+c.id?'تأكيد الحذف':'حذف'}</button>`;
   return `<div class="card stack" style="gap:8px"><div class="row"><span class="grow"><b translate="no">${esc(nm(c.by))}</b> <span class="muted small">· ${fmtD(c.date)}</span></span>${chip(st[0], st[1])}</div>
     <div class="kv"><dt>نهاية الدوام</dt><dd class="num">${esc(c.shiftEnd)}</dd><dt>الانتهاء الفعلي</dt><dd class="num">${esc(c.actualEnd)}</dd>
@@ -1043,7 +1049,7 @@ function coCard(c){
     ${c.reason ? `<dt>السبب</dt><dd style="white-space:pre-wrap" translate="no">${esc(c.reason)}</dd>` : ''}
     ${c.adminNote ? `<dt>ملاحظة المسؤول</dt><dd translate="no">${esc(c.adminNote)}</dd>` : ''}</div>
     <span class="muted small">قُدّم ${fmtDT(c.at)}${c.decidedAt ? ` · ${(CO[c.status]||[c.status])[0]} ${fmtDT(c.decidedAt)} (<span translate="no">${esc(nm(c.decidedBy))}</span>)` : ''}</span>
-    ${S.admin && c.status==='pending' ? `<input type="text" id="con-${c.id}" data-bind="con_${c.id}" placeholder="ملاحظة للطلب (اختياري)" value="${esc(S.ui['con_'+c.id]||'')}">` : ''}
+    ${canDecide(c) && c.status==='pending' ? `<input type="text" id="con-${c.id}" data-bind="con_${c.id}" placeholder="ملاحظة للطلب (اختياري)" value="${esc(S.ui['con_'+c.id]||'')}">` : ''}
     ${acts ? `<div class="row">${acts}</div>` : ''}</div>`;
 }
 function checkoutList(admin){
@@ -1079,7 +1085,7 @@ function vRosc(){
     <div class="stack" style="gap:6px"><span class="small"><b>الورقة المرفقة</b> (مطلوب)</span>${fileCtl('rosc', f.sheet)}</div>
     <label class="f">ملاحظات (اختياري)<textarea id="roNotes" data-ro="notes">${esc(f.notes||'')}</textarea></label>
     <div class="row"><button class="btn primary" data-act="roSubmit" ${ok?'':'disabled'}>تسجيل الحالة</button>${f.sheet ? '' : '<span class="muted small">أرفق الورقة لتفعيل التسجيل.</span>'}</div></div>`;
-  return `<div class="stack">${pageHead('حالات عودة النبض','ROSC Cases')}
+  return `<div class="stack">${secPicker()}${pageHead('حالات عودة النبض','ROSC Cases')}
     <div class="tiles"><div class="card stack" style="gap:4px"><span class="muted small">حالاتك</span><b class="num" style="font-size:28px">${roscCount(S.uid)}</b><span class="muted small">حالة عاد فيها النبض معك</span></div>
       <div class="card stack" style="gap:4px"><span class="muted small">إجمالي حالات القسم</span><b class="num" style="font-size:28px">${S.rosc.length}</b><span class="muted small">منذ بداية التسجيل</span></div></div>
     ${form}${roscList(S.admin)}</div>`;
@@ -1157,6 +1163,7 @@ function lastNameChange(u){ const h = (u && u.nameHistory) || []; return h.lengt
 function canChangeName(){ const l = lastNameChange(S.users[S.uid]); return !l || (l.at||'').slice(0,7) !== today().slice(0,7); }
 function nameCard(){
   const me = S.users[S.uid] || {}; const l = lastNameChange(me); const ok = canChangeName();
+  if(me.empNo) return `<div class="card flat stack" style="gap:4px"><h2>اسمي في المنصة</h2><div class="row"><b translate="no">${esc(me.officialName||me.name||'')}</b><span class="mono small muted">${esc(me.empNo)}</span></div><p class="sub">اسمك الرسمي مرتبط برقمك الوظيفي في القائمة المرجعية. لتعديله تواصل مع المسؤول.</p></div>`;
   const nx = new Date(); nx.setMonth(nx.getMonth() + 1, 1);
   return `<div class="card stack"><h2>اسمي في المنصة</h2>
     <div class="row"><b translate="no">${esc(S.myName||'')}</b><span class="mono small muted">${esc(me.email||'')}</span></div>
@@ -1314,15 +1321,23 @@ async function wipe(col, keep){
 /* ================= SMART SHIFT SCHEDULING ================= */
 const SCHED_DEF = {month:'', prefOpen:false, deadline:'', target:208, maxOT:48, maxCons:6, minRest:12, minOff:4, staff:{},
   sites:[
-    {id:'haram', name:'إسعاف الحرم', code:'ح', shifts:[{id:'m', name:'صباحي', kind:'m', start:'07:00', end:'15:00', need:2},{id:'e', name:'مسائي', kind:'e', start:'15:00', end:'23:00', need:2}]},
-    {id:'quba', name:'جهة قباء', code:'ق', shifts:[{id:'m', name:'صباحي', kind:'m', start:'07:00', end:'15:00', need:2},{id:'e', name:'مسائي', kind:'e', start:'15:00', end:'23:00', need:2}]},
-    {id:'squares', name:'عربة الساحات', code:'س', shifts:[{id:'m', name:'صباحي', kind:'m', start:'07:00', end:'15:00', need:1},{id:'e', name:'مسائي', kind:'e', start:'15:00', end:'23:00', need:1}]},
-    {id:'clinic', name:'العيادة', code:'ع', shifts:[{id:'m', name:'صباحي', kind:'m', start:'08:00', end:'16:00', need:1}]}
+    {id:'masjid', name:'قطاع المسجد النبوي', code:'ن', shifts:[{id:'m', name:'صباحي', kind:'m', start:'08:00', end:'16:00', need:1},{id:'e', name:'مسائي', kind:'e', start:'16:00', end:'00:00', need:1}]},
+    {id:'central', name:'قطاع المركزية', code:'ك', shifts:[{id:'m', name:'صباحي', kind:'m', start:'08:00', end:'16:00', need:2},{id:'e', name:'مسائي', kind:'e', start:'16:00', end:'00:00', need:2}]},
+    {id:'uhud', name:'قطاع أحد (قباء)', code:'ق', shifts:[{id:'d', name:'مناوبة 12 ساعة', kind:'m', start:'10:00', end:'22:00', need:2}]},
+    {id:'clinic', name:'العيادة', code:'ع', shifts:[{id:'e', name:'مسائي', kind:'e', start:'16:00', end:'00:00', need:1}]}
   ]};
+const SITE_MAP = {haram:'central', squares:'masjid', quba:'uhud', clinic:'clinic'};
+function migrateSched(c){
+  if(!(c.sites||[]).some(x => SITE_MAP[x.id] && x.id !== 'clinic') && (c.sites||[]).some(x => x.id==='central')) return c;
+  if(!(c.sites||[]).some(x => x.id==='haram' || x.id==='quba' || x.id==='squares')) return c;
+  c.sites = clone(SCHED_DEF.sites);
+  Object.values(c.staff||{}).forEach(st => { if(st.sites) st.sites = Array.from(new Set(st.sites.map(x => SITE_MAP[x] || x))); if(st.home) st.home = SITE_MAP[st.home] || st.home; });
+  return c;
+}
 const PREF = {m:['صباحي','p-m','ص'], e:['مسائي','p-e','م'], any:['أي مناوبة','p-any','أ'], off:['طلب راحة','p-off','ر'], na:['لا أستطيع','p-na','✕']};
 const WD = ['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
 const clone = o => JSON.parse(JSON.stringify(o));
-function schedCfg(){ const c = Object.assign(clone(SCHED_DEF), clone(S.schedCfg || {})); if(!c.month) c.month = ymNext(); return c; }
+function schedCfg(){ const c = migrateSched(Object.assign(clone(SCHED_DEF), clone(S.schedCfg || {}))); if(!c.month) c.month = ymNext(); return c; }
 function ymNext(){ const d = new Date(); d.setDate(1); d.setMonth(d.getMonth()+1); return d.toLocaleDateString('en-CA').slice(0,7); }
 const dim = ym => new Date(+ym.slice(0,4), +ym.slice(5,7), 0).getDate();
 const dowOf = (ym, d) => new Date(+ym.slice(0,4), +ym.slice(5,7)-1, d).getDay();
@@ -1336,7 +1351,8 @@ const slotLbl = (by, key) => { const x = by[key]; return x ? x.site.code + (x.sh
 function schedStaff(c){
   return Object.entries(S.users).filter(([id,u]) => u.active!==false && u.role!=='maintenance').map(([id,u]) => {
     const st = (c.staff||{})[id] || {};
-    return {id, name:u.name||u.email||'', include: st.include!==undefined ? !!st.include : u.role!=='admin', sites: (st.sites && st.sites.length) ? st.sites : c.sites.map(x => x.id), home: st.home||''};
+    const secSites = u.sector ? c.sites.filter(x => x.id===u.sector).map(x => x.id) : [];
+    return {id, name:u.officialName||u.name||u.email||'', include: st.include!==undefined ? !!st.include : u.role!=='admin', sites: (st.sites && st.sites.length) ? st.sites : secSites.length ? secSites : c.sites.map(x => x.id), home: st.home || secSites[0] || ''};
   }).sort((a,b) => a.name.localeCompare(b.name, 'ar'));
 }
 function prefOpenNow(){ const c = S.schedCfg; if(!c || !c.prefOpen || !c.month) return false; if(c.deadline && today() > c.deadline) return false; return true; }
@@ -1779,7 +1795,7 @@ async function enterApp(u){
     }
     const d = me.data();
     if(d.active === false){ S.gate = 'inactive'; render(); return; }
-    S.uid = u.uid; S.myName = d.name; S.admin = d.role==='admin'; S.maint = d.role==='maintenance'; if(S.maint) S.view = 'mcheck'; S.gate = null;
+    S.uid = u.uid; S.myName = d.officialName || d.name; S.admin = d.role==='admin'; S.maint = d.role==='maintenance'; S.sup = d.role==='supervisor'; S.mySector = d.sector || ''; if(S.maint) S.view = 'mcheck'; S.gate = null;
     startData();
   } catch(e){ console.error(e); S.noDb = 'تعذّر الاتصال بقاعدة البيانات. تأكد من الإنترنت ومن نشر قواعد الأمان (Rules) ثم أعد تحميل الصفحة.'; render(); }
 }
@@ -1921,7 +1937,7 @@ const ACT = {
   async roSubmit(b){
     const f = S.ui.ro || {}; if(!(f.caseNo||'').trim() || !f.caseAt || !f.sheet) return;
     b.disabled = true; const now = new Date().toISOString();
-    try { await S.db.collection('rosc').add({by:S.uid, caseNo:f.caseNo.trim(), caseAt:new Date(f.caseAt).toISOString(), team:f.team||[], notes:(f.notes||'').trim(), sheet:f.sheet, at:now, date:today()});
+    try { await S.db.collection('rosc').add({by:S.uid, sector:S.ui.opSector||S.mySector||'', caseNo:f.caseNo.trim(), caseAt:new Date(f.caseAt).toISOString(), team:f.team||[], notes:(f.notes||'').trim(), sheet:f.sheet, at:now, date:today()});
       audit('تسجيل حالة ROSC', `${f.caseNo.trim()} · ${[S.uid].concat(f.team||[]).map(nm).join('، ')}`); S.ui.ro = {caseAt:nowLocal()}; render(); toast('تم تسجيل الحالة');
     } catch(e){ b.disabled = false; e && e.code==='permission-denied' ? toast('تعذّر الحفظ: حدّث قواعد الأمان في Firebase.') : failMsg(e); }
   },
@@ -1937,7 +1953,7 @@ const ACT = {
   async pwSubmit(b){
     const f = S.ui.pw || {}; if(!(f.caseNo||'').trim() || !f.type) return;
     b.disabled = true; const now = new Date().toISOString();
-    try { await S.db.collection('pathways').add({by:S.uid, caseNo:f.caseNo.trim(), type:f.type, other:f.type==='other' ? (f.other||'').trim() : '', team:f.team||[], at:now, date:today()});
+    try { await S.db.collection('pathways').add({by:S.uid, sector:S.ui.opSector||S.mySector||'', caseNo:f.caseNo.trim(), type:f.type, other:f.type==='other' ? (f.other||'').trim() : '', team:f.team||[], at:now, date:today()});
       audit('تفعيل مسار', `${PW[f.type][0]} · ${f.caseNo.trim()} · ${[S.uid].concat(f.team||[]).map(nm).join('، ')}`); S.ui.pw = {}; render(); toast('تم تسجيل التفعيل');
     } catch(e){ b.disabled = false; e && e.code==='permission-denied' ? toast('تعذّر الحفظ: حدّث قواعد الأمان في Firebase.') : failMsg(e); }
   },
@@ -1952,7 +1968,7 @@ const ACT = {
     const f = S.ui.co || {}, date = f.date || today(), mins = coMinutes(f.shiftEnd, f.actualEnd);
     if(!(mins > 0) || !(f.caseNo||'').trim()) return;
     b.disabled = true; const now = new Date().toISOString();
-    try { await S.db.collection('checkouts').add({by:S.uid, date, shiftEnd:f.shiftEnd, actualEnd:f.actualEnd, minutes:mins, caseNo:f.caseNo.trim(), reason:(f.reason||'').trim(), status:'pending', at:now, history:[{at:now, by:S.uid, status:'pending'}]});
+    try { await S.db.collection('checkouts').add({by:S.uid, sector:S.mySector||'', date, shiftEnd:f.shiftEnd, actualEnd:f.actualEnd, minutes:mins, caseNo:f.caseNo.trim(), reason:(f.reason||'').trim(), status:'pending', at:now, history:[{at:now, by:S.uid, status:'pending'}]});
       audit('طلب ساعة خروج', `${date} · ${fmtMin(mins)}`); S.ui.co = {}; render(); toast('تم إرسال الطلب للمسؤول');
     } catch(e){ b.disabled = false; e && e.code==='permission-denied' ? toast('تعذّر الإرسال: حدّث قواعد الأمان في Firebase.') : failMsg(e); }
   },
@@ -2011,7 +2027,7 @@ const ACT = {
     if(!f.partner || !f.myDate || !f.partnerDate) return;
     b.disabled = true;
     try {
-      await S.db.collection('swaps').add({by:S.uid, partner:f.partner, myDate:f.myDate, myShift:f.myShift||'morning', partnerDate:f.partnerDate, partnerShift:f.partnerShift||'morning',
+      await S.db.collection('swaps').add({by:S.uid, sector:S.mySector||'', partner:f.partner, myDate:f.myDate, myShift:f.myShift||'morning', partnerDate:f.partnerDate, partnerShift:f.partnerShift||'morning',
         reason:(f.reason||'').trim(), form:f.form||null, status:'pending_partner', at:now, history:[{at:now, by:S.uid, status:'pending_partner'}]});
       audit('طلب تبديل نوبة', `${nm(S.uid)} ⇄ ${nm(f.partner)} · ${f.myDate} / ${f.partnerDate}`);
       S.ui.swOpen = null; S.ui.sw = null; render(); toast('تم إرسال الطلب لزميلك');
@@ -2031,7 +2047,7 @@ const ACT = {
   async swapAdmin(b){
     const w = S.swaps.find(x => x.id===b.dataset.id); if(!w) return; const now = new Date().toISOString(), v = b.dataset.v;
     const note = (S.ui['swn_'+w.id]||'').trim();
-    const upd = {status:v, adminAt:now, history:[...(w.history||[]), {at:now, by:S.uid, status:v}]}; if(note) upd.adminNote = note;
+    const upd = {status:v, adminAt:now, decidedBy:S.uid, history:[...(w.history||[]), {at:now, by:S.uid, status:v}]}; if(note) upd.adminNote = note;
     try { await S.db.doc('swaps/'+w.id).update(upd); audit(v==='approved' ? 'اعتماد تبديل نوبة' : 'رفض تبديل نوبة', `${nm(w.by)} ⇄ ${nm(w.partner)} · ${w.myDate} / ${w.partnerDate}`); toast(v==='approved' ? 'تم اعتماد التبديل' : 'تم رفض الطلب'); } catch(e){ failMsg(e); }
   },
   async swapDelete(b){
@@ -2072,6 +2088,7 @@ const ACT = {
   async setRole(b){
     const id = b.dataset.id, role = b.dataset.v;
     if(id===S.uid){ toast('لا يمكنك تغيير صلاحيتك بنفسك.'); return; }
+    if(role==='supervisor' && !(S.users[id]||{}).sector){ toast('اربط الموظف أولًا بقاعدة الموظفين ليُحدَّد قطاعه، ثم اجعله مشرفًا.'); return; }
     try { await S.db.doc('users/'+id).update({role}); audit('تغيير صلاحية', `${nm(id)} → ${(ROLES[role]||[role])[0]}`); } catch(e){ failMsg(e); }
   },
   async setActive(b){
@@ -2098,7 +2115,7 @@ const ACT = {
       if(x.status!=='good' && x.status!=='ok'){ if((x.note||'').trim()) o.note = x.note.trim(); if(x.photo) o.photo = x.photo; if(d.type==='vehicle') o.priority = x.pri||'medium'; }
       return o;
     });
-    const doc = {type:d.type, ambulance:d.ambulance, shift:d.shift, date:today(), at:now, by:S.uid, items, total:ev.total, issues:ev.issues, status: ev.issues ? 'action' : 'ready'};
+    const doc = {type:d.type, sector: d.type==='golf' ? 'masjid' : 'central', ambulance:d.ambulance, shift:d.shift, date:today(), at:now, by:S.uid, items, total:ev.total, issues:ev.issues, status: ev.issues ? 'action' : 'ready'};
     try {
       const ref = await S.db.collection('inspections').add(doc);
       if(d.type==='vehicle') for(const it of items.filter(x => x.status!=='good'))
@@ -2110,7 +2127,7 @@ const ACT = {
   async submitRep(b){
     b.disabled = true; const now = new Date().toISOString();
     try {
-      await S.db.collection('reports').add({ambulance:S.ui.repAmb||ambulances()[0]||'', item:S.ui.repItem.trim(), desc:S.ui.repDesc.trim(), priority:S.ui.repPri||'medium', photo:S.ui.repPhoto||null, by:S.uid, at:now, status:'pending', source:'manual', history:[{at:now, by:S.uid, status:'pending'}]});
+      await S.db.collection('reports').add({ambulance:S.ui.repAmb||'', sector:S.ui.repSec||S.mySector||'central', item:S.ui.repItem.trim(), desc:S.ui.repDesc.trim(), priority:S.ui.repPri||'medium', photo:S.ui.repPhoto||null, by:S.uid, at:now, status:'pending', source:'manual', history:[{at:now, by:S.uid, status:'pending'}]});
       Object.assign(S.ui, {repForm:null, repItem:'', repDesc:'', repPhoto:null, repPri:'medium'}); render(); toast('تم إرسال البلاغ');
     } catch(e){ b.disabled = false; failMsg(e); }
   },
@@ -2173,7 +2190,9 @@ const ACT = {
   }
 };
 
-document.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if(b && ACT[b.dataset.act]){ if(b.tagName!=='INPUT') e.preventDefault(); ACT[b.dataset.act](b, e); } });
+document.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if(b && ACT[b.dataset.act]){ if(b.tagName!=='INPUT') e.preventDefault();
+  if(b.dataset.pdf){ hookXlsx(); startPdfMode(); let r; try { r = ACT[b.dataset.act](b, e); } finally { Promise.resolve(r).finally(() => setTimeout(endPdfMode, 80)); } return; }
+  ACT[b.dataset.act](b, e); } });
 document.addEventListener('input', e => {
   const t = e.target;
   if(t.dataset.bind){ S.ui[t.dataset.bind] = t.value; if(t.dataset.live || t.tagName==='SELECT') render(); else syncButtons(); }
@@ -2189,7 +2208,7 @@ document.addEventListener('input', e => {
   else if(t.dataset.sw){ S.ui.sw = S.ui.sw || {}; S.ui.sw[t.dataset.sw] = t.value; if(t.tagName!=='TEXTAREA') render(); }
   else if(t.dataset.dh){ S.draft[t.dataset.dh] = t.value; if(t.dataset.dh==='ambulance') lsSet(S.draft.type==='golf' ? 'ems.golf' : 'ems.amb', t.value); render(); }
 });
-function syncButtons(){ const v = S.view; if(v==='announcements'||v==='schedule'||v==='reports'||v==='pathways'||v==='checkout'||v==='admin'){ render(); } }
+function syncButtons(){ const v = S.view; if(v==='circulars'||v==='profile'||v==='announcements'||v==='schedule'||v==='reports'||v==='pathways'||v==='checkout'||v==='admin'){ render(); } }
 document.addEventListener('change', async e => {
   if(e.target.id==='smMonth'){ S.ui.smMonth = e.target.value || null; S.proposals = null; S.ui.cell = null; subKey = ''; subSched(); render(); return; }
   const t = e.target; if(!t.dataset.upload || !t.files || !t.files[0]) return;
@@ -2222,16 +2241,771 @@ async function shrink(file){
   } catch(e){ return file; }
 }
 
+/* ===================== v7: sectors · staff directory · supervisors · circulars & e-signatures ===================== */
+const SECTORS = {
+  masjid:{ar:'قطاع المسجد النبوي', en:"Prophet's Mosque Sector", sub:'عربات القولف', ops:['golf','pathways','rosc']},
+  central:{ar:'قطاع المركزية', en:'Central Sector', sub:'إسعاف الحرم والفحوصات', ops:['vehicle','bags','pathways','rosc']},
+  uhud:{ar:'قطاع أحد', en:'Uhud Sector', sub:'قباء', ops:['pathways','rosc']},
+  clinic:{ar:'العيادة', en:'Clinic', sub:'العيادة', ops:[]}
+};
+const FIELD_SECTORS = ['masjid','central','uhud'];
+const OPS = {golf:['فحص عربات القولف','Golf Cart Checks'], vehicle:['فحص سيارات الإسعاف','Ambulance Checks'], bags:['فحص الشنط والمعدات الطبية','Medical Bags & Equipment'], pathways:['تفعيل المسارات الطبية','Pathway Activation'], rosc:['تسجيل حالات ROSC','ROSC Cases']};
+const PARENT = {vehicle:'ops', bags:'ops', golf:'ops', pathways:'ops', rosc:'ops', swaps:'services', checkout:'services', prefs:'services', history:'profile'};
+const PARENT_LBL = {ops:'العمليات الميدانية', services:'خدمات الموظفين', profile:'ملفي'};
+const secName = k => (SECTORS[k] || {}).ar || '';
+const userSec = id => ((S.users[id]||{}).sector) || '';
+const empNoOf = id => ((S.users[id]||{}).empNo) || '';
+const isSupFor = sec => !!S.sup && !!sec && sec === S.mySector;
+const canDecide = x => S.admin || isSupFor(x && x.sector);
+const FV = () => firebase.firestore.FieldValue;
+const tsISO = v => !v ? '' : typeof v === 'string' ? v : v.toDate ? v.toDate().toISOString() : '';
+const fmtRiyadh = d => new Date(d).toLocaleString(LANG==='en' ? 'en-GB' : 'ar-SA-u-ca-gregory-nu-latn', {timeZone:'Asia/Riyadh', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'});
+
+/* ---------- names & employee numbers ---------- */
+function normAr(s){ return String(s||'').toLowerCase().replace(/[ً-ٰٟـ]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/عبد\s+/g,'عبد').replace(/\s+/g,' ').trim(); }
+function nameTokens(s){ return normAr(s).split(' ').filter(t => t.length > 1 && !['بن','بنت','ابن'].includes(t)).map(t => t.replace(/^ال(?=..)/,'')); }
+function nameScore(a, b){
+  const A = nameTokens(a), B = nameTokens(b); if(!A.length || !B.length) return 0;
+  const used = new Set(); let m = 0;
+  A.forEach(t => { const i = B.findIndex((x,j) => !used.has(j) && (x===t || (t.length>3 && x.length>3 && (x.startsWith(t) || t.startsWith(x))))); if(i >= 0){ used.add(i); m++; } });
+  const mn = Math.min(A.length, B.length); let s = m / mn; if(mn < 2) s *= 0.6;
+  return Math.round(s*100)/100;
+}
+function cleanEmp(s){ return String(s ?? '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/\.0+$/,'').replace(/[^A-Za-z0-9_-]/g,'').toUpperCase().slice(0,30); }
+function secFromText(t){ t = normAr(t); if(!t) return '';
+  if(/نبوي|قولف|golf|masjid|mosque/.test(t)) return 'masjid';
+  if(/مركز|حرم|central|haram|اسعاف/.test(t)) return 'central';
+  if(/احد|قباء|uhud|quba/.test(t)) return 'uhud';
+  if(/عياد|clinic/.test(t)) return 'clinic'; return ''; }
+function unlinkedUsers(){ return Object.entries(S.users).filter(([id,u]) => !u.empNo && u.active!==false && u.role!=='maintenance').map(([id,u]) => Object.assign({id}, u)); }
+function userMatches(name, minScore){ return unlinkedUsers().map(u => ({u, s:nameScore(name, u.name||'')})).filter(x => x.s >= (minScore||0.5)).sort((a,b) => b.s - a.s); }
+const pct = s => Math.round(s*100) + '%';
+
+/* ---------- lazy libraries (PDF) ---------- */
+const LIBS = {pdflib:'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js', pdfjs:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', pdfjsWorker:'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'};
+const libP = {};
+function loadLib(k){ if(!libP[k]) libP[k] = new Promise((ok, no) => { const s = document.createElement('script'); s.src = LIBS[k]; s.onload = () => ok(); s.onerror = () => { libP[k] = null; no(new Error('lib')); }; document.head.appendChild(s); }); return libP[k]; }
+async function needPdfLib(){ if(!window.PDFLib) await loadLib('pdflib'); return window.PDFLib; }
+async function needPdfJs(){ if(!window.pdfjsLib) await loadLib('pdfjs'); window.pdfjsLib.GlobalWorkerOptions.workerSrc = LIBS.pdfjsWorker; return window.pdfjsLib; }
+
+/* ---------- chunked binary storage in Firestore (free plan, no Storage) ---------- */
+const CHUNK = 700000;
+function bytesToB64(u8){ let s = ''; for(let i=0; i<u8.length; i+=0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i+0x8000)); return btoa(s); }
+function b64ToBytes(b64){ const bin = atob(b64); const u = new Uint8Array(bin.length); for(let i=0; i<bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+async function sha256(u8){ try { const h = await crypto.subtle.digest('SHA-256', u8); return Array.from(new Uint8Array(h)).map(x => x.toString(16).padStart(2,'0')).join(''); } catch(e){ return ''; } }
+async function putChunks(col, base, u8, extra){
+  const b64 = bytesToB64(u8), n = Math.max(1, Math.ceil(b64.length / CHUNK));
+  for(let i=0; i<n; i++) await S.db.doc(`${col}/${base}_${i}`).set(Object.assign({b64:b64.slice(i*CHUNK, (i+1)*CHUNK), i, n, by:S.uid, at:new Date().toISOString()}, extra||{}));
+  return n;
+}
+const chunkCache = {};
+function getChunks(col, base, n){
+  const k = col + '/' + base;
+  if(!chunkCache[k]){ chunkCache[k] = (async () => { const parts = await Promise.all(Array.from({length:n}, (_,i) => S.db.doc(`${col}/${base}_${i}`).get()));
+    return b64ToBytes(parts.map(p => { const d = p.data(); if(!d) throw new Error('missing'); return d.b64; }).join('')); })(); chunkCache[k].catch(() => { delete chunkCache[k]; }); }
+  return chunkCache[k];
+}
+function saveBytes(u8, fname){ const url = URL.createObjectURL(new Blob([u8], {type:'application/pdf'})); const a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000); }
+function preWin(){ const w = window.open('', '_blank'); if(w) try { w.document.write('<p style="font-family:sans-serif;padding:24px">' + tr('جارٍ تجهيز الملف…') + '</p>'); } catch(e){} return w; }
+function showBytes(w, u8){ const url = URL.createObjectURL(new Blob([u8], {type:'application/pdf'})); if(w) w.location.href = url; else window.open(url, '_blank'); }
+
+/* ---------- Excel → PDF twin for every export button ---------- */
+let PDFM = null;
+function startPdfMode(){ PDFM = {w:preWin(), used:false}; if(!PDFM.w) toast('اسمح بالنوافذ المنبثقة ثم أعد المحاولة.'); }
+function endPdfMode(){ const m = PDFM; PDFM = null; if(m && !m.used && m.w) try { m.w.close(); } catch(e){} }
+function sheetAoa(ws){ if(XLSX.utils.sheet_to_json) return XLSX.utils.sheet_to_json(ws, {header:1, defval:''}); const r = ws.rows || []; if(!r.length) return []; if(Array.isArray(r[0])) return r; const k = Object.keys(r[0]); return [k].concat(r.map(o => k.map(x => o[x] ?? ''))); }
+function printDoc(w, title, inner, landscape){
+  const rtl = LANG !== 'en', logo = (document.querySelector('link[rel=icon]')||{}).href || '';
+  w.document.open();
+  w.document.write(`<!doctype html><html dir="${rtl?'rtl':'ltr'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>
+    @page{size:A4 ${landscape?'landscape':'portrait'};margin:10mm} body{font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;color:#14212B;margin:0;padding:8px}
+    header{display:flex;align-items:center;gap:12px;border-bottom:3px solid #11283A;padding-bottom:8px;margin-bottom:10px} header img{width:52px;height:52px;object-fit:contain}
+    h1{font-size:17px;margin:0} h2{font-size:14px;margin:14px 0 6px} p{font-size:11px;color:#56656F;margin:2px 0} table{border-collapse:collapse;width:100%;font-size:10px;margin-bottom:8px}
+    th,td{border:1px solid #C9D3DA;padding:4px 5px;text-align:${rtl?'right':'left'};vertical-align:top} th{background:#11283A;color:#fff} tr:nth-child(even) td{background:#F5F7F9}
+    .sum{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0} .sum div{border:1px solid #C9D3DA;border-radius:6px;padding:6px 10px;font-size:12px} .sum b{display:block;font-size:18px}
+    .ok{color:#1C7347;font-weight:700} .bad{color:#B42318;font-weight:700} .warn{color:#9A5806;font-weight:700}</style></head><body>
+    <header><img src="${logo}" alt=""><div><h1>${esc(title)}</h1><p>${esc(tr('إسعاف الحياة'))} · ${esc(new Date().toLocaleString(LOC))}</p></div></header>${inner}
+    <script>setTimeout(function(){window.print()},500)<\/script></body></html>`);
+  w.document.close();
+}
+function printWorkbook(wb, fname, w){
+  let wide = false;
+  const inner = wb.SheetNames.map(n => { const a = sheetAoa(wb.Sheets[n]); if(!a.length) return ''; if((a[0]||[]).length > 6) wide = true;
+    return `<h2>${esc(n)}</h2><table><thead><tr>${a[0].map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${a.slice(1).map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`; }).join('');
+  printDoc(w, String(fname).replace(/\.xlsx?$/i,'').replace(/_/g,' '), inner, wide);
+}
+function hookXlsx(){ if(!window.XLSX || XLSX.__v7) return; const wf = XLSX.writeFile; XLSX.__v7 = true;
+  XLSX.writeFile = function(wb, fname, o){ if(PDFM && PDFM.w){ PDFM.used = true; printWorkbook(wb, fname, PDFM.w); return; } return wf.call(XLSX, wb, fname, o); }; }
+function addPdfTwins(){
+  document.querySelectorAll('#view button[data-act]').forEach(b => {
+    if(!b.classList.contains('btn') || b.dataset.pdf || b.dataset.nopdf || b.dataset.twin || !/Excel/i.test(b.textContent)) return;
+    b.dataset.twin = '1';
+    if(b.parentElement && Array.from(b.parentElement.children).some(x => x !== b && /^\s*PDF\s*$/.test(x.textContent))) return;
+    const p = b.cloneNode(true); p.dataset.pdf = '1'; delete p.dataset.twin; p.classList.remove('primary'); p.textContent = /تحميل|Download/.test(b.textContent) ? (LANG==='en' ? 'Download PDF' : 'تحميل PDF') : 'PDF'; b.after(p);
+  });
+}
+
+/* ---------- field operations ---------- */
+function opsToday(sec){ const t = today();
+  const ins = S.insp.filter(i => i.date===t && (i.sector || (i.type==='golf' ? 'masjid' : 'central'))===sec).length;
+  const pw = S.pathways.filter(p => p.date===t && p.sector===sec).length;
+  const ro = S.rosc.filter(r => (r.date||'').slice(0,7)===t.slice(0,7) && r.sector===sec).length;
+  return {ins, pw, ro};
+}
+function vOps(){
+  const cards = FIELD_SECTORS.map(k => { const s = SECTORS[k], st = opsToday(k);
+    return `<div class="card stack" style="gap:10px"><div class="row"><span class="grow"><span class="en">${s.en}</span><h2>${s.ar}</h2><span class="muted small">${s.sub}</span></span>${S.mySector===k ? chip('قطاعك','info') : ''}</div>
+      <div class="row small">${s.ops.some(o => o==='vehicle'||o==='bags'||o==='golf') ? chip(st.ins + ' فحص اليوم', st.ins?'ok':'neutral') : ''}${chip(st.pw + ' مسار اليوم', st.pw?'info':'neutral')}${chip(st.ro + ' ROSC هذا الشهر', st.ro?'ok':'neutral')}</div>
+      <div class="row">${s.ops.map(o => `<button class="btn" data-act="opGo" data-s="${k}" data-v="${o}">${OPS[o][0]}</button>`).join('')}</div></div>`; }).join('');
+  return `<div class="stack">${pageHead('العمليات الميدانية','Field Operations')}
+    <p class="sub">كل فحص أو تفعيل يُسجَّل باسمك ورقمك الوظيفي والقطاع والتاريخ، وتبقى السجلات السابقة محفوظة.</p>${cards}</div>`;
+}
+function secPicker(){
+  const cur = S.ui.opSector || S.mySector || '';
+  return `<div class="card flat row" style="gap:8px"><span class="small"><b>القطاع</b></span><div class="seg" role="group">${FIELD_SECTORS.map(k => `<button data-act="opSec" data-v="${k}" aria-pressed="${cur===k}">${SECTORS[k].ar}</button>`).join('')}</div>${cur ? '' : '<span class="small muted">اختر القطاع قبل التسجيل</span>'}</div>`;
+}
+function vServices(){
+  const tile = (v, ar, en, meta) => `<button class="tile" data-act="go" data-v="${v}"><span class="en">${en}</span><b>${ar}</b><span class="meta">${meta}</span></button>`;
+  const sw = swapsNeedingMe().length, co = pendingCheckouts().length;
+  return `<div class="stack">${pageHead('خدمات الموظفين','Staff Services')}
+    <p class="sub">صفحة موحدة لجميع القطاعات. تُرسل الطلبات للاعتماد (المسؤول أو مشرف القطاع)، ويُحفظ سجل كامل للموافقات.</p>
+    <div class="tiles">${tile('swaps','طلبات تبديل النوبات','Shift Swaps', sw ? chip(sw + ' بانتظار إجراء','warn') : chip('لا طلبات معلقة','ok'))}
+    ${tile('checkout','ساعات الخروج والاستئذان','Checkout & Leave Hours', (S.admin||S.sup) && co ? chip(co + ' بانتظار الاعتماد','warn') : `<span class="muted small">تعويض التأخر بعد الدوام</span>`)}
+    ${tile('prefs','تفضيلات الجداول الشهرية','Monthly Preferences', prefOpenNow() ? (S.myPref ? chip('تم الإرسال','ok') : chip('الفترة مفتوحة','warn')) : chip('الفترة مغلقة','neutral'))}
+    <div class="tile" style="cursor:default;opacity:.75"><span class="en">Time-back Requests</span><b>طلبات استخدام التايم باك</b><span class="meta">${chip('ضمن المرحلة الثانية','neutral')}</span></div></div></div>`;
+}
+
+/* ---------- employee profile & self-linking ---------- */
+function linkCard(){
+  const u = S.users[S.uid] || {}; if(u.empNo) return '';
+  const lr = S.myLinkReq;
+  return `<div class="card stack" style="border-color:var(--warn)"><h2>اربط حسابك برقمك الوظيفي</h2>
+    <p class="sub">يُستخدم رقمك الوظيفي واسمك الرسمي تلقائيًا في الجداول والفحوصات والطلبات والتعاميم والتوقيعات. يلزم الربط قبل توقيع أي تعميم.</p>
+    ${lr && lr.status==='pending' ? `<div class="banner"><span>طلبك برقم <b class="mono">${esc(lr.empNo)}</b> بانتظار مراجعة المسؤول.</span></div>` : ''}
+    ${lr && lr.status==='rejected' ? `<div class="banner bad"><span>رفض المسؤول طلب الربط${lr.note ? ': ' + esc(lr.note) : ''}. تأكد من الرقم وأعد المحاولة.</span></div>` : ''}
+    <div class="row"><input type="text" id="myEmp" data-bind="myEmp" inputmode="numeric" dir="ltr" placeholder="الرقم الوظيفي" value="${esc(S.ui.myEmp||'')}" style="flex:1;min-width:160px"><button class="btn primary" data-act="linkSelf">ربط الحساب</button></div></div>`;
+}
+function profileCard(uid){
+  const u = S.users[uid] || {}, st = (S.staff||[]).find(s => s.uid===uid);
+  return `<div class="card stack" style="gap:8px"><div class="row"><span class="grow"><span class="en">Employee Profile</span><h2 translate="no">${esc(u.officialName || u.name || '—')}</h2></span>${chip((ROLES[u.role]||ROLES.paramedic)[0], (ROLES[u.role]||ROLES.paramedic)[1])}</div>
+    <dl class="kv" style="display:grid"><dt>الرقم الوظيفي</dt><dd class="mono">${esc(u.empNo || '—')}</dd><dt>القطاع</dt><dd>${esc(secName(u.sector) || '—')}</dd><dt>البريد</dt><dd class="mono small">${esc(u.email||'')}</dd>
+    <dt>حالة الربط</dt><dd>${u.empNo ? chip('مربوط بالقائمة المرجعية','ok') : chip('غير مربوط','warn')}</dd>${st && st.title ? `<dt>المسمى</dt><dd>${esc(st.title)}</dd>` : ''}</dl></div>`;
+}
+function vProfile(){
+  const uid = (S.admin || S.sup) && S.ui.profUid ? S.ui.profUid : S.uid, self = uid === S.uid;
+  const sigs = S.csigs.filter(x => x.by===uid).sort((a,b) => (tsISO(b.signedAt)||b.clientAt) < (tsISO(a.signedAt)||a.clientAt) ? -1 : 1);
+  return `<div class="stack">${pageHead(self ? 'ملفي' : 'ملف الموظف', 'My Profile', self ? '' : `<button class="btn sm ghost" data-act="profBack">رجوع</button>`)}
+    ${self ? linkCard() : ''}${profileCard(uid)}
+    ${self ? myRosterCard() : ''}
+    <div class="card flat stack" style="gap:6px"><h2>الساعات والأوفر تايم والتايم باك</h2><p class="sub">تُحسب تلقائيًا من الجداول المعتمدة ضمن المرحلة الثانية، مع رصيد التايم باك (المستحق، المستخدم، المتبقي) وحالة إدخاله في Oracle.</p></div>
+    <h2>التعاميم والإقرارات الموقعة</h2>${sigs.length ? `<div class="list">${sigs.map(sigRowCard).join('')}</div>` : '<div class="empty">لا توجد تعاميم موقعة بعد.</div>'}
+    ${self ? `<div class="row"><button class="btn" data-act="go" data-v="history">سجلي: الفحوصات والبلاغات</button></div>${nameCard()}` : ''}</div>`;
+}
+function sigRowCard(x){
+  const c = S.circs.find(k => k.id===x.circ);
+  return `<div class="card flat row"><span class="grow"><b>${esc(x.title || (c && c.title) || '')}</b> <span class="mono small muted">${esc(x.ref)} v${x.ver||1}</span><span class="tiny">${x.kind==='sign' ? 'وُقّع' : 'أُقرّ بالاطلاع'} ${esc(fmtRiyadh(tsISO(x.signedAt) || x.clientAt))}${x.late ? ' · بعد الموعد' : ''}</span></span>
+    ${chip(x.kind==='sign' ? 'تم التوقيع' : 'تم الإقرار', 'ok')}${x.n ? `<button class="btn sm" data-act="sigDl" data-id="${x.id}">تنزيل</button><button class="btn sm ghost" data-act="sigOpen" data-id="${x.id}">فتح / طباعة</button>` : ''}</div>`;
+}
+
+/* ---------- supervisor: my sector ---------- */
+function sectorUids(sec){ return Object.entries(S.users).filter(([id,u]) => u.sector===sec && u.active!==false && u.role!=='maintenance').map(([id]) => id); }
+function vSector(){
+  if(!S.sup && !S.admin) return '<div class="empty">هذه الصفحة لمشرفي القطاعات.</div>';
+  const sec = S.admin ? (S.ui.supSec || 'central') : S.mySector;
+  if(!sec) return `<div class="stack">${pageHead('قطاعي','My Sector')}<div class="empty">لم يُحدد قطاعك بعد. اطلب من المسؤول ربط حسابك بقاعدة الموظفين.</div></div>`;
+  const ids = sectorUids(sec), t = today();
+  const sw = S.swaps.filter(w => w.sector===sec && w.status==='pending_admin'), co = S.checkouts.filter(c => c.sector===sec && c.status==='pending');
+  const ins = S.insp.filter(i => i.date===t && ids.includes(i.by));
+  const act = S.circs.filter(c => c.status==='active');
+  const rows = ids.map(id => { const pend = act.filter(c => (c.targetUids||[]).includes(id) && !S.csigMap[c.id+'_'+id]).length;
+    return `<tr><td><b translate="no">${esc(nm(id))}</b></td><td class="mono">${esc(empNoOf(id)||'—')}</td><td class="num">${S.insp.filter(i => i.date===t && i.by===id).length}</td><td>${pend ? chip(pend + ' بانتظار التوقيع','warn') : chip('مكتمل','ok')}</td><td><button class="btn sm ghost" data-act="profOpen" data-id="${id}">الملف</button></td></tr>`; }).join('');
+  return `<div class="stack">${pageHead('قطاعي: ' + secName(sec), 'Sector Supervisor', S.admin ? `<div class="seg">${Object.keys(SECTORS).map(k => `<button data-act="supSec" data-v="${k}" aria-pressed="${sec===k}">${SECTORS[k].ar}</button>`).join('')}</div>` : '')}
+    <div class="row">${chip(ids.length + ' موظف','info')}${chip(ins.length + ' فحص اليوم', ins.length?'ok':'neutral')}${chip((sw.length+co.length) + ' طلب بانتظار الاعتماد', sw.length+co.length ? 'warn' : 'ok')}</div>
+    ${sw.length ? `<h2>طلبات تبديل بانتظار اعتمادك</h2><div class="list">${sw.map(swapCard).join('')}</div>` : ''}
+    ${co.length ? `<h2>ساعات خروج بانتظار اعتمادك</h2><div class="list">${co.map(coCard).join('')}</div>` : ''}
+    <h2>موظفو القطاع</h2>${ids.length ? `<div class="tbl-wrap"><table><thead><tr><th>الموظف</th><th>الرقم الوظيفي</th><th>فحوصات اليوم</th><th>التعاميم</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty">لا يوجد موظفون مربوطون بهذا القطاع بعد.</div>'}
+    <h2>فحوصات اليوم</h2>${ins.length ? `<div class="list">${ins.map(i => inspCard(i,true)).join('')}</div>` : '<div class="empty">لا توجد فحوصات اليوم.</div>'}
+    <div class="row"><button class="btn" data-act="circTab" data-v="track">متابعة توقيعات القطاع</button></div></div>`;
+}
+
+/* ---------- admin: staff reference directory ---------- */
+function vStaffDir(){
+  const st = S.staff || [], linked = st.filter(s => s.uid).length, reqs = (S.linkreqs||[]).filter(r => r.status==='pending'), un = unlinkedUsers();
+  const q = normAr(S.ui.stQ||''), list = st.filter(s => !q || normAr(s.name).includes(q) || s.empNo.toLowerCase().includes(q.toLowerCase()));
+  const imp = S.ui.imp ? impPreview() : '';
+  const cards = list.map(s => { const u = s.uid ? S.users[s.uid] : null; const sug = !s.uid ? userMatches(s.name, 0.5).slice(0,3) : [];
+    return `<div class="card flat stack" style="gap:8px"><div class="row"><span class="grow"><b translate="no">${esc(s.name)}</b> <span class="mono small muted">${esc(s.empNo)}</span></span>
+      <select data-v7="stSec" data-id="${esc(s.empNo)}" style="width:auto">${['<option value="">بدون قطاع</option>'].concat(Object.keys(SECTORS).map(k => `<option value="${k}" ${s.sector===k?'selected':''}>${SECTORS[k].ar}</option>`)).join('')}</select></div>
+      <div class="row small">${u ? `${chip('مربوط','ok')}<span class="grow"><span translate="no">${esc(u.name||'')}</span> <span class="mono muted">${esc(u.email||'')}</span>${s.linkMode ? ` · ${s.linkMode==='auto' ? 'ربط تلقائي' : 'ربط بواسطة المسؤول'}` : ''}</span><button class="btn sm ghost" data-act="profOpen" data-id="${s.uid}">الملف</button><button class="btn sm ghost danger" data-act="stUnlink" data-id="${esc(s.empNo)}">${S.ui.confirm==='stu'+s.empNo ? 'تأكيد فصل الربط' : 'فصل الربط'}</button>` :
+        `${chip('غير مربوط','warn')}<span class="grow">${sug.length ? sug.map(x => `<button class="btn sm" data-act="stLink" data-id="${esc(s.empNo)}" data-u="${x.u.id}">ربط بـ <span translate="no">${esc(x.u.name)}</span> (${pct(x.s)})</button>`).join(' ') : '<span class="muted">لا يوجد حساب مسجّل يطابق الاسم</span>'}</span>
+        ${un.length ? `<select data-v7="stPick" data-id="${esc(s.empNo)}" style="width:auto"><option value="">اختيار حساب يدويًا…</option>${un.map(x => `<option value="${x.id}" ${S.ui['stp_'+s.empNo]===x.id?'selected':''}>${esc(x.name)} · ${esc(x.email||'')}</option>`).join('')}</select><button class="btn sm" data-act="stLinkPick" data-id="${esc(s.empNo)}" ${S.ui['stp_'+s.empNo]?'':'disabled'}>ربط</button>` : ''}
+        <button class="btn sm ghost danger" data-act="stDel" data-id="${esc(s.empNo)}">${S.ui.confirm==='std'+s.empNo ? 'تأكيد الحذف' : 'حذف'}</button>`}</div></div>`; }).join('');
+  return `<div class="stack"><p class="sub">القائمة المرجعية للموظفين. الرقم الوظيفي هو المعرّف الأساسي للمطابقة، والاسم للتحقق الإضافي. لا يتم أي ربط عند وجود اختلاف إلا بعد مراجعتك.</p>
+    <div class="row">${chip(st.length + ' موظف','info')}${chip(linked + ' مربوط','ok')}${chip((st.length-linked) + ' غير مربوط', st.length-linked ? 'warn' : 'ok')}${reqs.length ? chip(reqs.length + ' طلب ربط بانتظارك','bad') : ''}${un.length ? chip(un.length + ' حساب بلا رقم وظيفي','warn') : ''}</div>
+    ${reqs.length ? `<h2>طلبات ربط بانتظار المراجعة</h2><div class="list">${reqs.map(r => { const s = st.find(x => x.empNo===r.empNo); const u = S.users[r.by] || {};
+      return `<div class="card stack" style="gap:6px;border-color:var(--warn)"><div class="row"><span class="grow"><b translate="no">${esc(u.name||'')}</b> <span class="mono small muted">${esc(u.email||'')}</span></span>${chip(r.reason==='not_found' ? 'الرقم غير موجود في القائمة' : r.reason==='taken' ? 'الرقم مرتبط بحساب آخر' : 'اختلاف في الاسم', 'warn')}</div>
+        <span class="small">الرقم المدخل: <b class="mono">${esc(r.empNo)}</b>${s ? ` · الاسم في القائمة: <b translate="no">${esc(s.name)}</b> · التطابق ${pct(nameScore(u.name||'', s.name))}` : ''}</span>
+        <div class="row">${s && !s.uid ? `<button class="btn sm primary" data-act="stLink" data-id="${esc(r.empNo)}" data-u="${r.by}">اعتماد الربط</button>` : ''}<input type="text" data-bind="lrn_${r.by}" placeholder="سبب الرفض (اختياري)" value="${esc(S.ui['lrn_'+r.by]||'')}" style="flex:1;min-width:140px"><button class="btn sm ghost danger" data-act="lrReject" data-id="${r.by}">رفض</button></div></div>`; }).join('')}</div>` : ''}
+    <div class="card stack"><h2>استيراد القائمة</h2><p class="sub">ارفع ملف Excel أو CSV فيه أعمدة: <b>الاسم</b>، <b>الرقم الوظيفي</b>، و<b>القطاع</b> (اختياري)، أو الصق القائمة سطرًا لكل موظف: الاسم، الرقم، القطاع.</p>
+      <div class="row"><label class="btn">رفع ملف Excel / CSV<input type="file" id="impFile" accept=".xlsx,.xls,.csv" hidden></label><button class="btn ghost" data-act="toggle" data-k="impPaste" data-id="1">لصق القائمة</button></div>
+      ${S.ui.impPaste ? `<textarea id="impText" data-bind="impText" placeholder="محمد أحمد الحربي، 10234، المركزية">${esc(S.ui.impText||'')}</textarea><div class="row"><button class="btn" data-act="impParse">معاينة</button></div>` : ''}</div>
+    ${imp}
+    <div class="card stack"><h2>إضافة موظف</h2><div class="fields"><label class="f">الاسم الكامل<input type="text" id="stName" data-bind="stName" value="${esc(S.ui.stName||'')}"></label><label class="f">الرقم الوظيفي<input type="text" id="stEmp" data-bind="stEmp" dir="ltr" inputmode="numeric" value="${esc(S.ui.stEmp||'')}"></label>
+      <label class="f">القطاع<select id="stSecN" data-bind="stSecN">${Object.keys(SECTORS).map(k => `<option value="${k}" ${(S.ui.stSecN||'central')===k?'selected':''}>${SECTORS[k].ar}</option>`).join('')}</select></label></div><div class="row"><button class="btn primary" data-act="stAdd">إضافة</button></div></div>
+    <div class="head-line"><h2>القائمة المرجعية</h2><div class="row"><input type="search" id="stQ" data-bind="stQ" data-live="1" placeholder="بحث بالاسم أو الرقم" value="${esc(S.ui.stQ||'')}" style="width:200px"><button class="btn sm" data-act="stExport">تصدير Excel</button></div></div>
+    ${list.length ? `<div class="list">${cards}</div>` : '<div class="empty">لا يوجد موظفون في القائمة بعد. استورد القائمة أو أضف موظفًا.</div>'}
+    ${un.length ? `<h2>حسابات مسجلة بلا رقم وظيفي</h2><div class="list">${un.map(u => { const m = st.filter(s => !s.uid).map(s => ({s, sc:nameScore(u.name||'', s.name)})).filter(x => x.sc>=0.5).sort((a,b) => b.sc-a.sc).slice(0,2);
+      return `<div class="card flat row small"><span class="grow"><b translate="no">${esc(u.name||'')}</b> <span class="mono muted">${esc(u.email||'')}</span></span>${m.map(x => `<button class="btn sm" data-act="stLink" data-id="${esc(x.s.empNo)}" data-u="${u.id}">ربط بـ ${esc(x.s.empNo)} · <span translate="no">${esc(x.s.name)}</span> (${pct(x.sc)})</button>`).join('') || '<span class="muted">لا توجد مطابقة مقترحة</span>'}</div>`; }).join('')}</div>` : ''}</div>`;
+}
+function parseStaffAoa(aoa){
+  aoa = (aoa||[]).map(r => (r||[]).map(c => String(c ?? '').trim())).filter(r => r.some(Boolean));
+  if(!aoa.length) return [];
+  const h = aoa[0].map(x => normAr(x));
+  let iN = h.findIndex(x => /اسم|name/.test(x)), iE = h.findIndex(x => /رقم|emp|id|number|no/.test(x)), iS = h.findIndex(x => /قطاع|sector|موقع/.test(x));
+  let rows = aoa;
+  if(iN >= 0 && iE >= 0) rows = aoa.slice(1);
+  else { const r0 = aoa[0]; iE = r0.findIndex(c => /^[\d٠-٩۰-۹A-Za-z-]+$/.test(c) && /[\d٠-٩۰-۹]/.test(c)); iN = r0.findIndex((c,i) => i!==iE && c && !secFromText(c)); iS = r0.findIndex((c,i) => i!==iE && i!==iN && secFromText(c)); }
+  return rows.map(r => ({name:r[iN]||'', empNo:r[iE]||'', sectorRaw: iS>=0 ? r[iS]||'' : ''}));
+}
+function analyzeImport(rows){
+  const cE = {}, cN = {};
+  rows.forEach(r => { r.empNo = cleanEmp(r.empNo); r.name = String(r.name||'').trim().replace(/\s+/g,' '); r.sector = secFromText(r.sectorRaw); cE[r.empNo] = (cE[r.empNo]||0)+1; const k = normAr(r.name); cN[k] = (cN[k]||0)+1; });
+  const used = {};
+  const out = rows.map(r => {
+    const ex = (S.staff||[]).find(s => s.empNo===r.empNo); let st, cls, act, note = '';
+    if(!r.empNo || !r.name){ st='بيانات ناقصة'; cls='bad'; act='skip'; }
+    else if(cE[r.empNo] > 1){ st='رقم وظيفي مكرر في الملف'; cls='bad'; act='skip'; }
+    else if(ex && normAr(ex.name)===normAr(r.name)){ st='موجود ومطابق'; cls='ok'; act = r.sector && r.sector!==ex.sector ? 'update' : 'none'; if(act==='update') note = 'سيُحدَّث القطاع'; }
+    else if(ex){ st='اختلاف في الاسم'; cls='warn'; act='review'; note = 'المسجّل: ' + ex.name; }
+    else { const dn = (S.staff||[]).find(s => normAr(s.name)===normAr(r.name));
+      if(dn){ st='الاسم مسجّل برقم آخر'; cls='warn'; act='review'; note = 'الرقم المسجّل: ' + dn.empNo; }
+      else if(cN[normAr(r.name)] > 1){ st='اسم مكرر في الملف'; cls='warn'; act='review'; }
+      else { st='جديد'; cls='info'; act='add'; } }
+    const linkedUid = ex && ex.uid;
+    const m = !linkedUid && act!=='skip' ? userMatches(r.name, 0.5)[0] : null;
+    if(m) used[m.u.id] = (used[m.u.id]||0)+1;
+    return Object.assign({}, r, {st, cls, act, note, match: m ? {uid:m.u.id, s:m.s} : null});
+  });
+  out.forEach(r => { if(r.match){ r.matchConflict = used[r.match.uid] > 1; r.link = !r.matchConflict && r.match.s >= 0.9 && r.act !== 'review'; } });
+  return out;
+}
+function impPreview(){
+  const rows = S.ui.imp, dec = S.ui.impDec || {};
+  const n = rows.filter((r,i) => r.act==='add' || r.act==='update' || (r.act==='review' && dec[i]==='apply') || r.link).length;
+  const alerts = rows.filter(r => r.cls==='bad' || r.cls==='warn' || r.matchConflict).length;
+  return `<div class="card stack"><div class="head-line"><h2>معاينة الاستيراد (${rows.length})</h2>${alerts ? chip(alerts + ' تنبيه يحتاج مراجعتك','warn') : chip('لا توجد تعارضات','ok')}</div>
+    <div class="tbl-wrap"><table><thead><tr><th>الاسم</th><th>الرقم</th><th>القطاع</th><th>الحالة</th><th>الحساب المطابق</th><th>الإجراء</th></tr></thead><tbody>${rows.map((r,i) => `<tr>
+      <td translate="no">${esc(r.name)}</td><td class="mono">${esc(r.empNo)}</td><td>${esc(secName(r.sector) || r.sectorRaw || '—')}</td><td>${chip(r.st, r.cls)}${r.note ? `<span class="tiny" translate="no">${esc(r.note)}</span>` : ''}</td>
+      <td>${r.match ? `<label class="small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-act="impLink" data-i="${i}" ${r.link?'checked':''} ${r.act==='skip'?'disabled':''}><span translate="no">${esc(nm(r.match.uid))}</span> (${pct(r.match.s)})</label>${r.matchConflict ? '<span class="tiny">الحساب نفسه يطابق أكثر من اسم</span>' : ''}` : '<span class="muted small">—</span>'}</td>
+      <td>${r.act==='review' ? `<select data-v7="impDec" data-i="${i}" style="width:auto"><option value="skip" ${dec[i]!=='apply'?'selected':''}>تخطي</option><option value="apply" ${dec[i]==='apply'?'selected':''}>${r.note && r.note.startsWith('المسجّل') ? 'تحديث الاسم' : 'إضافة رغم ذلك'}</option></select>` : r.act==='add' ? 'إضافة' : r.act==='update' ? 'تحديث' : r.act==='none' ? 'لا تغيير' : 'تخطي'}</td></tr>`).join('')}</tbody></table></div>
+    <div class="row"><button class="btn primary" data-act="impApply" ${n?'':'disabled'}>اعتماد الاستيراد (${n})</button><button class="btn ghost" data-act="impCancel">إلغاء</button></div></div>`;
+}
+async function linkAccount(emp, uid, mode){
+  const st = (S.staff||[]).find(s => s.empNo===emp), u = S.users[uid];
+  if(!st || !u){ toast('تعذّر العثور على الموظف أو الحساب.'); return false; }
+  if(st.uid && st.uid !== uid){ toast('هذا الرقم مرتبط بحساب آخر. افصل الربط أولًا.'); return false; }
+  if(u.empNo && u.empNo !== emp){ toast('هذا الحساب مرتبط برقم وظيفي آخر. افصل الربط أولًا.'); return false; }
+  const now = new Date().toISOString(), b = S.db.batch();
+  b.update(S.db.doc('staff/'+emp), {uid, linkedAt:now, linkMode:mode||'admin', linkBy:S.uid});
+  b.update(S.db.doc('users/'+uid), {empNo:emp, sector:st.sector||'', officialName:st.name, linkedAt:now});
+  b.delete(S.db.doc('linkreqs/'+uid));
+  await b.commit(); audit('ربط حساب بالرقم الوظيفي', `${st.name} · ${emp} ← ${u.email||''}`); return true;
+}
+
+/* ---------- circulars ---------- */
+const CK = {admin:['تعميم إداري','info'], ops:['تعليمات تشغيلية','warn'], ack:['إقرار بالاطلاع والالتزام','ok'], policy:['سياسة داخلية','neutral'], form:['نموذج يتطلب توقيع الموظفين','bad']};
+const CSTAT = {unseen:['لم يطلع على التعميم','neutral'], viewed:['تم الاطلاع ولم يتم التوقيع','warn'], signed:['تم التوقيع','ok'], signedLate:['تم التوقيع بعد الموعد','info'], late:['تأخر عن الموعد المحدد','bad']};
+const isLate = c => !!c.deadline && today() > c.deadline;
+function cStatus(c, uid){ const s = S.csigMap[c.id+'_'+uid]; if(s) return s.late ? 'signedLate' : 'signed'; if(isLate(c)) return 'late'; return S.cviewMap[c.id+'_'+uid] ? 'viewed' : 'unseen'; }
+function cStatLbl(c, k){ const v = CSTAT[k]; if(c.action==='read'){ if(k==='viewed') return ['تم الاطلاع ولم يتم التأكيد', v[1]]; if(k==='signed') return ['تم الإقرار', v[1]]; if(k==='signedLate') return ['تم الإقرار بعد الموعد', v[1]]; } return v; }
+function myPendingCircs(){ if(!S.uid || S.admin) return []; return S.circs.filter(c => c.status==='active' && (c.targetUids||[]).includes(S.uid) && !S.csigMap[c.id+'_'+S.uid]); }
+function circTargets(c){ let ids = c.targetUids || []; if(!S.admin && S.sup) ids = ids.filter(id => userSec(id)===S.mySector); return ids; }
+function circStats(c){ const ids = circTargets(c); const st = ids.map(id => cStatus(c, id)); const signed = st.filter(x => x==='signed' || x==='signedLate').length;
+  return {ids, total:ids.length, signed, remaining:ids.length - signed, late:st.filter(x => x==='late').length, viewed:st.filter(x => x==='viewed').length, pct: ids.length ? Math.round(signed*100/ids.length) : 0}; }
+function eligibleUids(t){ return Object.entries(S.users).filter(([id,u]) => u.active!==false && (u.role==='paramedic' || u.role==='supervisor' || !u.role) && (t.mode!=='sector' || (t.sectors||[]).includes(u.sector))).map(([id]) => id); }
+function nextRef(){ const y = today().slice(0,4); const n = S.circs.filter(c => (c.ref||'').startsWith('EMS-CIR-' + y) && (c.ver||1)===1).length + 1; return `EMS-CIR-${y}-${String(n).padStart(3,'0')}`; }
+function circHead(c){ return `<div class="row small">${chip(CK[c.kind] ? CK[c.kind][0] : c.kind, CK[c.kind] ? CK[c.kind][1] : 'neutral')}<span class="mono">${esc(c.ref)} · v${c.ver||1}</span><span class="muted">إصدار ${fmtD(c.issueDate)}</span>${c.deadline ? chip('آخر موعد ' + fmtD(c.deadline), isLate(c) ? 'bad' : 'neutral') : ''}${c.status==='superseded' ? chip('استُبدل بنسخة أحدث','neutral') : c.status==='closed' ? chip('مغلق','neutral') : ''}</div>`; }
+function vCirculars(){
+  const tab = S.ui.circTab || (S.admin ? 'track' : 'mine');
+  if(S.ui.circOpen){ const c = S.circs.find(x => x.id===S.ui.circOpen); if(c) return circDetail(c); S.ui.circOpen = null; }
+  if((S.admin || S.sup) && S.ui.circTrack){ const c = S.circs.find(x => x.id===S.ui.circTrack); if(c) return circTrackDetail(c); S.ui.circTrack = null; }
+  const tabs = [];
+  if(!S.admin) tabs.push(['mine','تعاميمي']);
+  if(S.admin || S.sup) tabs.push(['track', S.admin ? 'لوحة المتابعة' : 'متابعة قطاعي']);
+  if(S.admin) tabs.push(['new', S.ui.cf && S.ui.cf.supersedes ? 'نسخة محدثة' : 'تعميم جديد']);
+  if(S.admin || S.sup) tabs.push(['archive','الأرشيف']);
+  let body = '';
+  if(tab==='new' && S.admin) body = circForm();
+  else if(tab==='track' && (S.admin || S.sup)) body = circTrack();
+  else if(tab==='archive' && (S.admin || S.sup)) body = circArchive();
+  else body = circMine();
+  return `<div class="stack">${pageHead('التعاميم والإقرارات الإدارية','Administrative Circulars & Acknowledgments')}
+    ${tabs.length > 1 ? `<div class="subtabs">${tabs.map(([k,l]) => `<button data-act="circTab" data-v="${k}" aria-pressed="${tab===k}">${l}</button>`).join('')}</div>` : ''}${body}</div>`;
+}
+function circMine(){
+  const mine = S.circs.filter(c => (c.targetUids||[]).includes(S.uid)).sort((a,b) => a.at < b.at ? 1 : -1);
+  const pend = mine.filter(c => c.status==='active' && !S.csigMap[c.id+'_'+S.uid]), done = mine.filter(c => S.csigMap[c.id+'_'+S.uid]);
+  const card = c => { const k = cStatus(c, S.uid), l = cStatLbl(c, k), rem = c.remind && c.remind[S.uid];
+    return `<button class="card stack" style="gap:6px;text-align:inherit;cursor:pointer" data-act="circOpen" data-id="${c.id}"><div class="row"><b class="grow">${esc(c.title)}</b>${chip(l[0], l[1])}</div>${circHead(c)}
+      <span class="small muted">${c.action==='sign' ? 'يتطلب توقيعًا إلكترونيًا' : 'يتطلب الاطلاع والتأكيد'}${rem && !S.csigMap[c.id+'_'+S.uid] ? ' · تذكير من الإدارة ' + fmtDT(rem) : ''}</span></button>`; };
+  return `${S.users[S.uid] && !S.users[S.uid].empNo ? linkCard() : ''}
+    <h2>بانتظار اطلاعك وتوقيعك</h2>${pend.length ? `<div class="list">${pend.map(card).join('')}</div>` : '<div class="empty">لا توجد تعاميم بانتظارك.</div>'}
+    <h2>تم توقيعها أو الإقرار بها</h2>${done.length ? `<div class="list">${done.map(c => sigRowCard(S.csigMap[c.id+'_'+S.uid])).join('')}</div>` : '<div class="empty">لا يوجد بعد.</div>'}`;
+}
+const pageImgs = {};
+async function loadCircPages(c){
+  const k = c.id; if(pageImgs[k]) return; pageImgs[k] = {status:'loading', imgs:[]};
+  try {
+    const bytes = await getChunks('cdocs', c.id, c.fileN||1); const pj = await needPdfJs();
+    const doc = await pj.getDocument({data: bytes.slice()}).promise;
+    for(let i=1; i<=doc.numPages; i++){ const pg = await doc.getPage(i); const v1 = pg.getViewport({scale:1}); const vp = pg.getViewport({scale: 1100 / v1.width});
+      const cv = document.createElement('canvas'); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height); const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+      await pg.render({canvasContext:ctx, viewport:vp}).promise; pageImgs[k].imgs.push(cv.toDataURL('image/jpeg', 0.85)); }
+    pageImgs[k].status = 'ok';
+  } catch(e){ console.error(e); pageImgs[k].status = 'err'; }
+  render();
+}
+function circDetail(c){
+  const me = S.users[S.uid] || {}, sig = S.csigMap[c.id+'_'+S.uid], target = (c.targetUids||[]).includes(S.uid);
+  if(target && !sig && !S.cviewMap[c.id+'_'+S.uid] && !S.ui['cv_'+c.id]){ S.ui['cv_'+c.id] = 1; recordView(c); }
+  const pv = pageImgs[c.id]; if(!pv) setTimeout(() => loadCircPages(c), 0);
+  const viewer = !pv || pv.status==='loading' ? '<div class="empty">جارٍ تحميل المستند…</div>' : pv.status==='err' ? `<div class="empty">تعذّر عرض المستند داخل المنصة. <button class="btn sm" data-act="circRaw" data-id="${c.id}">فتح الملف</button></div>` :
+    `<div class="pdfv">${pv.imgs.map((s,i) => `<img src="${s}" alt="صفحة ${i+1}">`).join('')}</div>`;
+  let action = '';
+  if(sig) action = `<div class="banner"><span>${sig.kind==='sign' ? 'وقّعت' : 'أقررت بالاطلاع على'} هذا التعميم في <b>${esc(fmtRiyadh(tsISO(sig.signedAt) || sig.clientAt))}</b></span><span class="row">${sig.n ? `<button class="btn sm" data-act="sigDl" data-id="${sig.id}">تنزيل النسخة الموقعة</button><button class="btn sm ghost" data-act="sigOpen" data-id="${sig.id}">فتح / طباعة</button>` : ''}</span></div>`;
+  else if(!target) action = '';
+  else if(c.status!=='active') action = '<div class="banner warn"><span>هذا التعميم لم يعد متاحًا للتوقيع (استُبدل بنسخة أحدث أو أُغلق).</span></div>';
+  else if(!me.empNo) action = linkCard();
+  else if(c.action==='read') action = `<div class="card stack"><label class="row small" style="gap:8px"><input type="checkbox" data-act="sigConsent" ${S.ui.sigConsent?'checked':''}> أقر بأنني اطلعت على التعميم كاملًا وألتزم بما ورد فيه.</label>
+      <div class="row"><button class="btn primary" id="sigOk" data-act="circAck" data-id="${c.id}" ${S.ui.sigConsent?'':'disabled'}>تأكيد الاطلاع والإقرار</button></div></div>`;
+  else if(!S.ui.signing) action = `<div class="row"><button class="btn primary" data-act="signStart">التوقيع والإقرار</button></div>`;
+  else action = `<div class="card stack" style="border-color:var(--info)"><h2>التوقيع الإلكتروني</h2>
+      <dl class="kv" style="display:grid"><dt>اسم الموظف</dt><dd translate="no"><b>${esc(me.officialName||me.name)}</b></dd><dt>الرقم الوظيفي</dt><dd class="mono">${esc(me.empNo)}</dd><dt>مرجع التعميم</dt><dd class="mono">${esc(c.ref)} · v${c.ver||1}</dd><dt>تاريخ ووقت التوقيع</dt><dd id="sigNow">${esc(fmtRiyadh(Date.now()))}</dd></dl>
+      <p class="sub">ارسم توقيعك داخل المربع بإصبعك أو بالقلم أو بالماوس.</p>
+      <canvas id="sigPad" class="sigpad" aria-label="مساحة التوقيع"></canvas>
+      <label class="row small" style="gap:8px"><input type="checkbox" data-act="sigConsent" ${S.ui.sigConsent?'checked':''}> أقر بأنني اطلعت على المستند كاملًا، وأن هذا توقيعي الإلكتروني، وأوافق على مضمونه.</label>
+      <div class="row"><button class="btn primary" id="sigOk" data-act="circSign" data-id="${c.id}" ${S.ui.sigConsent && (S.ui.sigStrokes||[]).length ? '' : 'disabled'}>تأكيد التوقيع</button><button class="btn ghost" data-act="sigClear">مسح التوقيع</button><button class="btn ghost" data-act="signCancel">إلغاء</button></div></div>`;
+  return `<div class="stack">${pageHead(esc(c.title), 'Circular', `<button class="btn sm ghost" data-act="circBack">رجوع</button>`)}${circHead(c)}
+    ${c.desc ? `<p translate="no" style="white-space:pre-wrap;margin:0">${esc(c.desc)}</p>` : ''}
+    <div class="row"><button class="btn sm ghost" data-act="circRaw" data-id="${c.id}">فتح ملف PDF الأصلي</button>${S.admin ? `<button class="btn sm" data-act="circTrackOpen" data-id="${c.id}">متابعة التوقيعات</button>` : ''}</div>
+    ${viewer}${action}</div>`;
+}
+async function recordView(c){ try { await S.db.doc('cviews/' + c.id + '_' + S.uid).set({circ:c.id, by:S.uid, sector:S.mySector||'', at:new Date().toISOString()}); } catch(e){ console.warn('view', e && e.code); } }
+function circForm(){
+  const f = S.ui.cf || (S.ui.cf = {kind:'admin', action:'sign', src:'pdf', mode:'all', sectors:[], uids:[], sigPos:'append'});
+  const users = Object.entries(S.users).filter(([id,u]) => u.active!==false && u.role!=='maintenance' && u.role!=='admin').sort((a,b) => (a[1].officialName||a[1].name||'').localeCompare(b[1].officialName||b[1].name||'', 'ar'));
+  const tg = f.mode==='list' ? f.uids.length : eligibleUids(f).length;
+  const seg = (k, opts) => `<div class="seg" role="group">${opts.map(([v,l]) => `<button data-act="cfSet" data-k="${k}" data-v="${v}" aria-pressed="${f[k]===v}">${l}</button>`).join('')}</div>`;
+  return `<div class="card stack">${f.supersedes ? `<div class="banner"><span>إصدار نسخة محدثة من <b class="mono">${esc(f.ref)}</b> (v${f.ver}). تُغلق النسخة السابقة ويُطلب إقرار جديد من جميع المستهدفين، وتبقى التوقيعات السابقة محفوظة في الأرشيف.</span></div>` : ''}
+    <label class="f">عنوان التعميم<input type="text" id="cfTitle" data-bind="cfTitle" value="${esc(S.ui.cfTitle||'')}"></label>
+    <label class="f">الوصف<textarea id="cfDesc" data-bind="cfDesc">${esc(S.ui.cfDesc||'')}</textarea></label>
+    <div class="fields"><label class="f">النوع<select data-v7="cfKind">${Object.entries(CK).map(([k,v]) => `<option value="${k}" ${f.kind===k?'selected':''}>${v[0]}</option>`).join('')}</select></label>
+      <label class="f">تاريخ الإصدار<input type="date" id="cfIssue" data-bind="cfIssue" value="${esc(S.ui.cfIssue||today())}"></label>
+      <label class="f">الموعد النهائي (اختياري)<input type="date" id="cfDeadline" data-bind="cfDeadline" value="${esc(S.ui.cfDeadline||'')}"></label></div>
+    <div class="stack" style="gap:6px"><b class="small">الإجراء المطلوب من الموظف</b>${seg('action', [['sign','توقيع إلكتروني على المستند'],['read','اطلاع وتأكيد فقط']])}</div>
+    <div class="stack" style="gap:6px"><b class="small">المستند</b>${seg('src', [['pdf','رفع ملف PDF'],['editor','كتابة التعميم داخل المنصة']])}</div>
+    ${f.src==='pdf' ? `<div class="row"><label class="btn">${f.pdfName ? 'تغيير الملف' : 'اختيار ملف PDF'}<input type="file" id="cfPdf" accept="application/pdf,.pdf" hidden></label>${f.pdfName ? `<span class="small"><b>${esc(f.pdfName)}</b> · <span class="num">${Math.round((f.pdfSize||0)/1024)}</span> KB</span>` : '<span class="small muted">الحد الأقصى 8 ميجابايت</span>'}</div>
+      ${f.action==='sign' ? `<label class="f">مكان التوقيع<select data-v7="cfSigPos"><option value="append" ${f.sigPos==='append'?'selected':''}>صفحة توقيع وإقرار مستقلة في نهاية المستند</option><option value="lastBottom" ${f.sigPos==='lastBottom'?'selected':''}>أسفل الصفحة الأخيرة</option></select></label>` : ''}` :
+      `<label class="f">نص التعميم<textarea id="cfBody" data-bind="cfBody" style="min-height:220px" placeholder="اكتب النص هنا. سطر يبدأ بـ # يصبح عنوانًا فرعيًا، وسطر يبدأ بـ - يصبح نقطة.">${esc(S.ui.cfBody||'')}</textarea></label>
+      <div class="row"><button class="btn sm" data-act="cfPreview">معاينة PDF</button><span class="small muted">يُحوَّل النص إلى PDF بترويسة المنصة، مع خانة مخصصة لتوقيع الموظف.</span></div>`}
+    <div class="stack" style="gap:6px"><b class="small">الموظفون المستهدفون</b>${seg('mode', [['all','جميع الموظفين'],['sector','قطاع معين'],['list','مجموعة محددة']])}
+      ${f.mode==='sector' ? `<div class="row">${Object.keys(SECTORS).map(k => `<label class="row small" style="gap:6px"><input type="checkbox" data-act="cfSec" data-v="${k}" ${f.sectors.includes(k)?'checked':''}>${SECTORS[k].ar}</label>`).join('')}</div>` : ''}
+      ${f.mode==='list' ? `<div class="list" style="max-height:260px;overflow:auto">${users.map(([id,u]) => `<label class="row small" style="gap:6px"><input type="checkbox" data-act="cfUid" data-v="${id}" ${f.uids.includes(id)?'checked':''}><span translate="no">${esc(u.officialName||u.name||'')}</span> <span class="mono muted">${esc(u.empNo||'')}</span> <span class="muted">${esc(secName(u.sector))}</span></label>`).join('')}</div>` : ''}
+      <span class="small">${chip(tg + ' موظف مستهدف', tg ? 'info' : 'bad')}</span></div>
+    <div class="row"><button class="btn primary" data-act="cfPublish" ${(S.ui.cfTitle||'').trim() && tg && (f.src==='editor' ? (S.ui.cfBody||'').trim() : f.pdfBytes) ? '' : 'disabled'}>نشر التعميم</button><button class="btn ghost" data-act="cfReset">إلغاء</button></div></div>`;
+}
+function circTrack(){
+  const show = S.ui.ctF || 'active';
+  const list = S.circs.filter(c => show==='all' || c.status==='active').filter(c => S.admin || circTargets(c).length).sort((a,b) => a.at < b.at ? 1 : -1);
+  return `<div class="subtabs">${[['active','النشطة'],['all','الكل']].map(([k,l]) => `<button data-act="ctF" data-v="${k}" aria-pressed="${show===k}">${l}</button>`).join('')}</div>
+    ${list.length ? `<div class="list">${list.map(c => { const s = circStats(c);
+      return `<div class="card stack" style="gap:8px"><div class="row"><b class="grow">${esc(c.title)}</b>${chip(s.pct + '%', s.pct===100 ? 'ok' : s.late ? 'bad' : 'warn')}</div>${circHead(c)}
+        <div class="bar full" aria-label="نسبة الاكتمال"><i style="width:${s.pct}%"></i></div>
+        <div class="row small">${chip(s.total + ' مستهدف','info')}${chip(s.signed + ' وقّع','ok')}${chip(s.remaining + ' متبقٍ', s.remaining ? 'warn' : 'ok')}${s.late ? chip(s.late + ' متأخر','bad') : ''}<span class="grow"></span><button class="btn sm" data-act="circTrackOpen" data-id="${c.id}">التفاصيل</button></div></div>`; }).join('')}</div>` : '<div class="empty">لا توجد تعاميم.</div>'}`;
+}
+function circTrackDetail(c){
+  const s = circStats(c), f = S.ui.ctS || 'all';
+  const rows = s.ids.map(id => ({id, k:cStatus(c, id), sig:S.csigMap[c.id+'_'+id], v:S.cviewMap[c.id+'_'+id]})).filter(r => f==='all' || (f==='pending' ? !r.sig : r.sig)).sort((a,b) => nm(a.id).localeCompare(nm(b.id), 'ar'));
+  return `<div class="stack">${pageHead(esc(c.title), 'Signature Tracking', `<button class="btn sm ghost" data-act="circTrackBack">رجوع</button>`)}${circHead(c)}
+    <div class="tiles" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${[['المستهدفون', s.total, 'info'],['الموقعون', s.signed, 'ok'],['المتبقون', s.remaining, s.remaining?'warn':'ok'],['نسبة الاكتمال', s.pct + '%', s.pct===100?'ok':'warn']].map(([l,v,k]) => `<div class="card flat stack" style="gap:2px"><span class="muted small">${l}</span><b class="num" style="font-size:24px;color:var(--${k==='info'?'info':k==='ok'?'ok':'warn'})">${v}</b></div>`).join('')}</div>
+    <div class="bar full"><i style="width:${s.pct}%"></i></div>
+    <div class="row">${S.admin && c.status==='active' && s.remaining ? `<button class="btn primary" data-act="circRemind" data-id="${c.id}">إرسال تذكير لغير الموقعين (${s.remaining})</button>` : ''}
+      <button class="btn" data-act="circSheet" data-id="${c.id}">كشف التوقيع Excel</button><button class="btn" data-act="circReport" data-id="${c.id}" data-nopdf="1">تقرير الالتزام PDF</button>
+      ${c.action==='sign' && s.signed ? `<button class="btn" data-act="circAll" data-id="${c.id}">تنزيل جميع النسخ الموقعة</button>` : ''}
+      <button class="btn ghost" data-act="circOpen" data-id="${c.id}">عرض المستند</button>
+      ${S.admin && c.status==='active' ? `<button class="btn ghost" data-act="circNewVer" data-id="${c.id}">إصدار نسخة محدثة</button><button class="btn ghost danger" data-act="circClose" data-id="${c.id}">${S.ui.confirm==='cc'+c.id ? 'تأكيد الإغلاق' : 'إغلاق التعميم'}</button>` : ''}</div>
+    <div class="subtabs">${[['all','الكل'],['pending','لم يوقعوا'],['done','وقّعوا']].map(([k,l]) => `<button data-act="ctS" data-v="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div>
+    <div class="tbl-wrap"><table><thead><tr><th>الموظف</th><th>الرقم الوظيفي</th><th>القطاع</th><th>الحالة</th><th>الاطلاع</th><th>التوقيع</th><th></th></tr></thead><tbody>${rows.map(r => { const l = cStatLbl(c, r.k);
+      return `<tr><td><b translate="no">${esc(nm(r.id))}</b></td><td class="mono">${esc((r.sig && r.sig.empNo) || empNoOf(r.id) || '—')}</td><td>${esc(secName(userSec(r.id)))}</td><td>${chip(l[0], l[1])}${c.remind && c.remind[r.id] && !r.sig ? `<span class="tiny">ذُكّر ${fmtDT(c.remind[r.id])}</span>` : ''}</td>
+        <td class="small">${r.v ? fmtDT(r.v.at) : '—'}</td><td class="small">${r.sig ? esc(fmtRiyadh(tsISO(r.sig.signedAt) || r.sig.clientAt)) : '—'}</td>
+        <td>${r.sig && r.sig.n ? `<button class="btn sm" data-act="sigDl" data-id="${r.sig.id}">تنزيل</button>` : ''}${!r.sig && S.admin && c.status==='active' ? `<button class="btn sm ghost" data-act="circRemind" data-id="${c.id}" data-u="${r.id}">تذكير / إعادة إرسال</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div></div>`;
+}
+function circArchive(){
+  const q = normAr(S.ui.caQ||''), y = S.ui.caY||'', m = S.ui.caM||'', k = S.ui.caK||'';
+  let list = S.circs.slice().sort((a,b) => a.at < b.at ? 1 : -1);
+  if(y) list = list.filter(c => (c.issueDate||c.at||'').slice(0,4)===y); if(m) list = list.filter(c => (c.issueDate||c.at||'').slice(5,7)===m); if(k) list = list.filter(c => c.kind===k);
+  const empHits = q ? S.csigs.filter(x => normAr(x.name).includes(q) || (x.empNo||'').toLowerCase()===q) : [];
+  if(q) list = list.filter(c => normAr(c.title).includes(q) || (c.ref||'').toLowerCase().includes(q) || empHits.some(x => x.circ===c.id));
+  const years = Array.from(new Set(S.circs.map(c => (c.issueDate||c.at||'').slice(0,4)))).filter(Boolean).sort().reverse();
+  const groups = {}; list.forEach(c => { const g = (c.issueDate||c.at||'').slice(0,7); (groups[g] = groups[g] || []).push(c); });
+  return `<div class="fields"><label class="f">بحث<input type="search" id="caQ" data-bind="caQ" data-live="1" placeholder="العنوان أو الرقم المرجعي أو اسم الموظف" value="${esc(S.ui.caQ||'')}"></label>
+    <label class="f">السنة<select data-bind="caY"><option value="">الكل</option>${years.map(v => `<option ${v===y?'selected':''}>${v}</option>`).join('')}</select></label>
+    <label class="f">الشهر<select data-bind="caM"><option value="">الكل</option>${Array.from({length:12}, (_,i) => String(i+1).padStart(2,'0')).map(v => `<option ${v===m?'selected':''}>${v}</option>`).join('')}</select></label>
+    <label class="f">النوع<select data-bind="caK"><option value="">الكل</option>${Object.entries(CK).map(([kk,v]) => `<option value="${kk}" ${kk===k?'selected':''}>${v[0]}</option>`).join('')}</select></label></div>
+    <div class="row"><button class="btn sm" data-act="circArcX">تصدير الأرشيف Excel</button></div>
+    ${empHits.length ? `<h2>توقيعات مطابقة لاسم الموظف</h2><div class="list">${empHits.map(sigRowCard).join('')}</div>` : ''}
+    ${Object.keys(groups).length ? Object.keys(groups).sort().reverse().map(g => `<h2>${esc(ymLabel(g))}</h2><div class="list">${groups[g].map(c => { const s = circStats(c);
+      return `<div class="card flat stack" style="gap:6px"><div class="row"><b class="grow">${esc(c.title)}</b>${chip(s.signed + '/' + s.total, s.pct===100 ? 'ok' : 'warn')}</div>${circHead(c)}<div class="row"><button class="btn sm" data-act="circTrackOpen" data-id="${c.id}">التفاصيل</button><button class="btn sm ghost" data-act="circOpen" data-id="${c.id}">المستند</button></div></div>`; }).join('')}</div>`).join('') : '<div class="empty">لا توجد نتائج.</div>'}`;
+}
+function circRowsFor(c){ const s = circStats(c); return s.ids.map(id => { const k = cStatus(c, id), sig = S.csigMap[c.id+'_'+id], v = S.cviewMap[c.id+'_'+id];
+  return {'الموظف': nm(id), 'الرقم الوظيفي': (sig && sig.empNo) || empNoOf(id), 'القطاع': secName(userSec(id)), 'الحالة': cStatLbl(c, k)[0], 'تاريخ الاطلاع': v ? xD(v.at) + ' ' + xT(v.at) : '', 'تاريخ ووقت التوقيع': sig ? fmtRiyadh(tsISO(sig.signedAt) || sig.clientAt) : '', 'رمز التحقق': sig && sig.signedHash ? sig.signedHash.slice(0,16) : ''}; }); }
+function circListRows(list){ return list.map(c => { const s = circStats(c); return {'المرجع': c.ref, 'النسخة': c.ver||1, 'العنوان': c.title, 'النوع': (CK[c.kind]||[c.kind])[0], 'الإجراء': c.action==='sign' ? 'توقيع إلكتروني' : 'اطلاع وتأكيد', 'تاريخ الإصدار': c.issueDate, 'الموعد النهائي': c.deadline||'', 'الحالة': c.status==='active' ? 'نشط' : c.status==='superseded' ? 'مستبدل' : 'مغلق', 'المستهدفون': s.total, 'الموقعون': s.signed, 'المتبقون': s.remaining, 'نسبة الاكتمال': s.pct + '%'}; }); }
+function csigRows(list){ return list.map(x => ({'المرجع': x.ref, 'النسخة': x.ver||1, 'التعميم': x.title||'', 'الموظف': x.name, 'الرقم الوظيفي': x.empNo, 'القطاع': secName(x.sector), 'النوع': x.kind==='sign' ? 'توقيع' : 'إقرار', 'التاريخ والوقت': fmtRiyadh(tsISO(x.signedAt) || x.clientAt), 'بعد الموعد': x.late ? 'نعم' : 'لا', 'بصمة المستند الأصلي SHA-256': x.docHash||'', 'بصمة النسخة الموقعة SHA-256': x.signedHash||''})); }
+function staffRows(){ return (S.staff||[]).map(s => ({'الرقم الوظيفي': s.empNo, 'الاسم': s.name, 'القطاع': secName(s.sector), 'الحساب المرتبط': s.uid ? ((S.users[s.uid]||{}).email||'') : '', 'حالة الربط': s.uid ? 'مربوط' : 'غير مربوط', 'تاريخ الربط': s.linkedAt ? xD(s.linkedAt) : ''})); }
+
+/* ---------- PDF building (canvas → images keeps Arabic shaping correct) ---------- */
+function wrapLines(ctx, text, maxW){ const out = []; String(text).split('\n').forEach(par => { const words = par.split(/\s+/).filter(Boolean); if(!words.length){ out.push(''); return; } let line = '';
+  words.forEach(w => { const t = line ? line + ' ' + w : w; if(ctx.measureText(t).width > maxW && line){ out.push(line); line = w; } else line = t; }); out.push(line); }); return out; }
+function loadImg(src){ return new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; }); }
+const FONT = w => `${w} {s}px "IBM Plex Sans Arabic", Tahoma, "Geeza Pro", sans-serif`;
+const font = (w, s) => FONT(w).replace('{s}', s);
+async function docFonts(){ try { await document.fonts.load(font(400, 20)); await document.fonts.load(font(700, 20)); } catch(e){} }
+async function canvasPage(drawFn){ const W = 1240, H = 1754; const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0,0,W,H); ctx.direction = LANG==='en' ? 'ltr' : 'rtl'; await drawFn(ctx, W, H); return cv; }
+async function drawLetterhead(ctx, W, o){
+  const M = 100, logo = await loadImg((document.querySelector('link[rel=icon]')||{}).href || ''); const rtl = LANG !== 'en';
+  if(logo) ctx.drawImage(logo, rtl ? W - M - 130 : M, 60, 130, 130);
+  ctx.fillStyle = '#11283A'; ctx.textAlign = rtl ? 'right' : 'left'; const tx = rtl ? W - M - 150 : M + 150;
+  ctx.font = font(700, 34); ctx.fillText(tr('إسعاف الحياة'), tx, 105); ctx.font = font(400, 24); ctx.fillStyle = '#56656F'; ctx.fillText(o.kindLabel || '', tx, 145);
+  ctx.textAlign = rtl ? 'left' : 'right'; ctx.font = font(400, 22); const lx = rtl ? M : W - M;
+  ctx.fillText(`${tr('المرجع')}: ${o.ref} · v${o.ver}`, lx, 95); ctx.fillText(`${tr('تاريخ الإصدار')}: ${o.issueDate}`, lx, 130); if(o.deadline) ctx.fillText(`${tr('الموعد النهائي')}: ${o.deadline}`, lx, 165);
+  ctx.fillStyle = '#11283A'; ctx.fillRect(M, 210, W - 2*M, 5); ctx.fillStyle = '#B42318'; ctx.fillRect(rtl ? W - M - 160 : M, 210, 160, 5);
+}
+async function editorPdf(o){
+  const L = await needPdfLib(); await docFonts();
+  const W = 1240, H = 1754, M = 100, rtl = LANG !== 'en', X = rtl ? W - M : M, maxW = W - 2*M;
+  const blocks = []; String(o.body||'').split('\n').forEach(l => { const t = l.trim(); if(!t) blocks.push({k:'gap'}); else if(t.startsWith('#')) blocks.push({k:'h', t:t.replace(/^#+\s*/,'')}); else if(/^[-•*]\s+/.test(t)) blocks.push({k:'li', t:t.replace(/^[-•*]\s+/,'')}); else blocks.push({k:'p', t}); });
+  const pages = []; let ctx, y;
+  const newPage = async first => { const cv = await canvasPage(async (c) => { ctx = c; await drawLetterhead(c, W, o); }); pages.push(cv); y = 270;
+    if(first){ ctx.fillStyle = '#14212B'; ctx.font = font(700, 40); ctx.textAlign = rtl ? 'right' : 'left'; wrapLines(ctx, o.title, maxW).forEach(l => { y += 52; ctx.fillText(l, X, y); }); y += 30; } };
+  const ensure = async h => { if(y + h > H - 130) await newPage(false); };
+  await newPage(true);
+  for(const b of blocks){
+    if(b.k==='gap'){ y += 18; continue; }
+    const size = b.k==='h' ? 30 : 25, lh = b.k==='h' ? 46 : 42; ctx.font = font(b.k==='h' ? 700 : 400, size);
+    const ind = b.k==='li' ? 34 : 0; const lines = wrapLines(ctx, b.t, maxW - ind);
+    if(b.k==='h') y += 14;
+    for(let i=0; i<lines.length; i++){ await ensure(lh); ctx.font = font(b.k==='h' ? 700 : 400, size); ctx.fillStyle = b.k==='h' ? '#11283A' : '#14212B'; ctx.textAlign = rtl ? 'right' : 'left';
+      y += lh; if(b.k==='li' && i===0){ ctx.beginPath(); ctx.arc(rtl ? X - 10 : X + 10, y - 9, 6, 0, Math.PI*2); ctx.fill(); }
+      ctx.fillText(lines[i], rtl ? X - ind : X + ind, y); }
+  }
+  let sigBox = null;
+  if(o.action==='sign'){ const bh = 340; await ensure(bh + 60); y += 40;
+    ctx.strokeStyle = '#8EA6B8'; ctx.setLineDash([10,8]); ctx.lineWidth = 2; ctx.strokeRect(M, y, W - 2*M, bh); ctx.setLineDash([]);
+    ctx.fillStyle = '#8EA6B8'; ctx.font = font(400, 22); ctx.textAlign = 'center'; ctx.fillText(tr('خانة توقيع الموظف — تُملأ تلقائيًا عند التوقيع الإلكتروني'), W/2, y + bh/2);
+    sigBox = {page: pages.length - 1, x: M, y, w: W - 2*M, h: bh}; }
+  const pdf = await L.PDFDocument.create(); pdf.setTitle(o.title); pdf.setSubject(o.ref + ' v' + o.ver); pdf.setCreator('Al Hayat EMS'); pdf.setProducer('Al Hayat EMS');
+  const sc = 595.28 / W;
+  for(let i=0; i<pages.length; i++){ const c = pages[i].getContext('2d'); c.fillStyle = '#8EA6B8'; c.font = font(400, 20); c.textAlign = 'center'; c.fillText(`${o.ref} · v${o.ver} · ${i+1} / ${pages.length}`, W/2, H - 60);
+    const img = await pdf.embedJpg(b64ToBytes(pages[i].toDataURL('image/jpeg', 0.9).split(',')[1])); const p = pdf.addPage([595.28, 841.89]); p.drawImage(img, {x:0, y:0, width:595.28, height:841.89}); }
+  if(sigBox) sigBox = {page: sigBox.page, x: sigBox.x*sc, y: (H - sigBox.y - sigBox.h)*sc, w: sigBox.w*sc, h: sigBox.h*sc};
+  return {bytes: await pdf.save(), sigBox, pages: pages.length};
+}
+function sigPng(strokes, w, h){ const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.lineWidth = Math.max(3, w/170); x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = '#0B2545';
+  strokes.forEach(s => { x.beginPath(); s.forEach((p,i) => i ? x.lineTo(p[0]*w, p[1]*h) : x.moveTo(p[0]*w, p[1]*h)); if(s.length===1) x.lineTo(s[0][0]*w + 1, s[0][1]*h); x.stroke(); }); return c; }
+async function sigBlock(c, me, whenTxt, sigCv, hashShort){
+  await docFonts(); const W = 1200, H = 340, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const x = cv.getContext('2d'); const rtl = LANG !== 'en';
+  x.fillStyle = '#fff'; x.fillRect(0,0,W,H); x.strokeStyle = '#11283A'; x.lineWidth = 3; x.strokeRect(2,2,W-4,H-4); x.fillStyle = '#11283A'; x.fillRect(2,2,W-4,52);
+  x.direction = rtl ? 'rtl' : 'ltr'; x.textAlign = rtl ? 'right' : 'left'; x.fillStyle = '#fff'; x.font = font(700, 26); x.fillText(tr(c.action==='sign' ? 'توقيع وإقرار إلكتروني' : 'إقرار بالاطلاع'), rtl ? W - 24 : 24, 38);
+  const rows = [[tr('اسم الموظف'), me.officialName||me.name], [tr('الرقم الوظيفي'), me.empNo], [tr('تاريخ ووقت التوقيع'), whenTxt], [tr('مرجع التعميم'), `${c.ref} · v${c.ver||1}`], [tr('رمز التحقق'), hashShort]];
+  x.fillStyle = '#14212B'; let yy = 98; const lx = rtl ? W - 24 : 24, vx = rtl ? W - 250 : 250;
+  rows.forEach(([k,v]) => { x.font = font(400, 22); x.fillStyle = '#56656F'; x.fillText(k, lx, yy); x.font = font(700, 24); x.fillStyle = '#14212B'; x.fillText(String(v||''), vx, yy); yy += 52; });
+  const bx = rtl ? 24 : W - 24 - 420; x.strokeStyle = '#C9D3DA'; x.lineWidth = 2; x.strokeRect(bx, 70, 420, 250); if(sigCv) x.drawImage(sigCv, bx + 10, 80, 400, 230);
+  return cv;
+}
+async function signedPdf(c, me, strokes, when){
+  const L = await needPdfLib(); const src = await getChunks('cdocs', c.id, c.fileN||1);
+  const pdf = await L.PDFDocument.load(src.slice(), {ignoreEncryption:true});
+  const whenTxt = fmtRiyadh(when) + ' (KSA)', sigCv = sigPng(strokes, 800, 460);
+  const blk = await sigBlock(c, me, whenTxt, sigCv, (c.fileHash||'').slice(0,16).toUpperCase());
+  const blkImg = await pdf.embedPng(b64ToBytes(blk.toDataURL('image/png').split(',')[1]));
+  // footer stamp on every original page
+  const st = document.createElement('canvas'); st.width = 1600; st.height = 44; const sx = st.getContext('2d'); sx.fillStyle = '#fff'; sx.fillRect(0,0,1600,44); sx.direction = LANG==='en' ? 'ltr' : 'rtl'; sx.textAlign = 'center'; sx.fillStyle = '#1F5D8C'; sx.font = font(400, 24);
+  sx.fillText(`${tr('موقّع إلكترونيًا')}: ${me.officialName||me.name} · ${me.empNo} · ${whenTxt} · ${c.ref} v${c.ver||1}`, 800, 31);
+  const stImg = await pdf.embedPng(b64ToBytes(st.toDataURL('image/png').split(',')[1]));
+  pdf.getPages().forEach(p => { const {width} = p.getSize(); const w = width - 40, h = w * 44 / 1600; p.drawImage(stImg, {x:20, y:4, width:w, height:h}); });
+  const pages = pdf.getPages(), last = pages[pages.length - 1];
+  if(c.sigPos==='box' && c.sigBox){ const p = pages[c.sigBox.page] || last; const b = c.sigBox; const r = Math.min(b.w/1200, b.h/340); p.drawImage(blkImg, {x: b.x + (b.w - 1200*r)/2, y: b.y + (b.h - 340*r)/2, width: 1200*r, height: 340*r}); }
+  else if(c.sigPos==='lastBottom'){ const {width} = last.getSize(); const w = width - 60, h = w*340/1200; last.drawRectangle({x:28, y:24, width:w+4, height:h+4, color:L.rgb(1,1,1)}); last.drawImage(blkImg, {x:30, y:26, width:w, height:h}); }
+  else { const cv = await canvasPage(async (x, W, H) => { await drawLetterhead(x, W, {ref:c.ref, ver:c.ver||1, issueDate:c.issueDate, deadline:c.deadline, kindLabel:tr((CK[c.kind]||[''])[0])});
+      const rtl = LANG !== 'en', M = 100, X = rtl ? W - M : M; x.textAlign = rtl ? 'right' : 'left'; x.fillStyle = '#11283A'; x.font = font(700, 38); x.fillText(tr('صفحة التوقيع والإقرار'), X, 320);
+      x.fillStyle = '#14212B'; x.font = font(400, 26); let y = 380; wrapLines(x, `${tr('أقر أنا الموقع أدناه بأنني اطلعت على')} «${c.title}» (${c.ref} · v${c.ver||1}) ${tr('اطلاعًا كاملًا، وأن هذا توقيعي الإلكتروني، وألتزم بما ورد فيه.')}`, W - 2*M).forEach(l => { x.fillText(l, X, y); y += 44; });
+      x.drawImage(blk, M, y + 30, W - 2*M, (W - 2*M) * 340 / 1200);
+      x.fillStyle = '#56656F'; x.font = font(400, 20); let yy = y + 60 + (W - 2*M) * 340 / 1200;
+      [`${tr('بصمة المستند الأصلي SHA-256')}: ${c.fileHash||'—'}`, `${tr('سُجّلت عملية التوقيع من حساب الموظف نفسه، مع الوقت من الخادم وسجل تدقيق إلكتروني.')}`].forEach(l => { wrapLines(x, l, W - 2*M).forEach(t => { x.fillText(t, X, yy); yy += 32; }); });
+      x.textAlign = 'center'; x.fillText(`${c.ref} · v${c.ver||1}`, W/2, H - 60); });
+    const img = await pdf.embedJpg(b64ToBytes(cv.toDataURL('image/jpeg', 0.92).split(',')[1])); const p = pdf.addPage([595.28, 841.89]); p.drawImage(img, {x:0, y:0, width:595.28, height:841.89}); }
+  pdf.setTitle(`${c.title} — ${me.officialName||me.name}`); pdf.setSubject(`${c.ref} v${c.ver||1} · ${me.empNo}`); pdf.setKeywords([c.ref, String(me.empNo), c.fileHash||'']); pdf.setCreator('Al Hayat EMS'); pdf.setProducer('Al Hayat EMS'); pdf.setModificationDate(new Date(when));
+  return await pdf.save();
+}
+async function sigBytes(x){ return getChunks('csigned', `${x.circ}_${x.by}_${x.token}`, x.n); }
+const sigFname = x => `${x.ref}_v${x.ver||1}_${x.empNo}.pdf`;
+
+/* ---------- signature pad ---------- */
+function sigPadInit(){
+  const c = document.getElementById('sigPad'); if(!c || c.dataset.init) return; c.dataset.init = '1';
+  const ratio = window.devicePixelRatio || 1, w = c.clientWidth || 320, h = c.clientHeight || 200; c.width = w*ratio; c.height = h*ratio;
+  const ctx = c.getContext('2d'); ctx.scale(ratio, ratio); ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink') || '#14212B';
+  const st = S.ui.sigStrokes = S.ui.sigStrokes || [];
+  const redraw = () => { ctx.clearRect(0,0,w,h); st.forEach(s => { ctx.beginPath(); s.forEach((p,i) => i ? ctx.lineTo(p[0]*w, p[1]*h) : ctx.moveTo(p[0]*w, p[1]*h)); if(s.length===1) ctx.lineTo(s[0][0]*w + 0.5, s[0][1]*h); ctx.stroke(); }); };
+  redraw(); let cur = null;
+  const pos = e => { const r = c.getBoundingClientRect(); return [Math.min(1, Math.max(0, (e.clientX - r.left)/r.width)), Math.min(1, Math.max(0, (e.clientY - r.top)/r.height))]; };
+  c.addEventListener('pointerdown', e => { e.preventDefault(); try { c.setPointerCapture(e.pointerId); } catch(_){} cur = [pos(e)]; st.push(cur); redraw(); });
+  c.addEventListener('pointermove', e => { if(!cur) return; e.preventDefault(); cur.push(pos(e)); redraw(); });
+  const up = () => { if(!cur) return; cur = null; const b = document.getElementById('sigOk'); if(b) b.disabled = !(st.length && S.ui.sigConsent); };
+  c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up); c.addEventListener('pointerleave', up);
+}
+function v7After(){
+  addPdfTwins(); sigPadInit();
+  const n = document.getElementById('sigNow'); if(n && !S.sigTimer) S.sigTimer = setInterval(() => { const e = document.getElementById('sigNow'); if(e) e.textContent = fmtRiyadh(Date.now()); else { clearInterval(S.sigTimer); S.sigTimer = null; } }, 1000);
+  { const v = document.getElementById('view'); const p = PARENT[S.view]; if(v && p && !document.getElementById('backBar')) v.insertAdjacentHTML('afterbegin', `<div id="backBar" class="row" style="margin-bottom:8px"><button class="btn sm ghost" data-act="go" data-v="${p}">→ ${esc(tr(PARENT_LBL[p]))}</button></div>`); }
+}
+
+/* ---------- admin: keep "all / sector" targets in sync as accounts join ---------- */
+let syncBusy = false;
+async function syncTargets(){
+  if(!S.admin || syncBusy) return; syncBusy = true;
+  try { for(const c of S.circs.filter(c => c.status==='active' && c.target && c.target.mode !== 'list')){
+      const miss = eligibleUids(c.target).filter(id => !(c.targetUids||[]).includes(id));
+      if(miss.length) await S.db.doc('circulars/'+c.id).update({targetUids: FV().arrayUnion(...miss)}); } } catch(e){ console.warn('sync', e && e.code); }
+  syncBusy = false;
+}
+
+/* ---------- subscriptions ---------- */
+function v7Subs(db){
+  const bump = () => { S.csigMap = {}; S.csigs.forEach(x => S.csigMap[x.circ + '_' + x.by] = x); S.cviewMap = {}; S.cviews.forEach(x => S.cviewMap[x.circ + '_' + x.by] = x); render(); };
+  const warn = k => e => console.warn(k, e && e.code);
+  const docs = q => q.docs.map(d => Object.assign({id:d.id}, d.data()));
+  const merge = (key, part) => snap => { S['_'+key] = S['_'+key] || {}; S['_'+key][part] = docs(snap); const m = {}; Object.values(S['_'+key]).flat().forEach(x => m[x.id] = x); S[key] = Object.values(m); bump(); };
+  if(S.admin){
+    db.collection('staff').onSnapshot(q => { S.staff = docs(q).sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ar')); render(); }, warn('staff'));
+    db.collection('linkreqs').onSnapshot(q => { S.linkreqs = docs(q); render(); }, warn('linkreqs'));
+    db.collection('circulars').orderBy('at','desc').limit(300).onSnapshot(q => { S.circs = docs(q); render(); setTimeout(syncTargets, 500); }, warn('circulars'));
+    db.collection('csigs').onSnapshot(merge('csigs','all'), warn('csigs'));
+    db.collection('cviews').onSnapshot(merge('cviews','all'), warn('cviews'));
+  } else {
+    if(S.sup && S.mySector){
+      db.collection('staff').where('sector','==',S.mySector).onSnapshot(q => { S.staff = docs(q); render(); }, warn('staff'));
+      db.collection('circulars').orderBy('at','desc').limit(300).onSnapshot(q => { S.circs = docs(q); render(); }, warn('circulars'));
+      db.collection('csigs').where('sector','==',S.mySector).onSnapshot(merge('csigs','sec'), warn('csigs'));
+      db.collection('cviews').where('sector','==',S.mySector).onSnapshot(merge('cviews','sec'), warn('cviews'));
+    } else db.collection('circulars').where('targetUids','array-contains',S.uid).onSnapshot(q => { S.circs = docs(q); render(); }, warn('circulars'));
+    db.collection('csigs').where('by','==',S.uid).onSnapshot(merge('csigs','mine'), warn('csigs'));
+    db.collection('cviews').where('by','==',S.uid).onSnapshot(merge('cviews','mine'), warn('cviews'));
+    db.doc('linkreqs/'+S.uid).onSnapshot(sn => { S.myLinkReq = sn.exists ? sn.data() : null; render(); }, warn('linkreq'));
+  }
+}
+
+/* ---------- home additions ---------- */
+function v7Banners(){
+  const out = [], me = S.users[S.uid] || {};
+  if(!S.admin && !me.empNo) out.push(`<div class="banner warn"><span>اربط حسابك برقمك الوظيفي لتظهر بياناتك الرسمية وتتمكن من توقيع التعاميم.</span><button class="btn sm" data-act="go" data-v="profile">ربط الآن</button></div>`);
+  const pc = myPendingCircs(); if(pc.length){ const rem = pc.filter(c => c.remind && c.remind[S.uid]).length;
+    out.push(`<div class="banner ${rem ? 'bad' : 'warn'}"><span>لديك <b class="num">${pc.length}</b> ${pc.length===1 ? 'تعميم بانتظار الاطلاع والتوقيع' : 'تعاميم بانتظار الاطلاع والتوقيع'}${rem ? ' · وصلك تذكير من الإدارة' : ''}</span><button class="btn sm" data-act="go" data-v="circulars">فتح التعاميم</button></div>`); }
+  if(S.admin){ const r = (S.linkreqs||[]).filter(x => x.status==='pending').length; if(r) out.push(`<div class="banner bad"><span><b class="num">${r}</b> طلب ربط رقم وظيفي يحتاج مراجعتك (اختلاف أو عدم تطابق)</span><button class="btn sm" data-act="go" data-v="admin" data-tab="staffDir">مراجعة</button></div>`); }
+  if(S.sup){ const n = S.swaps.filter(w => w.sector===S.mySector && w.status==='pending_admin').length + S.checkouts.filter(c => c.sector===S.mySector && c.status==='pending').length; if(n) out.push(`<div class="banner"><span><b class="num">${n}</b> طلب من قطاعك بانتظار اعتمادك</span><button class="btn sm" data-act="go" data-v="sector">مراجعة</button></div>`); }
+  return out;
+}
+function v7Tiles(tile){
+  const pc = myPendingCircs().length;
+  const t = [tile('ops','العمليات الميدانية','Field Operations', `<span class="muted small">${FIELD_SECTORS.map(k => SECTORS[k].ar.replace('قطاع ','')).join(' · ')}</span>`),
+    tile('circulars','التعاميم والإقرارات','Circulars & Acknowledgments', S.admin ? chip(S.circs.filter(c => c.status==='active').length + ' تعميم نشط','info') : pc ? chip(pc + ' بانتظار توقيعك','warn') : chip('لا جديد','ok')),
+    tile('services','خدمات الموظفين','Staff Services', `<span class="muted small">التبديل · الخروج · التفضيلات</span>`)];
+  if(S.sup) t.push(tile('sector','قطاعي','My Sector', chip(secName(S.mySector) || 'غير محدد','info')));
+  return t;
+}
+
+/* ---------- actions ---------- */
+Object.assign(ACT, {
+  opGo(b){ S.ui.opSector = b.dataset.s; ACT.go(b); },
+  opSec(b){ S.ui.opSector = b.dataset.v; render(); },
+  profOpen(b){ S.ui.profUid = b.dataset.id; S.view = 'profile'; render(); window.scrollTo(0,0); },
+  profBack(){ S.ui.profUid = null; S.view = S.admin ? 'admin' : 'sector'; render(); },
+  supSec(b){ S.ui.supSec = b.dataset.v; render(); },
+  async linkSelf(b){
+    const emp = cleanEmp(S.ui.myEmp); if(!emp){ toast('اكتب رقمك الوظيفي.'); return; }
+    const me = S.users[S.uid] || {}; b.disabled = true;
+    const req = async (reason, sc) => { await S.db.doc('linkreqs/'+S.uid).set({by:S.uid, empNo:emp, name:me.name||'', email:me.email||'', reason, score:sc||0, status:'pending', at:new Date().toISOString()}); audit('طلب ربط رقم وظيفي', `${emp} · ${reason}`); };
+    try {
+      const sn = await S.db.doc('staff/'+emp).get();
+      if(!sn.exists){ await req('not_found', 0); toast('الرقم غير موجود في القائمة المرجعية. أُرسل طلبك للمسؤول للمراجعة.'); }
+      else { const st = sn.data(), sc = nameScore(me.name||'', st.name);
+        if(st.uid && st.uid !== S.uid){ await req('taken', sc); toast('هذا الرقم مرتبط بحساب آخر. أُرسل طلبك للمسؤول للمراجعة.'); }
+        else if(sc >= 0.75){ const now = new Date().toISOString(), bt = S.db.batch();
+          bt.update(S.db.doc('staff/'+emp), {uid:S.uid, linkedAt:now, linkMode:'auto', linkScore:sc});
+          bt.update(S.db.doc('users/'+S.uid), {empNo:emp, sector:st.sector||'', officialName:st.name, linkedAt:now});
+          await bt.commit(); try { await S.db.doc('linkreqs/'+S.uid).delete(); } catch(e){}
+          audit('ربط تلقائي بالرقم الوظيفي', `${st.name} · ${emp} · تطابق ${pct(sc)}`); S.ui.myEmp = ''; toast('تم ربط حسابك برقمك الوظيفي'); }
+        else { await req('name_mismatch', sc); toast('اسم حسابك لا يطابق القائمة المرجعية. أُرسل طلبك للمسؤول للمراجعة.'); } }
+    } catch(e){ failMsg(e); }
+    b.disabled = false; render();
+  },
+  async lrReject(b){ const id = b.dataset.id; try { await S.db.doc('linkreqs/'+id).update({status:'rejected', note:(S.ui['lrn_'+id]||'').trim(), decidedAt:new Date().toISOString(), decidedBy:S.uid}); audit('رفض طلب ربط', nm(id)); toast('تم رفض الطلب'); } catch(e){ failMsg(e); } },
+  async stLink(b){ try { if(await linkAccount(b.dataset.id, b.dataset.u, 'admin')) toast('تم الربط'); } catch(e){ failMsg(e); } },
+  async stLinkPick(b){ const u = S.ui['stp_'+b.dataset.id]; if(!u) return; const st = (S.staff||[]).find(s => s.empNo===b.dataset.id); const sc = st ? nameScore((S.users[u]||{}).name||'', st.name) : 0;
+    if(sc < 0.5 && S.ui.confirm !== 'stl'+b.dataset.id){ S.ui.confirm = 'stl'+b.dataset.id; render(); toast('الاسم لا يطابق. اضغط ربط مرة أخرى للتأكيد.'); return; }
+    S.ui.confirm = null; try { if(await linkAccount(b.dataset.id, u, 'admin')){ S.ui['stp_'+b.dataset.id] = ''; toast('تم الربط'); } } catch(e){ failMsg(e); } },
+  async stUnlink(b){ const emp = b.dataset.id; if(S.ui.confirm !== 'stu'+emp){ S.ui.confirm = 'stu'+emp; render(); return; } S.ui.confirm = null;
+    const st = (S.staff||[]).find(s => s.empNo===emp); if(!st || !st.uid) return; const d = FV().delete(), bt = S.db.batch();
+    bt.update(S.db.doc('staff/'+emp), {uid:d, linkedAt:d, linkMode:d, linkBy:d, linkScore:d}); bt.update(S.db.doc('users/'+st.uid), {empNo:d, officialName:d, linkedAt:d});
+    try { await bt.commit(); audit('فصل ربط رقم وظيفي', `${st.name} · ${emp}`); } catch(e){ failMsg(e); } },
+  async stDel(b){ const emp = b.dataset.id; if(S.ui.confirm !== 'std'+emp){ S.ui.confirm = 'std'+emp; render(); return; } S.ui.confirm = null;
+    try { await S.db.doc('staff/'+emp).delete(); audit('حذف موظف من القائمة المرجعية', emp); } catch(e){ failMsg(e); } },
+  async stAdd(b){ const emp = cleanEmp(S.ui.stEmp), name = (S.ui.stName||'').trim().replace(/\s+/g,' '); if(!emp || !name){ toast('اكتب الاسم والرقم الوظيفي.'); return; }
+    if((S.staff||[]).some(s => s.empNo===emp)){ toast('الرقم الوظيفي موجود مسبقًا.'); return; }
+    const dn = (S.staff||[]).find(s => normAr(s.name)===normAr(name)); if(dn && S.ui.confirm !== 'sta'){ S.ui.confirm = 'sta'; toast('الاسم مسجّل برقم ' + dn.empNo + '. اضغط إضافة مرة أخرى للتأكيد.'); return; }
+    S.ui.confirm = null; b.disabled = true;
+    try { await S.db.doc('staff/'+emp).set({empNo:emp, name, sector:S.ui.stSecN||'central', active:true, at:new Date().toISOString(), by:S.uid}); audit('إضافة موظف للقائمة المرجعية', `${name} · ${emp}`); S.ui.stEmp = ''; S.ui.stName = ''; toast('تمت الإضافة'); } catch(e){ failMsg(e); }
+    b.disabled = false; render(); },
+  async stExport(b){ await exportSheet(b, `EMS_قاعدة_الموظفين_${today()}.xlsx`, 'قاعدة الموظفين', staffRows(), 'لا يوجد موظفون'); },
+  impParse(){ const aoa = String(S.ui.impText||'').split('\n').map(l => l.split(/[,،\t;|]/)); const rows = parseStaffAoa(aoa); if(!rows.length){ toast('لم يتم التعرف على أي سطر.'); return; } S.ui.imp = analyzeImport(rows); S.ui.impDec = {}; render(); },
+  impCancel(){ S.ui.imp = null; S.ui.impDec = {}; render(); },
+  impLink(b){ const r = S.ui.imp && S.ui.imp[+b.dataset.i]; if(r) r.link = b.checked; render(); },
+  async impApply(b){
+    const rows = S.ui.imp || [], dec = S.ui.impDec || {}, now = new Date().toISOString(); b.disabled = true; let add = 0, upd = 0, lnk = 0;
+    try {
+      const bt = S.db.batch();
+      rows.forEach((r,i) => { const ex = (S.staff||[]).find(s => s.empNo===r.empNo);
+        if(r.act==='add' || (r.act==='review' && dec[i]==='apply' && !ex)){ bt.set(S.db.doc('staff/'+r.empNo), {empNo:r.empNo, name:r.name, sector:r.sector||'', active:true, at:now, by:S.uid}); add++; }
+        else if(ex && (r.act==='update' || (r.act==='review' && dec[i]==='apply'))){ const u = {name:r.name}; if(r.sector) u.sector = r.sector; bt.update(S.db.doc('staff/'+r.empNo), u); if(ex.uid){ const uu = {officialName:r.name}; if(r.sector) uu.sector = r.sector; bt.update(S.db.doc('users/'+ex.uid), uu); } upd++; } });
+      await bt.commit();
+      for(const r of rows.filter(r => r.link && r.match && r.act!=='skip')){ await new Promise(ok => setTimeout(ok, 50)); if(!(S.staff||[]).some(s => s.empNo===r.empNo)) S.staff = (S.staff||[]).concat([{empNo:r.empNo, name:r.name, sector:r.sector||''}]); if(await linkAccount(r.empNo, r.match.uid, 'import')) lnk++; }
+      audit('استيراد القائمة المرجعية', `إضافة ${add} · تحديث ${upd} · ربط ${lnk}`); S.ui.imp = null; S.ui.impDec = {}; S.ui.impText = ''; S.ui.impPaste = null; toast(`تم: إضافة ${add}، تحديث ${upd}، ربط ${lnk}`);
+    } catch(e){ failMsg(e); }
+    b.disabled = false; render();
+  },
+  circTab(b){ S.ui.circTab = b.dataset.v; S.ui.circOpen = null; S.ui.circTrack = null; if(S.view!=='circulars') S.view = 'circulars'; render(); window.scrollTo(0,0); },
+  circOpen(b){ S.ui.circOpen = b.dataset.id; S.ui.signing = false; S.ui.sigStrokes = []; S.ui.sigConsent = false; if(S.view!=='circulars') S.view = 'circulars'; render(); window.scrollTo(0,0); },
+  circBack(){ S.ui.circOpen = null; S.ui.signing = false; render(); },
+  circTrackOpen(b){ S.ui.circTrack = b.dataset.id; S.ui.circOpen = null; S.view = 'circulars'; render(); window.scrollTo(0,0); },
+  circTrackBack(){ S.ui.circTrack = null; render(); },
+  ctF(b){ S.ui.ctF = b.dataset.v; render(); }, ctS(b){ S.ui.ctS = b.dataset.v; render(); },
+  signStart(){ S.ui.signing = true; S.ui.sigStrokes = []; render(); },
+  signCancel(){ S.ui.signing = false; S.ui.sigStrokes = []; render(); },
+  sigClear(){ S.ui.sigStrokes = []; const c = document.getElementById('sigPad'); if(c){ delete c.dataset.init; } render(); },
+  sigConsent(b){ S.ui.sigConsent = b.checked; const ok = document.getElementById('sigOk'); if(ok) ok.disabled = !(b.checked && (ok.dataset.act==='circAck' || (S.ui.sigStrokes||[]).length)); },
+  async circRaw(b){ const c = S.circs.find(x => x.id===b.dataset.id); if(!c) return; const w = preWin(); try { showBytes(w, await getChunks('cdocs', c.id, c.fileN||1)); } catch(e){ if(w) w.close(); failMsg(e); } },
+  async circAck(b){ await doSign(b, 'ack'); },
+  async circSign(b){ await doSign(b, 'sign'); },
+  async sigDl(b){ const x = S.csigs.find(k => k.id===b.dataset.id); if(!x) return; const l = b.textContent; b.disabled = true; b.textContent = 'جارٍ التجهيز…'; try { saveBytes(await sigBytes(x), sigFname(x)); audit('تنزيل نسخة موقعة', `${x.ref} · ${x.empNo}`); } catch(e){ failMsg(e); } b.disabled = false; b.textContent = l; },
+  async sigOpen(b){ const x = S.csigs.find(k => k.id===b.dataset.id); if(!x) return; const w = preWin(); try { showBytes(w, await sigBytes(x)); } catch(e){ if(w) w.close(); failMsg(e); } },
+  cfSet(b){ const f = S.ui.cf; f[b.dataset.k] = b.dataset.v; render(); },
+  cfSec(b){ const f = S.ui.cf, v = b.dataset.v; f.sectors = b.checked ? Array.from(new Set(f.sectors.concat([v]))) : f.sectors.filter(x => x!==v); render(); },
+  cfUid(b){ const f = S.ui.cf, v = b.dataset.v; f.uids = b.checked ? Array.from(new Set(f.uids.concat([v]))) : f.uids.filter(x => x!==v); render(); },
+  cfReset(){ S.ui.cf = null; ['cfTitle','cfDesc','cfBody','cfDeadline','cfIssue'].forEach(k => S.ui[k] = ''); S.ui.circTab = 'track'; render(); },
+  async cfPreview(b){ const w = preWin(); const l = b.textContent; b.disabled = true; b.textContent = 'جارٍ التجهيز…';
+    try { const f = S.ui.cf; const r = await editorPdf({title:(S.ui.cfTitle||'').trim() || '—', body:S.ui.cfBody||'', ref:f.ref || nextRef(), ver:f.ver||1, issueDate:S.ui.cfIssue||today(), deadline:S.ui.cfDeadline||'', action:f.action, kindLabel:tr(CK[f.kind][0])}); showBytes(w, r.bytes); }
+    catch(e){ if(w) w.close(); console.error(e); toast('تعذّر تجهيز المعاينة. تأكد من الإنترنت.'); }
+    b.disabled = false; b.textContent = l; },
+  async cfPublish(b){
+    const f = S.ui.cf, title = (S.ui.cfTitle||'').trim(); if(!title) return;
+    const targetUids = f.mode==='list' ? f.uids.slice() : eligibleUids(f); if(!targetUids.length){ toast('اختر الموظفين المستهدفين.'); return; }
+    if(f.mode==='sector' && !f.sectors.length){ toast('اختر القطاع.'); return; }
+    const l = b.textContent; b.disabled = true; b.textContent = 'جارٍ النشر…';
+    try {
+      const ref = f.ref || nextRef(), ver = f.ver || 1, issueDate = S.ui.cfIssue || today(), deadline = S.ui.cfDeadline || '';
+      let bytes, sigBox = null, pages = 0;
+      if(f.src==='editor'){ const r = await editorPdf({title, body:S.ui.cfBody||'', ref, ver, issueDate, deadline, action:f.action, kindLabel:tr(CK[f.kind][0])}); bytes = r.bytes; sigBox = r.sigBox; pages = r.pages; }
+      else { bytes = f.pdfBytes; try { const L = await needPdfLib(); pages = (await L.PDFDocument.load(bytes.slice(), {ignoreEncryption:true})).getPageCount(); } catch(e){ toast('ملف PDF غير صالح أو محمي.'); throw e; } }
+      const id = S.db.collection('circulars').doc().id, hash = await sha256(bytes);
+      const n = await putChunks('cdocs', id, bytes, {circ:id});
+      const doc = {ref, ver, title, desc:(S.ui.cfDesc||'').trim(), kind:f.kind, action:f.action, src:f.src, body: f.src==='editor' ? (S.ui.cfBody||'') : '', fileN:n, fileSize:bytes.length, fileHash:hash, pages,
+        sigPos: f.src==='editor' ? 'box' : (f.sigPos||'append'), sigBox, target:{mode:f.mode, sectors:f.sectors, uids: f.mode==='list' ? f.uids : []}, targetUids, issueDate, deadline, at:new Date().toISOString(), by:S.uid, status:'active', supersedes:f.supersedes||null, remind:{}};
+      await S.db.doc('circulars/'+id).set(doc);
+      if(f.supersedes) await S.db.doc('circulars/'+f.supersedes).update({status:'superseded', supersededBy:id});
+      audit('نشر تعميم', `${ref} v${ver} · ${title} · ${targetUids.length} مستهدف`);
+      ACT.cfReset(); S.ui.circTrack = id; toast('تم نشر التعميم');
+    } catch(e){ console.error(e); if(!(e && e.message==='lib')) failMsg(e); else toast('تعذّر تحميل أداة PDF. تأكد من الإنترنت.'); }
+    b.disabled = false; b.textContent = l; render();
+  },
+  async circRemind(b){ const c = S.circs.find(x => x.id===b.dataset.id); if(!c) return; const now = new Date().toISOString();
+    const ids = b.dataset.u ? [b.dataset.u] : (c.targetUids||[]).filter(id => !S.csigMap[c.id+'_'+id]); if(!ids.length) return;
+    const upd = {}; ids.forEach(id => upd['remind.' + id] = now);
+    try { await S.db.doc('circulars/'+c.id).update(upd); audit('تذكير بتعميم', `${c.ref} · ${ids.length} موظف`); toast(`تم إرسال التذكير (${ids.length})`); } catch(e){ failMsg(e); } },
+  async circClose(b){ const id = b.dataset.id; if(S.ui.confirm !== 'cc'+id){ S.ui.confirm = 'cc'+id; render(); return; } S.ui.confirm = null; const c = S.circs.find(x => x.id===id);
+    try { await S.db.doc('circulars/'+id).update({status:'closed', closedAt:new Date().toISOString()}); audit('إغلاق تعميم', c ? c.ref : id); } catch(e){ failMsg(e); } },
+  circNewVer(b){ const c = S.circs.find(x => x.id===b.dataset.id); if(!c) return;
+    S.ui.cf = {kind:c.kind, action:c.action, src:c.src==='editor' ? 'editor' : 'pdf', mode:(c.target||{}).mode||'all', sectors:(c.target||{}).sectors||[], uids:(c.target||{}).mode==='list' ? (c.targetUids||[]).slice() : [], sigPos:c.sigPos==='box' ? 'append' : c.sigPos, ref:c.ref, ver:(c.ver||1)+1, supersedes:c.id};
+    Object.assign(S.ui, {cfTitle:c.title, cfDesc:c.desc||'', cfBody:c.body||'', cfIssue:today(), cfDeadline:'', circTab:'new', circTrack:null}); render(); window.scrollTo(0,0); },
+  async circSheet(b){ const c = S.circs.find(x => x.id===b.dataset.id); if(!c) return; await exportSheet(b, `EMS_كشف_توقيع_${c.ref}_v${c.ver||1}.xlsx`, 'كشف التوقيع', circRowsFor(c), 'لا يوجد مستهدفون'); },
+  circReport(b){ const c = S.circs.find(x => x.id===b.dataset.id); if(!c) return; const w = preWin(); if(!w){ toast('اسمح بالنوافذ المنبثقة ثم أعد المحاولة.'); return; } const s = circStats(c), rows = circRowsFor(c);
+    const cls = t => /تم/.test(t) ? 'ok' : /تأخر/.test(t) ? 'bad' : 'warn';
+    printDoc(w, `${tr('تقرير الالتزام بالتوقيع')} — ${c.title}`, `<p><b>${esc(c.ref)} · v${c.ver||1}</b> · ${esc(tr((CK[c.kind]||[''])[0]))} · ${esc(tr('تاريخ الإصدار'))} ${esc(c.issueDate)}${c.deadline ? ' · ' + esc(tr('الموعد النهائي')) + ' ' + esc(c.deadline) : ''}</p>
+      <div class="sum"><div>${tr('المستهدفون')}<b>${s.total}</b></div><div>${tr('الموقعون')}<b class="ok">${s.signed}</b></div><div>${tr('المتبقون')}<b class="warn">${s.remaining}</b></div><div>${tr('متأخر')}<b class="bad">${s.late}</b></div><div>${tr('نسبة الاكتمال')}<b>${s.pct}%</b></div></div>
+      <table><thead><tr>${Object.keys(rows[0]||{'الموظف':1}).map(k => `<th>${esc(tr(k))}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${Object.entries(r).map(([k,v]) => `<td class="${k==='الحالة' ? cls(v) : ''}">${esc(tr(String(v)))}</td>`).join('')}</tr>`).join('')}</tbody></table>
+      <p>${esc(tr('بصمة المستند الأصلي SHA-256'))}: <span style="font-family:monospace">${esc(c.fileHash||'—')}</span></p>`, true);
+    audit('تقرير التزام PDF', c.ref); },
+  async circAll(b){ const c = S.circs.find(x => x.id===b.dataset.id); if(!c) return; const l = b.textContent; b.disabled = true; b.textContent = 'جارٍ التجهيز…';
+    try { const L = await needPdfLib(), out = await L.PDFDocument.create(); const sigs = circTargets(c).map(id => S.csigMap[c.id+'_'+id]).filter(x => x && x.n).sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ar'));
+      for(const x of sigs){ const d = await L.PDFDocument.load((await sigBytes(x)).slice()); (await out.copyPages(d, d.getPageIndices())).forEach(p => out.addPage(p)); }
+      out.setTitle(`${c.ref} v${c.ver||1} — ${sigs.length}`); saveBytes(await out.save(), `${c.ref}_v${c.ver||1}_signed_all.pdf`); audit('تنزيل جميع النسخ الموقعة', `${c.ref} · ${sigs.length}`); }
+    catch(e){ console.error(e); toast('تعذّر تجهيز الملف. أعد المحاولة.'); }
+    b.disabled = false; b.textContent = l; },
+  async circArcX(b){ await exportSheet(b, `EMS_أرشيف_التعاميم_${today()}.xlsx`, 'أرشيف التعاميم', circListRows(S.circs), 'لا توجد تعاميم'); }
+});
+async function doSign(b, kind){
+  const c = S.circs.find(x => x.id===b.dataset.id), me = S.users[S.uid] || {}; if(!c) return;
+  if(!me.empNo){ toast('اربط حسابك برقمك الوظيفي أولًا.'); return; }
+  if(!S.ui.sigConsent || (kind==='sign' && !(S.ui.sigStrokes||[]).length)) return;
+  const l = b.textContent; b.disabled = true; b.textContent = kind==='sign' ? 'جارٍ توقيع المستند…' : 'جارٍ الحفظ…';
+  try {
+    const when = Date.now(), token = Math.random().toString(36).slice(2,10);
+    const rec = {circ:c.id, ref:c.ref, ver:c.ver||1, title:c.title, by:S.uid, name:me.officialName, empNo:me.empNo, sector:me.sector||'', kind, signedAt:FV().serverTimestamp(), clientAt:new Date(when).toISOString(),
+      late:isLate(c), docHash:c.fileHash||'', token, n:0, size:0, signedHash:'', ua:String(navigator.userAgent||'').slice(0,200)};
+    if(kind==='sign'){
+      const bytes = await signedPdf(c, me, S.ui.sigStrokes, when);
+      rec.signedHash = await sha256(bytes); rec.size = bytes.length;
+      rec.sigPng = sigPng(S.ui.sigStrokes, 300, 120).toDataURL('image/png');
+      rec.n = await putChunks('csigned', `${c.id}_${S.uid}_${token}`, bytes, {circ:c.id, token, sector:me.sector||''});
+      chunkCache['csigned/' + `${c.id}_${S.uid}_${token}`] = Promise.resolve(bytes);
+    }
+    await S.db.doc('csigs/' + c.id + '_' + S.uid).set(rec);
+    audit(kind==='sign' ? 'توقيع تعميم إلكترونيًا' : 'إقرار بالاطلاع على تعميم', `${c.ref} v${c.ver||1} · ${me.empNo}`);
+    S.ui.signing = false; S.ui.sigStrokes = []; S.ui.sigConsent = false; toast(kind==='sign' ? 'تم التوقيع وحُفظت نسختك الموقعة' : 'تم تسجيل إقرارك');
+  } catch(e){ console.error(e); b.disabled = false; b.textContent = l; e && e.message==='lib' ? toast('تعذّر تحميل أداة PDF. تأكد من الإنترنت.') : failMsg(e); return; }
+  render();
+}
+
+/* ---------- inputs owned by v7 ---------- */
+const V7IN = {
+  async stSec(t){ const emp = t.dataset.id, st = (S.staff||[]).find(s => s.empNo===emp); if(!st) return; const bt = S.db.batch(); bt.update(S.db.doc('staff/'+emp), {sector:t.value}); if(st.uid) bt.update(S.db.doc('users/'+st.uid), {sector:t.value});
+    try { await bt.commit(); audit('تغيير قطاع موظف', `${st.name} → ${secName(t.value) || '—'}`); } catch(e){ failMsg(e); } },
+  stPick(t){ S.ui['stp_'+t.dataset.id] = t.value; render(); },
+  impDec(t){ S.ui.impDec = S.ui.impDec || {}; S.ui.impDec[t.dataset.i] = t.value; render(); },
+  cfKind(t){ S.ui.cf.kind = t.value; if(t.value==='ack' || t.value==='form') S.ui.cf.action = 'sign'; render(); },
+  cfSigPos(t){ S.ui.cf.sigPos = t.value; }
+};
+document.addEventListener('change', async e => {
+  const t = e.target;
+  if(t.dataset && t.dataset.v7 && V7IN[t.dataset.v7]){ V7IN[t.dataset.v7](t); return; }
+  if(t.id==='cfPdf' && t.files && t.files[0]){ const f = t.files[0]; if(!(f.type==='application/pdf' || /\.pdf$/i.test(f.name))){ toast('اختر ملف PDF.'); return; } if(f.size > 8*1024*1024){ toast('الملف أكبر من 8 ميجابايت.'); return; }
+    const buf = new Uint8Array(await f.arrayBuffer()); Object.assign(S.ui.cf, {pdfBytes:buf, pdfName:f.name, pdfSize:f.size}); t.value = ''; render(); return; }
+  if(t.id==='impFile' && t.files && t.files[0]){ const f = t.files[0]; t.value = '';
+    try { let aoa; if(/\.csv$/i.test(f.name) && !(window.XLSX && XLSX.read)) aoa = (await f.text()).split(/\r?\n/).map(l => l.split(/[,،;\t]/));
+      else { const wb = XLSX.read(new Uint8Array(await f.arrayBuffer()), {type:'array'}); aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:'', raw:false}); }
+      const rows = parseStaffAoa(aoa); if(!rows.length){ toast('لم يتم العثور على بيانات في الملف.'); return; } S.ui.imp = analyzeImport(rows); S.ui.impDec = {}; render(); }
+    catch(err){ console.error(err); toast('تعذّر قراءة الملف. تأكد أنه Excel أو CSV.'); } }
+});
+
 /* ---------- boot ---------- */
 function startData(){
   const db = S.db;
-  const h = (location.hash||'').slice(1); if(navList().some(([k]) => k===h)) S.view = h;
+  const h = (location.hash||'').slice(1); if(navList().some(([k]) => k===h) || PARENT[h]) S.view = h;
   const err = e => { console.error(e); if(e.code==='permission-denied'){ S.noDb = 'انتهت صلاحية دخولك أو تم إيقاف حسابك. أعد تحميل الصفحة.'; render(); } };
   const soft = key => e => { console.warn(key, e && e.code); if(e && e.code==='permission-denied'){ S[key] = []; render(); } else err(e); };
   const list = (path, field, n, key) => db.collection(path).orderBy(field,'desc').limit(n).onSnapshot(q => { S[key] = q.docs.map(d => Object.assign({id:d.id}, d.data())); render(); }, soft(key));
   db.doc('config/main').onSnapshot(s => { S.config = s.exists ? s.data() : null; S.configLoaded = true; S.ready = true; if(S.ui.adminTab!=='lists') S.ui.cfgInit = false; render(); }, err);
   db.collection('users').onSnapshot(q => { const u = {}; q.docs.forEach(d => u[d.id] = d.data()); S.users = u;
-    const me = u[S.uid]; if(me){ S.myName = me.name; const wasAdmin = S.admin; S.admin = me.role==='admin'; if(me.active===false || (me.role==='maintenance') !== S.maint){ location.reload(); return; } if(S.admin && !wasAdmin) location.reload(); }
+    const me = u[S.uid]; if(me){ S.myName = me.officialName || me.name; const wasAdmin = S.admin; S.admin = me.role==='admin'; if(me.active===false || (me.role==='maintenance') !== S.maint || (me.role==='supervisor') !== S.sup || (S.sup && (me.sector||'') !== S.mySector)){ location.reload(); return; } S.mySector = me.sector || ''; if(S.admin && !wasAdmin) location.reload(); }
     render(); }, err);
   if(S.maint){ list('reports','at',300,'reports'); db.collection('mchecks').where('by','==',S.uid).onSnapshot(q => { S.mchecks = q.docs.map(d => Object.assign({id:d.id}, d.data())).sort((a,b) => a.at < b.at ? 1 : -1); render(); }, err); watchNewReports(); return; }
   if(S.admin) list('mchecks','at',300,'mchecks');
@@ -2249,10 +3023,11 @@ function startData(){
   if(S.admin) list('records','at',1000,'records');
   if(S.admin){ list('audit','at',100,'audit'); db.collection('allowed').onSnapshot(q => { S.allowed = q.docs.map(d => d.id); render(); }, err); }
   db.collection('acks').onSnapshot(q => { const a = {}; q.docs.forEach(d => a[d.id] = d.data()); S.acks = a; render(); }, err);
+  v7Subs(db);
 }
 function init(){
   if(LANG === 'en'){ const app = document.getElementById('app'); app.dir = 'ltr'; app.lang = 'en'; document.documentElement.dir = 'ltr'; document.documentElement.lang = 'en'; document.title = 'Al Hayat EMS'; }
-  tick(); setInterval(tick, 30000);
+  tick(); setInterval(tick, 30000); hookXlsx();
   if(!window.firebase || !FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey==='PASTE_HERE'){ S.noDb = window.firebase ? true : 'تعذّر تحميل مكتبات Firebase. تأكد من الاتصال بالإنترنت.'; render(); return; }
   firebase.initializeApp(FIREBASE_CONFIG);
   S.db = firebase.firestore();
