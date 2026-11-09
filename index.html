@@ -2414,10 +2414,11 @@ function linkCard(){
     <div class="row"><input type="text" id="myEmp" data-bind="myEmp" inputmode="numeric" dir="ltr" placeholder="الرقم الوظيفي" value="${esc(S.ui.myEmp||'')}" style="flex:1;min-width:160px"><button class="btn primary" data-act="linkSelf">ربط الحساب</button></div></div>`;
 }
 function profileCard(uid){
-  const u = S.users[uid] || {}, st = (S.staff||[]).find(s => s.uid===uid);
-  return `<div class="card stack" style="gap:8px"><div class="row"><span class="grow"><span class="en">Employee Profile</span><h2 translate="no">${esc(u.officialName || u.name || '—')}</h2></span>${chip((ROLES[u.role]||ROLES.paramedic)[0], (ROLES[u.role]||ROLES.paramedic)[1])}</div>
-    <dl class="kv" style="display:grid"><dt>الرقم الوظيفي</dt><dd class="mono">${esc(u.empNo || '—')}</dd><dt>القطاع</dt><dd>${esc(secName(u.sector) || '—')}</dd><dt>البريد</dt><dd class="mono small">${esc(u.email||'')}</dd>
-    <dt>حالة الربط</dt><dd>${u.empNo ? chip('مربوط بالقائمة المرجعية','ok') : chip('غير مربوط','warn')}</dd>${st && st.title ? `<dt>المسمى</dt><dd>${esc(st.title)}</dd>` : ''}</dl></div>`;
+  const u = S.users[uid] || {}, st = (S.staff||[]).find(s => s.uid===uid) || S.myStaff && uid===S.uid && S.myStaff || {}, pv = (S.staffPriv||{})[u.empNo] || (uid===S.uid ? S.myPriv : null) || {};
+  return `<div class="card stack" style="gap:8px"><div class="row"><span class="grow"><span class="en" translate="no">${esc(st.nameEn || 'Employee Profile')}</span><h2 translate="no">${esc(u.officialName || u.name || '—')}</h2></span>${chip((ROLES[u.role]||ROLES.paramedic)[0], (ROLES[u.role]||ROLES.paramedic)[1])}</div>
+    <dl class="kv" style="display:grid"><dt>الرقم الوظيفي</dt><dd class="mono">${esc(u.empNo || '—')}</dd>${st.title ? `<dt>المسمى الوظيفي</dt><dd>${esc(st.title)}</dd>` : ''}<dt>القطاع</dt><dd>${esc(secName(u.sector) || '—')}</dd>
+    ${pv.license ? `<dt>رقم ترخيص الهيئة</dt><dd class="mono">${esc(pv.license)}</dd>` : ''}${pv.idNo ? `<dt>رقم الهوية / الإقامة</dt><dd class="mono">${esc(pv.idNo)}</dd>` : ''}${pv.mobile ? `<dt>رقم الجوال</dt><dd class="mono">${esc(pv.mobile)}</dd>` : ''}
+    <dt>البريد</dt><dd class="mono small">${esc(u.email||'')}</dd><dt>حالة الربط</dt><dd>${u.empNo ? chip('مربوط بالقائمة المرجعية','ok') : chip('غير مربوط','warn')}</dd></dl></div>`;
 }
 function vProfile(){
   const uid = (S.admin || S.sup) && S.ui.profUid ? S.ui.profUid : S.uid, self = uid === S.uid;
@@ -2462,7 +2463,7 @@ function vStaffDir(){
   const q = normAr(S.ui.stQ||''), list = st.filter(s => !q || normAr(s.name).includes(q) || s.empNo.toLowerCase().includes(q.toLowerCase()));
   const imp = S.ui.imp ? impPreview() : '';
   const cards = list.map(s => { const u = s.uid ? S.users[s.uid] : null; const sug = !s.uid ? userMatches(s.name, 0.5).slice(0,3) : [];
-    return `<div class="card flat stack" style="gap:8px"><div class="row"><span class="grow"><b translate="no">${esc(s.name)}</b> <span class="mono small muted">${esc(s.empNo)}</span></span>
+    return `<div class="card flat stack" style="gap:8px"><div class="row"><span class="grow"><b translate="no">${esc(s.name)}</b> <span class="mono small muted">${esc(s.empNo)}</span>${s.title || s.email ? `<span class="tiny">${esc(s.title||'')}${s.title && s.email ? ' · ' : ''}<span class="mono">${esc(s.email||'')}</span>${s.email && !s.uid ? ((S.allowed||[]).includes(s.email) ? ' · جاهز للتسجيل' : '') : ''}</span>` : ''}</span>
       <select data-v7="stSec" data-id="${esc(s.empNo)}" style="width:auto">${['<option value="">بدون قطاع</option>'].concat(Object.keys(SECTORS).map(k => `<option value="${k}" ${s.sector===k?'selected':''}>${SECTORS[k].ar}</option>`)).join('')}</select></div>
       <div class="row small">${u ? `${chip('مربوط','ok')}<span class="grow"><span translate="no">${esc(u.name||'')}</span> <span class="mono muted">${esc(u.email||'')}</span>${s.linkMode ? ` · ${s.linkMode==='auto' ? 'ربط تلقائي' : 'ربط بواسطة المسؤول'}` : ''}</span><button class="btn sm ghost" data-act="profOpen" data-id="${s.uid}">الملف</button><button class="btn sm ghost danger" data-act="stUnlink" data-id="${esc(s.empNo)}">${S.ui.confirm==='stu'+s.empNo ? 'تأكيد فصل الربط' : 'فصل الربط'}</button>` :
         `${chip('غير مربوط','warn')}<span class="grow">${sug.length ? sug.map(x => `<button class="btn sm" data-act="stLink" data-id="${esc(s.empNo)}" data-u="${x.u.id}">ربط بـ <span translate="no">${esc(x.u.name)}</span> (${pct(x.s)})</button>`).join(' ') : '<span class="muted">لا يوجد حساب مسجّل يطابق الاسم</span>'}</span>
@@ -2488,12 +2489,16 @@ function vStaffDir(){
 function parseStaffAoa(aoa){
   aoa = (aoa||[]).map(r => (r||[]).map(c => String(c ?? '').trim())).filter(r => r.some(Boolean));
   if(!aoa.length) return [];
-  const h = aoa[0].map(x => normAr(x));
-  let iN = h.findIndex(x => /اسم|name/.test(x)), iE = h.findIndex(x => /رقم|emp|id|number|no/.test(x)), iS = h.findIndex(x => /قطاع|sector|موقع/.test(x));
+  const h = aoa[0].map(x => normAr(x)), f = re => h.findIndex(x => re.test(x));
+  let iE = f(/وظيفي|employee|emp\b|emp |staff no|^emp/); if(iE < 0) iE = h.findIndex(x => x==='رقم' || x==='no' || x==='id');
+  let iNe = f(/انجليز|english|en name|full name/), iN = h.findIndex((x,i) => i!==iNe && /اسم|name/.test(x));
+  const iS = f(/قطاع|sector|موقع/), iT = f(/مسمي|title|وظيفه|job/), iM = f(/بريد|ايميل|mail/), iP = f(/جوال|mobile|phone|هاتف/), iI = f(/هويه|اقامه|iqama|national/), iL = f(/ترخيص|license|scfhs|هيئه/);
   let rows = aoa;
   if(iN >= 0 && iE >= 0) rows = aoa.slice(1);
-  else { const r0 = aoa[0]; iE = r0.findIndex(c => /^[\d٠-٩۰-۹A-Za-z-]+$/.test(c) && /[\d٠-٩۰-۹]/.test(c)); iN = r0.findIndex((c,i) => i!==iE && c && !secFromText(c)); iS = r0.findIndex((c,i) => i!==iE && i!==iN && secFromText(c)); }
-  return rows.map(r => ({name:r[iN]||'', empNo:r[iE]||'', sectorRaw: iS>=0 ? r[iS]||'' : ''}));
+  else { const r0 = aoa[0]; iE = r0.findIndex(c => /^[\d٠-٩۰-۹A-Za-z-]+$/.test(c) && /[\d٠-٩۰-۹]/.test(c)); iN = r0.findIndex((c,i) => i!==iE && c && !secFromText(c) && !/@/.test(c)); }
+  const g = (r, i) => i >= 0 ? r[i] || '' : '';
+  return rows.map(r => ({name:String(g(r,iN)).replace(/^(السيد|السيده|السيدة|الاستاذ|الأستاذ|Mr\.?|Ms\.?|Mrs\.?)\s*\/?\s*/i,''), nameEn:String(g(r,iNe)).replace(/^(Mr|Ms|Mrs)\.?\s+/i,''), empNo:g(r,iE), sectorRaw:g(r,iS), title:g(r,iT),
+    email:String(g(r,iM)).trim().toLowerCase(), mobile:g(r,iP), idNo:g(r,iI), license:g(r,iL)}));
 }
 function analyzeImport(rows){
   const cE = {}, cN = {};
@@ -2510,11 +2515,13 @@ function analyzeImport(rows){
       else if(cN[normAr(r.name)] > 1){ st='اسم مكرر في الملف'; cls='warn'; act='review'; }
       else { st='جديد'; cls='info'; act='add'; } }
     const linkedUid = ex && ex.uid;
-    const m = !linkedUid && act!=='skip' ? userMatches(r.name, 0.5)[0] : null;
+    const byMail = r.email && !linkedUid && act!=='skip' ? unlinkedUsers().find(u => (u.email||'').toLowerCase()===r.email) : null;
+    if(act==='none' && (r.email || r.title || r.nameEn || r.mobile)) act = 'update';
+    const m = byMail ? {u:byMail, s:1, mail:true} : !linkedUid && act!=='skip' ? userMatches(r.name, 0.5)[0] : null;
     if(m) used[m.u.id] = (used[m.u.id]||0)+1;
-    return Object.assign({}, r, {st, cls, act, note, match: m ? {uid:m.u.id, s:m.s} : null});
+    return Object.assign({}, r, {st, cls, act, note, match: m ? {uid:m.u.id, s:m.s, mail:!!m.mail} : null});
   });
-  out.forEach(r => { if(r.match){ r.matchConflict = used[r.match.uid] > 1; r.link = !r.matchConflict && r.match.s >= 0.9 && r.act !== 'review'; } });
+  out.forEach(r => { if(r.match){ r.matchConflict = used[r.match.uid] > 1; r.link = !r.matchConflict && (r.match.mail || (r.match.s >= 0.9 && r.act !== 'review')); } });
   return out;
 }
 function impPreview(){
@@ -2523,8 +2530,8 @@ function impPreview(){
   const alerts = rows.filter(r => r.cls==='bad' || r.cls==='warn' || r.matchConflict).length;
   return `<div class="card stack"><div class="head-line"><h2>معاينة الاستيراد (${rows.length})</h2>${alerts ? chip(alerts + ' تنبيه يحتاج مراجعتك','warn') : chip('لا توجد تعارضات','ok')}</div>
     <div class="tbl-wrap"><table><thead><tr><th>الاسم</th><th>الرقم</th><th>القطاع</th><th>الحالة</th><th>الحساب المطابق</th><th>الإجراء</th></tr></thead><tbody>${rows.map((r,i) => `<tr>
-      <td translate="no">${esc(r.name)}</td><td class="mono">${esc(r.empNo)}</td><td>${esc(secName(r.sector) || r.sectorRaw || '—')}</td><td>${chip(r.st, r.cls)}${r.note ? `<span class="tiny" translate="no">${esc(r.note)}</span>` : ''}</td>
-      <td>${r.match ? `<label class="small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-act="impLink" data-i="${i}" ${r.link?'checked':''} ${r.act==='skip'?'disabled':''}><span translate="no">${esc(nm(r.match.uid))}</span> (${pct(r.match.s)})</label>${r.matchConflict ? '<span class="tiny">الحساب نفسه يطابق أكثر من اسم</span>' : ''}` : '<span class="muted small">—</span>'}</td>
+      <td translate="no">${esc(r.name)}${r.title || r.email ? `<span class="tiny">${esc(r.title)}${r.title && r.email ? ' · ' : ''}${esc(r.email)}</span>` : ''}</td><td class="mono">${esc(r.empNo)}</td><td>${esc(secName(r.sector) || r.sectorRaw || '—')}</td><td>${chip(r.st, r.cls)}${r.note ? `<span class="tiny" translate="no">${esc(r.note)}</span>` : ''}</td>
+      <td>${r.match ? `<label class="small" style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-act="impLink" data-i="${i}" ${r.link?'checked':''} ${r.act==='skip'?'disabled':''}><span translate="no">${esc(nm(r.match.uid))}</span> (${r.match.mail ? 'نفس الإيميل' : pct(r.match.s)})</label>${r.matchConflict ? '<span class="tiny">الحساب نفسه يطابق أكثر من اسم</span>' : ''}` : '<span class="muted small">—</span>'}</td>
       <td>${r.act==='review' ? `<select data-v7="impDec" data-i="${i}" style="width:auto"><option value="skip" ${dec[i]!=='apply'?'selected':''}>تخطي</option><option value="apply" ${dec[i]==='apply'?'selected':''}>${r.note && r.note.startsWith('المسجّل') ? 'تحديث الاسم' : 'إضافة رغم ذلك'}</option></select>` : r.act==='add' ? 'إضافة' : r.act==='update' ? 'تحديث' : r.act==='none' ? 'لا تغيير' : 'تخطي'}</td></tr>`).join('')}</tbody></table></div>
     <div class="row"><button class="btn primary" data-act="impApply" ${n?'':'disabled'}>اعتماد الاستيراد (${n})</button><button class="btn ghost" data-act="impCancel">إلغاء</button></div></div>`;
 }
@@ -2689,7 +2696,7 @@ function circRowsFor(c){ const s = circStats(c); return s.ids.map(id => { const 
   return {'الموظف': nm(id), 'الرقم الوظيفي': (sig && sig.empNo) || empNoOf(id), 'القطاع': secName(userSec(id)), 'الحالة': cStatLbl(c, k)[0], 'تاريخ الاطلاع': v ? xD(v.at) + ' ' + xT(v.at) : '', 'تاريخ ووقت التوقيع': sig ? fmtRiyadh(tsISO(sig.signedAt) || sig.clientAt) : '', 'رمز التحقق': sig && sig.signedHash ? sig.signedHash.slice(0,16) : ''}; }); }
 function circListRows(list){ return list.map(c => { const s = circStats(c); return {'المرجع': c.ref, 'النسخة': c.ver||1, 'العنوان': c.title, 'النوع': (CK[c.kind]||[c.kind])[0], 'الإجراء': c.action==='sign' ? 'توقيع إلكتروني' : 'اطلاع وتأكيد', 'تاريخ الإصدار': c.issueDate, 'الموعد النهائي': c.deadline||'', 'الحالة': c.status==='active' ? 'نشط' : c.status==='superseded' ? 'مستبدل' : 'مغلق', 'المستهدفون': s.total, 'الموقعون': s.signed, 'المتبقون': s.remaining, 'نسبة الاكتمال': s.pct + '%'}; }); }
 function csigRows(list){ return list.map(x => ({'المرجع': x.ref, 'النسخة': x.ver||1, 'التعميم': x.title||'', 'الموظف': x.name, 'الرقم الوظيفي': x.empNo, 'القطاع': secName(x.sector), 'النوع': x.kind==='sign' ? 'توقيع' : 'إقرار', 'التاريخ والوقت': fmtRiyadh(tsISO(x.signedAt) || x.clientAt), 'بعد الموعد': x.late ? 'نعم' : 'لا', 'بصمة المستند الأصلي SHA-256': x.docHash||'', 'بصمة النسخة الموقعة SHA-256': x.signedHash||''})); }
-function staffRows(){ return (S.staff||[]).map(s => ({'الرقم الوظيفي': s.empNo, 'الاسم': s.name, 'القطاع': secName(s.sector), 'الحساب المرتبط': s.uid ? ((S.users[s.uid]||{}).email||'') : '', 'حالة الربط': s.uid ? 'مربوط' : 'غير مربوط', 'تاريخ الربط': s.linkedAt ? xD(s.linkedAt) : ''})); }
+function staffRows(){ return (S.staff||[]).map(s => { const pv = (S.staffPriv||{})[s.empNo] || {}; return {'الرقم الوظيفي': s.empNo, 'الاسم': s.name, 'الاسم بالإنجليزي': s.nameEn||'', 'المسمى الوظيفي': s.title||'', 'القطاع': secName(s.sector), 'البريد الإلكتروني': s.email||'', 'رقم الجوال': pv.mobile||'', 'رقم الهوية / الإقامة': pv.idNo||'', 'رقم ترخيص الهيئة': pv.license||'', 'الحساب المرتبط': s.uid ? ((S.users[s.uid]||{}).email||'') : '', 'حالة الربط': s.uid ? 'مربوط' : 'غير مربوط', 'تاريخ الربط': s.linkedAt ? xD(s.linkedAt) : ''}; }); }
 
 /* ---------- PDF building (canvas → images keeps Arabic shaping correct) ---------- */
 function wrapLines(ctx, text, maxW){ const out = []; String(text).split('\n').forEach(par => { const words = par.split(/\s+/).filter(Boolean); if(!words.length){ out.push(''); return; } let line = '';
@@ -2817,6 +2824,7 @@ function v7Subs(db){
   if(S.admin){
     db.collection('staff').onSnapshot(q => { S.staff = docs(q).sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ar')); render(); }, warn('staff'));
     db.collection('linkreqs').onSnapshot(q => { S.linkreqs = docs(q); render(); }, warn('linkreqs'));
+    db.collection('staffpriv').onSnapshot(q => { const m = {}; q.docs.forEach(d => m[d.id] = d.data()); S.staffPriv = m; render(); }, warn('staffpriv'));
     db.collection('circulars').orderBy('at','desc').limit(300).onSnapshot(q => { S.circs = docs(q); render(); setTimeout(syncTargets, 500); }, warn('circulars'));
     db.collection('csigs').onSnapshot(merge('csigs','all'), warn('csigs'));
     db.collection('cviews').onSnapshot(merge('cviews','all'), warn('cviews'));
@@ -2830,6 +2838,7 @@ function v7Subs(db){
     db.collection('csigs').where('by','==',S.uid).onSnapshot(merge('csigs','mine'), warn('csigs'));
     db.collection('cviews').where('by','==',S.uid).onSnapshot(merge('cviews','mine'), warn('cviews'));
     db.doc('linkreqs/'+S.uid).onSnapshot(sn => { S.myLinkReq = sn.exists ? sn.data() : null; render(); }, warn('linkreq'));
+    v9Self(db);
   }
 }
 
@@ -2901,15 +2910,19 @@ Object.assign(ACT, {
   impCancel(){ S.ui.imp = null; S.ui.impDec = {}; render(); },
   impLink(b){ const r = S.ui.imp && S.ui.imp[+b.dataset.i]; if(r) r.link = b.checked; render(); },
   async impApply(b){
-    const rows = S.ui.imp || [], dec = S.ui.impDec || {}, now = new Date().toISOString(); b.disabled = true; let add = 0, upd = 0, lnk = 0;
+    const rows = S.ui.imp || [], dec = S.ui.impDec || {}, now = new Date().toISOString(); b.disabled = true; let add = 0, upd = 0, lnk = 0, al = 0;
     try {
       const bt = S.db.batch();
       rows.forEach((r,i) => { const ex = (S.staff||[]).find(s => s.empNo===r.empNo);
-        if(r.act==='add' || (r.act==='review' && dec[i]==='apply' && !ex)){ bt.set(S.db.doc('staff/'+r.empNo), {empNo:r.empNo, name:r.name, sector:r.sector||'', active:true, at:now, by:S.uid}); add++; }
-        else if(ex && (r.act==='update' || (r.act==='review' && dec[i]==='apply'))){ const u = {name:r.name}; if(r.sector) u.sector = r.sector; bt.update(S.db.doc('staff/'+r.empNo), u); if(ex.uid){ const uu = {officialName:r.name}; if(r.sector) uu.sector = r.sector; bt.update(S.db.doc('users/'+ex.uid), uu); } upd++; } });
+        const extra = {}; ['nameEn','title','email'].forEach(k => { if(r[k]) extra[k] = r[k]; });
+        const go = r.act==='add' || r.act==='update' || (r.act==='review' && dec[i]==='apply');
+        if(r.act==='add' || (r.act==='review' && dec[i]==='apply' && !ex)){ bt.set(S.db.doc('staff/'+r.empNo), Object.assign({empNo:r.empNo, name:r.name, sector:r.sector||'', active:true, at:now, by:S.uid}, extra)); add++; }
+        else if(ex && go){ const u = Object.assign({name:r.name}, extra); if(r.sector) u.sector = r.sector; bt.update(S.db.doc('staff/'+r.empNo), u); if(ex.uid){ const uu = {officialName:r.name}; if(r.sector) uu.sector = r.sector; bt.update(S.db.doc('users/'+ex.uid), uu); } upd++; }
+        if(go && (r.mobile || r.idNo || r.license)) bt.set(S.db.doc('staffpriv/'+r.empNo), {mobile:r.mobile||'', idNo:r.idNo||'', license:r.license||'', at:now, by:S.uid});
+        if(go && r.email && r.email !== ((S.users[S.uid]||{}).email||'').toLowerCase() && !(S.allowed||[]).includes(r.email) && !Object.values(S.users).some(u => (u.email||'').toLowerCase()===r.email)){ bt.set(S.db.doc('allowed/'+r.email), {at:now, by:S.uid, role:'paramedic', empNo:r.empNo}); al++; } });
       await bt.commit();
       for(const r of rows.filter(r => r.link && r.match && r.act!=='skip')){ await new Promise(ok => setTimeout(ok, 50)); if(!(S.staff||[]).some(s => s.empNo===r.empNo)) S.staff = (S.staff||[]).concat([{empNo:r.empNo, name:r.name, sector:r.sector||''}]); if(await linkAccount(r.empNo, r.match.uid, 'import')) lnk++; }
-      audit('استيراد القائمة المرجعية', `إضافة ${add} · تحديث ${upd} · ربط ${lnk}`); S.ui.imp = null; S.ui.impDec = {}; S.ui.impText = ''; S.ui.impPaste = null; toast(`تم: إضافة ${add}، تحديث ${upd}، ربط ${lnk}`);
+      audit('استيراد القائمة المرجعية', `إضافة ${add} · تحديث ${upd} · ربط ${lnk} · إيميلات مسموحة ${al}`); S.ui.imp = null; S.ui.impDec = {}; S.ui.impText = ''; S.ui.impPaste = null; toast(`تم: إضافة ${add}، تحديث ${upd}، ربط ${lnk}، إيميلات جاهزة للتسجيل ${al}`);
     } catch(e){ failMsg(e); }
     b.disabled = false; render();
   },
@@ -3246,6 +3259,23 @@ function v8Subs(db){
 }
 function v8Pending(){ return S.tbreqs.filter(x => x.status==='pending' && canDecideReq(x)).length + S.extras.filter(x => x.status==='pending' && canDecideReq(x)).length; }
 
+/* ===================== v9: email-based auto link & full profile ===================== */
+async function v9Self(db){
+  let me = S.users[S.uid] || {}; try { const ud = await db.doc('users/'+S.uid).get(); if(ud.exists) me = ud.data(); } catch(e){}
+  const em = ((S.user && S.user.email) || me.email || '').toLowerCase(); let emp = me.empNo || '';
+  try {
+    if(!me.empNo && em){
+      const q = await db.collection('staff').where('email','==',em).limit(1).get();
+      if(!q.empty){ const d = q.docs[0], st = d.data();
+        if(!st.uid){ const now = new Date().toISOString(), bt = db.batch();
+          bt.update(db.doc('staff/'+d.id), {uid:S.uid, linkedAt:now, linkMode:'email'});
+          bt.update(db.doc('users/'+S.uid), {empNo:d.id, sector:st.sector||'', officialName:st.name, linkedAt:now});
+          await bt.commit(); emp = d.id; try { await db.doc('linkreqs/'+S.uid).delete(); } catch(e){}
+          audit('ربط تلقائي بالبريد الإلكتروني', `${st.name} · ${d.id}`); toast('تم ربط حسابك برقمك الوظيفي تلقائيًا'); } }
+    }
+  } catch(e){ console.warn('emailLink', e && e.code); }
+  if(emp){ try { const a = await db.doc('staff/'+emp).get(); S.myStaff = a.exists ? a.data() : null; const p = await db.doc('staffpriv/'+emp).get(); S.myPriv = p.exists ? p.data() : null; render(); } catch(e){ console.warn('mypriv', e && e.code); } }
+}
 /* ---------- boot ---------- */
 function startData(){
   const db = S.db;
