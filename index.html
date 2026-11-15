@@ -159,6 +159,7 @@ td .tiny{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 .lvs table{min-width:0}.lvs td{padding:3px 5px;border:1px solid #000;text-align:left;font-size:inherit;color:#000}.lvs tr:last-child td{border-bottom:1px solid #000}
 .lvs td.r{text-align:right}.lvs td.c{text-align:center}
 .lvs .en{text-transform:none;letter-spacing:0;color:#000;font-size:inherit;font-weight:400;display:block;margin:0}.lvs .ar{color:#000}
+.btn[href]{text-decoration:none}
 .stamp-area{position:relative;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}.stamp-area>img:first-child{display:block;width:100%;height:auto}
 .stamp-box{position:absolute;cursor:grab;touch-action:none;box-shadow:0 0 0 3px rgba(214,58,76,.75);border-radius:4px;user-select:none;-webkit-user-select:none}
 .lvhost{position:relative;width:100%;overflow:hidden;border-radius:8px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.25)}
@@ -277,7 +278,7 @@ const FIREBASE_CONFIG = /*CONFIG_START*/{"apiKey":"AIzaSyDAAagIzTQb8CRn1p76PkDC6
 const DEFAULT_CONFIG = {"ambulances": ["AMB-01", "AMB-02", "AMB-03"], "cpr": ["BVM Adult (Ambu Bag)", "BVM Pediatric (Ambu Bag)", "Laryngoscope Set (Intubation Kit)", "ETT (Endotracheal Tubes)", "Epinephrine (Adrenaline)", "LMA Adult", "LMA Pediatric", "IV Cannulas (All Sizes)", "Adhesive Tape", "AED Pads", "AED (Automated External Defibrillator)", "Syringe 5 mL", "Syringe 10 mL", "Gauze", "Gloves", "IV Set (Infusion Set)"], "meds": [{"name": "باراسيتامول Paracetamol", "qty": 3}, {"name": "دكستروز 10% Dextrose", "qty": 2}, {"name": "نورمال سلاين Normal Saline", "qty": 2}, {"name": "أدينوسين Adenosine", "qty": 3}, {"name": "أسبرين Aspirin", "qty": 2}, {"name": "ديكلوفيناك Diclofenac IM", "qty": 3}, {"name": "أدرينالين Adrenaline", "qty": 5}, {"name": "سالبيوتامول Salbutamol", "qty": 2}, {"name": "بيكربونات الصوديوم Sodium Bicarbonate", "qty": 2}], "paramedic": [{"name": "Tourniquet", "qty": 2}, {"name": "قفازات", "qty": 10}, {"name": "أزواج قفازات معقمة", "qty": 2}, {"name": "رباط شاش 4*4", "qty": 1}, {"name": "رباط شاش 4*7", "qty": 1}, {"name": "رباط مثلث", "qty": 2}, {"name": "شاش", "qty": 1}, {"name": "قسطرة وريدية 24", "qty": 3}, {"name": "I/V sets", "qty": 3}, {"name": "محلول ملحي", "qty": 1}, {"name": "محلول دكستروز 5%", "qty": 1}, {"name": "بلاستر", "qty": 1}, {"name": "مسحات كحولية", "qty": 1}, {"name": "Aluminum rescue blanket", "qty": 1}, {"name": "بطانية حروق", "qty": 1}, {"name": "سماعة طبيب", "qty": 1}, {"name": "جهاز قياس ضغط الدم للكبار", "qty": 1}, {"name": "جهاز قياس ضغط الدم للصغار", "qty": 1}, {"name": "مقص ضمادات", "qty": 1}, {"name": "قاطع خواتم", "qty": 1}, {"name": "Glass Perforator", "qty": 1}], "vehicleItems": ["مستوى الوقود", "الإطارات", "الأنوار والإشارات", "المكيف", "البطارية", "جهاز الشفط", "أسطوانات الأكسجين", "النقالة", "الكرسي المتحرك", "نظافة السيارة"]};
 const S = { db:null, user:null, assets:true, uid:null, myName:'', admin:false, canWrite:true, ready:false, noDb:false, swaps:[], pathways:[], checkouts:[], records:[], rosc:[], mchecks:[], maint:false, schedCfg:null, myPref:null, rosters:[], prefsAll:[], draft:null, proposals:null, users:{}, allowed:[], authMode:'login', authErr:'', authBusy:false, gate:null,
   config:null, configLoaded:false, schedules:[], anns:[], acks:{}, insp:[], reports:[], audit:[],
-  view:'home', leaves:[], mySig:null, rostersRaw:[], rchanges:[], extras:[], tbreqs:[], staff:[], linkreqs:[], circs:[], csigs:[], cviews:[], csigMap:{}, cviewMap:{}, myLinkReq:null, sup:false, mySector:'', draft:null, bagType:'cpr', names:{}, asked:new Set(), seen:[], ui:{ adminTab:'ready', repFilter:'open', uploading:{} } };
+  view:'home', walog:[], leaves:[], mySig:null, rostersRaw:[], rchanges:[], extras:[], tbreqs:[], staff:[], linkreqs:[], circs:[], csigs:[], cviews:[], csigMap:{}, cviewMap:{}, myLinkReq:null, sup:false, mySector:'', draft:null, bagType:'cpr', names:{}, asked:new Set(), seen:[], ui:{ adminTab:'ready', repFilter:'open', uploading:{} } };
 
 const TYPES = {vehicle:'السيارة', cpr:'شنطة CPR', meds:'شنطة الأدوية', paramedic:'شنطة المسعف', golf:'عربة القولف'};
 const TYPES_EN = {vehicle:'Ambulance', cpr:'CPR Bag', meds:'Medication Bag', paramedic:'Paramedic Bag'};
@@ -721,7 +722,7 @@ function vHistory(){
 function vAdmin(){
   if(!S.admin) return '<div class="empty">هذه الصفحة للمسؤول فقط.</div>';
   const t = S.ui.adminTab;
-  const tabs = [['ready','الجاهزية اليومية'],['alerts','التنبيهات'],['stats','الإحصائيات'],['records','سجل الموظفين'],['adPathways','المسارات'],['adRosc','حالات ROSC'],['adCheckouts','ساعات الخروج'],['staffDir','قاعدة الموظفين'],['balances','الأرصدة والأوفر تايم'],['smart','الجدولة الذكية'],['mchecksAd','فحوصات الصيانة'],['team','الفريق'],['lists','القوائم'],['export','تصدير Excel'],['reset','تصفير الشهر'],['audit','سجل التدقيق']].map(([k,l]) => `<button data-act="adminTab" data-v="${k}" aria-pressed="${t===k}">${l}</button>`).join('');
+  const tabs = [['ready','الجاهزية اليومية'],['alerts','التنبيهات'],['stats','الإحصائيات'],['records','سجل الموظفين'],['adPathways','المسارات'],['adRosc','حالات ROSC'],['adCheckouts','ساعات الخروج'],['staffDir','قاعدة الموظفين'],['balances','الأرصدة والأوفر تايم'],['smart','الجدولة الذكية'],['mchecksAd','فحوصات الصيانة'],['team','الفريق'],['lists','القوائم'],['export','تصدير Excel'],['reset','تصفير الشهر'],['waLog','سجل الواتساب'],['audit','سجل التدقيق']].map(([k,l]) => `<button data-act="adminTab" data-v="${k}" aria-pressed="${t===k}">${l}</button>`).join('');
   let body = '';
   if(t==='ready'){
     const d = S.ui.readyDate || today();
@@ -736,6 +737,7 @@ function vAdmin(){
       ${meds.length ? `<div class="tbl-wrap"><table><thead><tr><th>السيارة</th><th>الدواء</th><th>الحالة</th><th>الكمية</th><th>الصلاحية</th><th>آخر فحص</th></tr></thead><tbody>${meds.map(m=>`<tr><td>${esc(m.amb)}</td><td><b>${esc(m.it.name)}</b></td><td>${chip(ST[m.it.status][0],ST[m.it.status][1])}</td><td class="num">${m.it.qty}/${m.it.req}</td><td>${esc(expLabel(m.it.exp))}</td><td>${fmtDT(m.insp.at)}<span class="tiny">${esc(nm(m.insp.by))}</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لا تنبيهات أدوية.</div>'}
       <h2>نواقص الشنط</h2>${bags.length ? `<div class="tbl-wrap"><table><thead><tr><th>السيارة</th><th>الشنطة</th><th>العنصر</th><th>الحالة</th><th>آخر فحص</th></tr></thead><tbody>${bags.map(b=>`<tr><td>${esc(b.amb)}</td><td>${TYPES[b.type]}</td><td><b>${esc(b.it.name)}</b>${b.it.note?`<span class="tiny">${esc(b.it.note)}</span>`:''}</td><td>${chip(ST[b.it.status][0],ST[b.it.status][1])}</td><td>${fmtDT(b.insp.at)}<span class="tiny">${esc(nm(b.insp.by))}</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لا نواقص في الشنط.</div>'}
       <h2>بلاغات عالية الأولوية</h2>${hi.length ? `<div class="list">${hi.map(r=>`<div class="card flat row"><span class="grow"><b>${esc(r.item)}</b> <span class="muted small">· ${esc(r.ambulance)} · ${fmtDT(r.at)}</span></span>${chip(PRI[r.priority][0],PRI[r.priority][1])}${chip(RST[r.status][0],RST[r.status][1])}</div>`).join('')}</div>` : '<div class="empty">لا بلاغات عالية الأولوية مفتوحة.</div>'}`;
+  } else if(t==='waLog'){ body = vWaLog();
   } else if(t==='staffDir'){ body = vStaffDir();
   } else if(t==='balances'){ body = vBalances();
   } else if(t==='team'){
@@ -2503,6 +2505,7 @@ function vStaffDir(){
   const cards = list.map(s => { const u = s.uid ? S.users[s.uid] : null; const sug = !s.uid ? userMatches(s.name, 0.5).slice(0,3) : [];
     return `<div class="card flat stack" style="gap:8px"><div class="row"><span class="grow"><b translate="no">${esc(s.name)}</b> <span class="mono small muted">${esc(s.empNo)}</span>${s.title || s.email ? `<span class="tiny">${esc(s.title||'')}${s.title && s.email ? ' · ' : ''}<span class="mono">${esc(s.email||'')}</span>${s.email && !s.uid ? ((S.allowed||[]).includes(s.email) ? ' · جاهز للتسجيل' : '') : ''}</span>` : ''}</span>
       <select data-v7="stSec" data-id="${esc(s.empNo)}" style="width:auto">${['<option value="">بدون قطاع</option>'].concat(Object.keys(SECTORS).map(k => `<option value="${k}" ${s.sector===k?'selected':''}>${SECTORS[k].ar}</option>`)).join('')}</select></div>
+      <div class="row small"><span>واتساب</span><input type="tel" dir="ltr" data-bind="wa_${esc(s.empNo)}" value="${esc(S.ui['wa_'+s.empNo] ?? (((S.staffPriv||{})[s.empNo]||{}).wa || ''))}" placeholder="${esc(((S.staffPriv||{})[s.empNo]||{}).mobile || '05XXXXXXXX')}" style="width:150px"><button class="btn sm" data-act="stWaSave" data-id="${esc(s.empNo)}">حفظ</button><span class="tiny">${waNorm((((S.staffPriv||{})[s.empNo]||{}).wa) || (((S.staffPriv||{})[s.empNo]||{}).mobile)) ? 'المستخدم: +' + waNorm((((S.staffPriv||{})[s.empNo]||{}).wa) || (((S.staffPriv||{})[s.empNo]||{}).mobile)) : 'لا يوجد رقم'}</span></div>
       <div class="row small">${u ? `${chip('مربوط','ok')}<span class="grow"><span translate="no">${esc(u.name||'')}</span> <span class="mono muted">${esc(u.email||'')}</span>${s.linkMode ? ` · ${s.linkMode==='auto' ? 'ربط تلقائي' : 'ربط بواسطة المسؤول'}` : ''}</span><button class="btn sm ghost" data-act="profOpen" data-id="${s.uid}">الملف</button><button class="btn sm ghost danger" data-act="stUnlink" data-id="${esc(s.empNo)}">${S.ui.confirm==='stu'+s.empNo ? 'تأكيد فصل الربط' : 'فصل الربط'}</button>` :
         `${chip('غير مربوط','warn')}<span class="grow">${sug.length ? sug.map(x => `<button class="btn sm" data-act="stLink" data-id="${esc(s.empNo)}" data-u="${x.u.id}">ربط بـ <span translate="no">${esc(x.u.name)}</span> (${pct(x.s)})</button>`).join(' ') : '<span class="muted">لا يوجد حساب مسجّل يطابق الاسم</span>'}</span>
         ${un.length ? `<select data-v7="stPick" data-id="${esc(s.empNo)}" style="width:auto"><option value="">اختيار حساب يدويًا…</option>${un.map(x => `<option value="${x.id}" ${S.ui['stp_'+s.empNo]===x.id?'selected':''}>${esc(x.name)} · ${esc(x.email||'')}</option>`).join('')}</select><button class="btn sm" data-act="stLinkPick" data-id="${esc(s.empNo)}" ${S.ui['stp_'+s.empNo]?'':'disabled'}>ربط</button>` : ''}
@@ -2705,13 +2708,15 @@ function circTrackDetail(c){
     <div class="row">${S.admin && c.status==='active' && s.remaining ? `<button class="btn primary" data-act="circRemind" data-id="${c.id}">إرسال تذكير لغير الموقعين (${s.remaining})</button>` : ''}
       <button class="btn" data-act="circSheet" data-id="${c.id}">كشف التوقيع Excel</button><button class="btn" data-act="circReport" data-id="${c.id}" data-nopdf="1">تقرير الالتزام PDF</button>
       ${c.action==='sign' && s.signed ? `<button class="btn" data-act="circAll" data-id="${c.id}">تنزيل جميع النسخ الموقعة</button>` : ''}
-      <button class="btn ghost" data-act="circOpen" data-id="${c.id}">عرض المستند</button>
+      <button class="btn ghost" data-act="circOpen" data-id="${c.id}">عرض المستند</button><button class="btn" style="border-color:#1FAF5A" data-act="waQueue" data-id="${c.id}">إرسال عبر الواتساب</button>
       ${S.admin && c.status==='active' ? `<button class="btn ghost" data-act="circNewVer" data-id="${c.id}">إصدار نسخة محدثة</button><button class="btn ghost danger" data-act="circClose" data-id="${c.id}">${S.ui.confirm==='cc'+c.id ? 'تأكيد الإغلاق' : 'إغلاق التعميم'}</button>` : ''}</div>
+    ${S.ui.waQ===c.id ? waQueuePanel(c) : ''}
+    ${S.ui.waSig ? (() => { const x = S.csigs.find(k => k.id===S.ui.waSig); return x && x.circ===c.id ? waPanel({kind:'csig', docId:x.id, ref:c.ref, uid:x.by, msg:circSignedMsg(c, x), pdf:'csig', key:'cs'+x.id}) : ''; })() : ''}
     <div class="subtabs">${[['all','الكل'],['pending','لم يوقعوا'],['done','وقّعوا']].map(([k,l]) => `<button data-act="ctS" data-v="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div>
     <div class="tbl-wrap"><table><thead><tr><th>الموظف</th><th>الرقم الوظيفي</th><th>القطاع</th><th>الحالة</th><th>الاطلاع</th><th>التوقيع</th><th></th></tr></thead><tbody>${rows.map(r => { const l = cStatLbl(c, r.k);
       return `<tr><td><b translate="no">${esc(nm(r.id))}</b></td><td class="mono">${esc((r.sig && r.sig.empNo) || empNoOf(r.id) || '—')}</td><td>${esc(secName(userSec(r.id)))}</td><td>${chip(l[0], l[1])}${c.remind && c.remind[r.id] && !r.sig ? `<span class="tiny">ذُكّر ${fmtDT(c.remind[r.id])}</span>` : ''}</td>
         <td class="small">${r.v ? fmtDT(r.v.at) : '—'}</td><td class="small">${r.sig ? esc(fmtRiyadh(tsISO(r.sig.signedAt) || r.sig.clientAt)) : '—'}</td>
-        <td>${r.sig && r.sig.n ? `<button class="btn sm" data-act="sigDl" data-id="${r.sig.id}">تنزيل</button>` : ''}${!r.sig && S.admin && c.status==='active' ? `<button class="btn sm ghost" data-act="circRemind" data-id="${c.id}" data-u="${r.id}">تذكير / إعادة إرسال</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div></div>`;
+        <td>${r.sig && r.sig.n ? `<button class="btn sm" data-act="sigDl" data-id="${r.sig.id}">تنزيل</button><button class="btn sm" style="border-color:#1FAF5A" data-act="waSigOpen" data-id="${r.sig.id}">واتساب</button>` : ''}${!r.sig && S.admin && c.status==='active' ? `<button class="btn sm ghost" data-act="circRemind" data-id="${c.id}" data-u="${r.id}">تذكير / إعادة إرسال</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div></div>`;
 }
 function circArchive(){
   const q = normAr(S.ui.caQ||''), y = S.ui.caY||'', m = S.ui.caM||'', k = S.ui.caK||'';
@@ -3567,6 +3572,7 @@ function lvDetail(x){
       ${mine && (x.status==='pending' || x.status==='returned') ? `<button class="btn ghost danger" data-act="lvCancel" data-id="${x.id}">${S.ui.confirm==='lvc'+x.id ? 'تأكيد الإلغاء' : 'إلغاء الطلب'}</button>` : ''}
       ${S.admin ? `<button class="btn ghost danger" data-act="lvDel" data-id="${x.id}">${S.ui.confirm==='lvd'+x.id ? 'تأكيد الحذف' : 'حذف'}</button>` : ''}</div>
     ${act}
+    ${(x.status==='approved' || x.status==='rejected') && (S.admin || isSupFor(x.sector)) ? waPanel({kind:'leave', docId:x.id, ref:x.ref, uid:x.uid, msg:lvMsg(x), pdf:'leave', key:'lv'+x.id}) : ''}
     <div class="lvhost" data-lv="${x.id}"></div>
     ${hist ? `<div class="card flat"><h2>سجل الطلب</h2><ul style="margin:6px 0 0;padding-inline-start:18px">${hist}</ul></div>` : ''}</div>`;
 }
@@ -3770,6 +3776,84 @@ function stampDragInit(){
 V7IN.stSize = t => { const p = S.ui.stPos; p.w = (+t.value)/100; const bx = document.getElementById('stampBox'); if(bx){ bx.style.width = (p.w*100) + '%'; } };
 V7IN.stPage = t => { S.ui.stPos.page = +t.value; render(); };
 ACT.schSignTog = b => { S.ui.schSign = b.checked; render(); };
+/* ===================== v11: WhatsApp sending (chat link + share sheet with PDF) ===================== */
+const PLATFORM_URL = location.origin + location.pathname;
+function waNorm(n){ let d = String(n||'').replace(/[٠-٩]/g, x => '٠١٢٣٤٥٦٧٨٩'.indexOf(x)).replace(/\D/g, ''); if(!d) return '';
+  if(d.startsWith('00')) d = d.slice(2); if(d.startsWith('05') && d.length===10) d = '966' + d.slice(1); else if(d.startsWith('5') && d.length===9) d = '966' + d; return d.length >= 10 ? d : ''; }
+S.waPhones = S.waPhones || {}; S.waPrep = {};
+function waPhone(uid){
+  const emp = empNoOf(uid); if(!emp) return '';
+  const pv = (S.staffPriv||{})[emp] || (uid===S.uid ? S.myPriv : null) || S.waPhones[emp];
+  if(pv) return waNorm(pv.wa || pv.mobile);
+  if(S.waPhones[emp] === undefined){ S.waPhones[emp] = null; S.db.doc('staffpriv/'+emp).get().then(sn => { S.waPhones[emp] = sn.exists ? sn.data() : {}; render(); }).catch(() => { S.waPhones[emp] = {}; }); }
+  return '';
+}
+const waLink = (phone, text) => `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+const firstName = uid => nm(uid);
+function lvMsg(x){
+  const ok = x.status==='approved', when = x.decidedAt ? new Date(x.decidedAt).toLocaleDateString('en-GB') : new Date().toLocaleDateString('en-GB');
+  return `عزيزي الموظف: ${x.name || nm(x.uid)}\n\n${ok ? 'نفيدكم بأنه تمت الموافقة على طلبكم.' : x.status==='rejected' ? 'نفيدكم بأنه لم تتم الموافقة على طلبكم / تم تأجيله' + (x.head && x.head.delayTo ? ' إلى ' + new Date(x.head.delayTo).toLocaleDateString('en-GB') : '') + '.' : 'نفيدكم بتحديث حالة طلبكم.'}\n\nنوع الطلب: طلب إجازة (${lvTypeName(x)})\nالمدة: من ${x.from} إلى ${x.to} (${x.days} يوم)\nتاريخ الاعتماد: ${when}\nرقم الطلب: ${x.ref}\n\nمرفق لكم النموذج المعتمد بصيغة PDF.\nللاطلاع عبر المنصة: ${PLATFORM_URL}`;
+}
+function circMsg(c, uid){ return `عزيزي الموظف: ${nm(uid)}\n\nصدر تعميم جديد يتطلب ${c.action==='sign' ? 'اطلاعكم وتوقيعكم' : 'اطلاعكم وتأكيدكم'}:\n${c.title}\nالمرجع: ${c.ref} · v${c.ver||1}${c.deadline ? '\nآخر موعد: ' + c.deadline : ''}\n\nيرجى الدخول للمنصة ← التعاميم والإقرارات:\n${PLATFORM_URL}`; }
+function circSignedMsg(c, x){ return `عزيزي الموظف: ${x.name}\n\nمرفق لكم نسختكم الموقعة من التعميم:\n${c.title}\nالمرجع: ${c.ref} · v${c.ver||1}\nتاريخ التوقيع: ${new Date(tsISO(x.signedAt) || x.clientAt).toLocaleDateString('en-GB')}`; }
+async function waLog(kind, docId, ref, uid, method){ try { await S.db.collection('walog').add({kind, docId, ref:ref||'', to:uid, toName:nm(uid), phone:waPhone(uid), method, at:new Date().toISOString(), by:S.uid}); } catch(e){ console.warn('walog', e && e.code); } }
+function waHistory(docId){ const l = (S.walog||[]).filter(w => w.docId===docId); if(!l.length) return '';
+  return `<div class="small muted">${l.map(w => `واتساب ${w.method==='share' ? '(ملف)' : '(رسالة)'} ← ${esc(w.toName||'')} · ${fmtDT(w.at)}`).join('<br>')}</div>`; }
+/* one recipient panel: open chat with ready text + share the PDF through the share sheet */
+function waPanel(o){ // {kind, docId, ref, uid, msg, pdf:'leave'|'csig'|null, key}
+  const ph = waPhone(o.uid), prep = S.waPrep[o.key];
+  return `<div class="card flat stack" style="gap:8px;border-color:#1FAF5A"><div class="head-line"><h2>إرسال عبر الواتساب</h2>${ph ? chip('\u200E+' + ph, 'ok') : chip('لا يوجد رقم واتساب','warn')}</div>
+    <div class="row">${ph ? `<a class="btn primary" style="background:#1FAF5A;border-color:#1FAF5A" href="${esc(waLink(ph, o.msg))}" target="_blank" rel="noopener" data-act="waChat" data-kind="${o.kind}" data-doc="${o.docId}" data-ref="${esc(o.ref)}" data-u="${o.uid}">1. فتح محادثة الموظف بالرسالة</a>` : '<span class="small muted">أضف رقم الجوال/الواتساب للموظف من قاعدة الموظفين.</span>'}
+      ${o.pdf ? (prep && prep.file ? `<button class="btn" data-act="waShare" data-key="${o.key}" data-kind="${o.kind}" data-doc="${o.docId}" data-ref="${esc(o.ref)}" data-u="${o.uid}">2. إرفاق ملف PDF ومشاركته</button>` : `<button class="btn" data-act="waPrepare" data-key="${o.key}" data-pdf="${o.pdf}" data-doc="${o.docId}" ${prep && prep.busy ? 'disabled' : ''}>${prep && prep.busy ? 'جارٍ تجهيز الملف…' : '2. تجهيز ملف PDF للإرسال'}</button>`) : ''}
+      <button class="btn ghost sm" data-act="waCopy" data-key="${o.key}">نسخ نص الرسالة</button></div>
+    <span class="tiny">على الجوال: افتح المحادثة أولًا ثم ارجع واضغط «مشاركة» واختر نفس المحادثة لإرفاق الملف. على الكمبيوتر يُنزَّل الملف لترفقه يدويًا.</span>
+    ${waHistory(o.docId)}<textarea hidden id="wamsg-${o.key}">${esc(o.msg)}</textarea></div>`;
+}
+async function lvPdfBytes(x){ const cv = await lvCanvas(x), L = await needPdfLib(), pdf = await L.PDFDocument.create(), img = await pdf.embedJpg(await lvImageBytes(cv));
+  const p = pdf.addPage([595.28, 841.89]); let w = 595.28, h = cv.height * 595.28 / cv.width; if(h > 841.89){ w = w * 841.89 / h; h = 841.89; }
+  p.drawImage(img, {x:(595.28 - w)/2, y:841.89 - h, width:w, height:h}); pdf.setTitle('Vacation Request Form — ' + x.name); pdf.setCreator('Al Hayat EMS'); return await pdf.save(); }
+Object.assign(ACT, {
+  waSigOpen(b){ S.ui.waSig = b.dataset.id; render(); window.scrollTo(0,0); },
+  waChat(b){ waLog(b.dataset.kind, b.dataset.doc, b.dataset.ref, b.dataset.u, 'chat'); audit('إرسال واتساب (محادثة)', `${b.dataset.ref} · ${nm(b.dataset.u)}`); window.open(b.getAttribute('href'), '_blank'); },
+  async waPrepare(b){ const key = b.dataset.key; S.waPrep[key] = {busy:true}; render();
+    try { let bytes, name;
+      if(b.dataset.pdf==='leave'){ const x = (S.leaves||[]).find(k => k.id===b.dataset.doc); bytes = await lvPdfBytes(x); name = lvFname(x, 'pdf'); }
+      else { const x = S.csigs.find(k => k.id===b.dataset.doc); bytes = await sigBytes(x); name = sigFname(x); }
+      S.waPrep[key] = {file: new File([bytes], name, {type:'application/pdf'})}; }
+    catch(e){ console.error(e); S.waPrep[key] = null; toast('تعذّر تجهيز الملف. تأكد من الإنترنت.'); }
+    render(); },
+  async waShare(b){ const key = b.dataset.key, pr = S.waPrep[key]; if(!pr || !pr.file) return; const text = (document.getElementById('wamsg-' + key)||{}).value || '';
+    if(navigator.canShare && navigator.canShare({files:[pr.file]})){
+      try { await navigator.share({files:[pr.file], text}); waLog(b.dataset.kind, b.dataset.doc, b.dataset.ref, b.dataset.u, 'share'); audit('إرسال واتساب (ملف)', `${b.dataset.ref} · ${nm(b.dataset.u)}`); }
+      catch(e){ if(e && e.name !== 'AbortError') toast('تعذّرت المشاركة. نزّل الملف وأرفقه يدويًا.'); }
+    } else { saveBytes(new Uint8Array(await pr.file.arrayBuffer()), pr.file.name); waLog(b.dataset.kind, b.dataset.doc, b.dataset.ref, b.dataset.u, 'share'); toast('تم تنزيل الملف، أرفقه في محادثة الواتساب.'); } },
+  async waCopy(b){ const t = (document.getElementById('wamsg-' + b.dataset.key)||{}).value || ''; try { await navigator.clipboard.writeText(t); toast('تم نسخ الرسالة'); } catch(e){ toast('تعذّر النسخ'); } },
+  waQueue(b){ S.ui.waQ = b.dataset.id; S.ui.waQf = b.dataset.f || 'pending'; render(); setTimeout(() => { const e = document.getElementById('waQueue'); if(e) e.scrollIntoView({block:'start'}); }, 50); },
+  waQClose(){ S.ui.waQ = null; render(); },
+  async waGroup(b){ const c = S.circs.find(x => x.id===b.dataset.id); if(!c) return; const text = `تعميم جديد: ${c.title}\nالمرجع: ${c.ref} · v${c.ver||1}${c.deadline ? '\nآخر موعد: ' + c.deadline : ''}\nيرجى ${c.action==='sign' ? 'الاطلاع والتوقيع' : 'الاطلاع والتأكيد'} عبر المنصة ← التعاميم والإقرارات:\n${PLATFORM_URL}`;
+    if(navigator.share){ try { await navigator.share({text}); waLog('circ-group', c.id, c.ref, S.uid, 'share'); } catch(e){} } else { try { await navigator.clipboard.writeText(text); toast('تم نسخ الرسالة، الصقها في مجموعة الواتساب'); } catch(e){} } },
+  async stWaSave(b){ const emp = b.dataset.id, v = (S.ui['wa_'+emp]||'').trim(); if(v && !waNorm(v)){ toast('رقم غير صحيح. مثال: 05XXXXXXXX'); return; }
+    try { const ref = S.db.doc('staffpriv/'+emp), sn = await ref.get(); if(sn.exists) await ref.update({wa:v}); else await ref.set({wa:v, at:new Date().toISOString(), by:S.uid}); audit('تحديث رقم واتساب', emp); toast('تم حفظ رقم الواتساب'); } catch(e){ failMsg(e); } },
+  async waLogX(b){ await exportSheet(b, `EMS_سجل_الواتساب_${today()}.xlsx`, 'سجل الواتساب', (S.walog||[]).map(w => ({'التاريخ': xD(w.at) + ' ' + xT(w.at), 'المستند': w.kind==='leave' ? 'طلب إجازة' : w.kind==='csig' ? 'تعميم موقّع' : w.kind==='circ-group' ? 'تعميم (مجموعة)' : 'تعميم', 'المرجع': w.ref, 'المستلم': w.toName, 'الرقم': w.phone, 'الطريقة': w.method==='share' ? 'ملف PDF' : 'رسالة', 'بواسطة': nm(w.by)})), 'لا يوجد'); }
+});
+/* bulk queue for circulars: one tap per employee opens his chat with a ready message */
+function waQueuePanel(c){
+  const f = S.ui.waQf || 'pending', ids = circTargets(c).filter(id => f==='all' || !S.csigMap[c.id+'_'+id]);
+  const sent = new Set((S.walog||[]).filter(w => w.docId===c.id).map(w => w.to));
+  return `<div class="card stack" id="waQueue" style="border-color:#1FAF5A"><div class="head-line"><h2>إرسال التعميم عبر الواتساب (${ids.length})</h2><button class="btn sm ghost" data-act="waQClose">إغلاق</button></div>
+    <div class="subtabs">${[['pending','غير الموقعين'],['all','جميع المستهدفين']].map(([k,l]) => `<button data-act="waQueue" data-id="${c.id}" data-f="${k}" aria-pressed="${f===k}">${l}</button>`).join('')}</div>
+    <span class="tiny">اضغط على كل موظف لفتح محادثته والرسالة جاهزة، ثم ارجع للمنصة للتالي. أو استخدم «مشاركة لمجموعة واتساب» لإرسال رسالة واحدة لقروب القسم.</span>
+    <div class="row"><button class="btn sm" data-act="waGroup" data-id="${c.id}">مشاركة لمجموعة واتساب</button></div>
+    <div class="list">${ids.map(id => { const ph = waPhone(id); return `<div class="card flat row small"><span class="grow"><b translate="no">${esc(nm(id))}</b> <span class="mono muted" dir="ltr">${ph ? '+' + ph : 'لا يوجد رقم'}</span></span>${sent.has(id) ? chip('أُرسل','ok') : ''}
+      ${ph ? `<a class="btn sm" style="background:#1FAF5A;border-color:#1FAF5A;color:#fff" href="${esc(waLink(ph, circMsg(c, id)))}" target="_blank" rel="noopener" data-act="waChat" data-kind="circ" data-doc="${c.id}" data-ref="${esc(c.ref)}" data-u="${id}">واتساب</a>` : ''}</div>`; }).join('')}</div></div>`;
+}
+function vWaLog(){ const l = (S.walog||[]).slice().sort((a,b) => a.at < b.at ? 1 : -1);
+  return `<div class="stack"><div class="row"><button class="btn sm" data-act="waLogX">تصدير Excel</button><span class="small muted">${l.length} عملية إرسال</span></div>
+    ${l.length ? `<div class="tbl-wrap"><table><thead><tr><th>التاريخ</th><th>المستند</th><th>المستلم</th><th>الطريقة</th><th>بواسطة</th></tr></thead><tbody>${l.map(w => `<tr><td class="small">${fmtDT(w.at)}</td><td class="small">${esc(w.kind==='leave' ? 'طلب إجازة' : w.kind==='csig' ? 'تعميم موقّع' : w.kind==='circ-group' ? 'تعميم (مجموعة)' : 'تعميم')} <span class="mono">${esc(w.ref)}</span></td><td><span translate="no">${esc(w.toName||'')}</span><span class="tiny mono">${w.phone ? '+' + esc(w.phone) : ''}</span></td><td>${w.method==='share' ? chip('ملف PDF','info') : chip('رسالة','ok')}</td><td class="small">${esc(nm(w.by))}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لا توجد عمليات إرسال بعد.</div>'}</div>`; }
+function v11Subs(db){ const warn = k => e => console.warn(k, e && e.code);
+  if(S.admin) db.collection('walog').onSnapshot(q => { S.walog = q.docs.map(d => Object.assign({id:d.id}, d.data())); render(); }, warn('walog'));
+  else if(S.sup) db.collection('walog').where('by','==',S.uid).onSnapshot(q => { S.walog = q.docs.map(d => Object.assign({id:d.id}, d.data())); render(); }, warn('walog')); }
+
 /* ---------- boot ---------- */
 function startData(){
   const db = S.db;
@@ -3797,7 +3881,7 @@ function startData(){
   if(S.admin) list('records','at',1000,'records');
   if(S.admin){ list('audit','at',100,'audit'); db.collection('allowed').onSnapshot(q => { S.allowed = q.docs.map(d => d.id); render(); }, err); }
   db.collection('acks').onSnapshot(q => { const a = {}; q.docs.forEach(d => a[d.id] = d.data()); S.acks = a; render(); }, err);
-  v7Subs(db); v8Subs(db); v10Subs(db);
+  v7Subs(db); v8Subs(db); v10Subs(db); v11Subs(db);
 }
 function init(){
   if(LANG === 'en'){ const app = document.getElementById('app'); app.dir = 'ltr'; app.lang = 'en'; document.documentElement.dir = 'ltr'; document.documentElement.lang = 'en'; document.title = 'Al Hayat EMS'; }
