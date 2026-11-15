@@ -520,6 +520,7 @@ function vSchedule(){
       <label class="f">ملاحظات على المناوبات<textarea id="schNote" data-bind="schNote" placeholder="تبديلات، مناوبات احتياط، تعليمات خاصة">${esc(S.ui.schNote||'')}</textarea></label>
       <div class="photo-in"><label class="btn" for="schFileIn">${f ? 'تغيير الملف' : 'اختيار ملف الجدول (PDF أو صورة)'}</label><input type="file" id="schFileIn" accept="application/pdf,image/*" data-upload="sched">
         ${S.ui.uploading.sched ? '<span class="muted small">جارٍ الرفع…</span>' : f ? `<span class="small">${esc(f.name)}</span>` : '<span class="muted small">ملف Excel: احفظه PDF أو صورة أولًا. حجم PDF الأقصى 650 كيلوبايت، والصور تُصغَّر تلقائيًا.</span>'}</div>
+      ${S.mySig && S.mySig.png ? `<label class="row small" style="gap:8px"><input type="checkbox" data-act="schSignTog" ${S.ui.schSign !== false ? 'checked' : ''}> إضافة توقيعي الرسمي على الجدول (اعتماد رئيس القسم)</label>` : `<span class="small muted">لإضافة توقيعك على الجداول، احفظ توقيعك الرسمي من «ملفي».</span>`}
       <div class="row"><button class="btn primary" data-act="pubSched" ${f && (S.ui.schMonth||'').trim() ? '' : 'disabled'}>نشر الجدول وإشعار الفريق</button></div></div>`;
   }
   const show = s => {
@@ -1657,7 +1658,7 @@ function rosterPdf(r, title){
     th,td{border:1px solid #C9D3DA;padding:2px;text-align:center} th{background:#11283A;color:#fff} td.nm{text-align:${rtl?'right':'left'};font-weight:700;white-space:nowrap}
     td.m{background:#E3EEF7} td.e{background:#FCEFD8} tr:nth-child(even) td.nm{background:#F5F7F9}</style></head><body>
     <header><img src="${logo}" alt=""><div><h1>${esc(title||'')}</h1><p>${legend}</p></div></header><table><thead>${head}</thead><tbody>${body}</tbody></table>
-    <p>${tr('ص = صباحي · م = مسائي')} · ${new Date().toLocaleString(LOC)}</p><script>setTimeout(function(){window.print()},400)<\/script></body></html>`);
+    <p>${tr('ص = صباحي · م = مسائي')} · ${new Date().toLocaleString(LOC)}</p>${r.signed && r.signed.sig ? `<div style="margin-top:10px;text-align:${rtl?'left':'right'};font-size:11px"><div style="color:#56656F">${tr('اعتماد')} · Approved</div><img src="${r.signed.sig}" style="height:54px"><div style="font-weight:700">${esc(r.signed.name)}</div><div style="color:#56656F">${esc(r.signed.title)} · ${esc(xD(r.signed.at))}</div></div>` : ''}<script>setTimeout(function(){window.print()},400)<\/script></body></html>`);
   w.document.close();
 }
 
@@ -1926,6 +1927,7 @@ const ACT = {
     if(S.ui.confirm !== 'pub'){ S.ui.confirm = 'pub'; render(); return; } S.ui.confirm = null;
     const d = S.draft, prev = S.rosters.find(r => r.month===d.month), staffIds = new Set(Object.keys(d.assign||{}));
     const r = {month: d.month, sites: d.sites, staff: d.staff, assign: d.assign, target: d.target, version: (prev ? (prev.version||1) + 1 : 1), publishedAt: new Date().toISOString(), by: S.uid};
+    if(S.mySig && S.mySig.png) r.signed = {sig:S.mySig.png, name:S.myName||'', title:'Head of Paramedic', at:r.publishedAt};
     b.disabled = true;
     try { await S.db.doc('rosters/' + d.month).set(r); audit(prev ? 'تعديل جدول منشور' : 'اعتماد ونشر الجدول', `${d.month} · نسخة ${r.version}`); toast('تم اعتماد الجدول ونشره للموظفين'); }
     catch(e){ b.disabled = false; failMsg(e); }
@@ -2215,8 +2217,9 @@ const ACT = {
     try { await S.db.doc('acks/'+S.uid).set(cur); toast('تم تسجيل اطلاعك'); } catch(e){ b.disabled = false; failMsg(e); }
   },
   async pubSched(b){
-    b.disabled = true; const f = S.ui.schFile;
-    try { await S.db.collection('schedules').add({month:S.ui.schMonth.trim(), note:(S.ui.schNote||'').trim(), file:f.id, fileName:f.name, fileType:f.type, publishedAt:new Date().toISOString(), by:S.uid});
+    b.disabled = true; let f = S.ui.schFile;
+    try { if(S.mySig && S.mySig.png && S.ui.schSign !== false){ b.textContent = 'جارٍ إضافة التوقيع…'; f = await stampScheduleFile(f); }
+      await S.db.collection('schedules').add({month:S.ui.schMonth.trim(), note:(S.ui.schNote||'').trim(), file:f.id, fileName:f.name, fileType:f.type, signed: !!f.signed, publishedAt:new Date().toISOString(), by:S.uid});
       audit('نشر جدول مناوبات', S.ui.schMonth.trim()); Object.assign(S.ui, {schMonth:'', schNote:'', schFile:null}); render(); toast('تم نشر الجدول'); } catch(e){ b.disabled = false; failMsg(e); }
   },
   expRange(b){
@@ -2461,7 +2464,7 @@ function vProfile(){
     ${self ? myRosterCard() : ''}
     ${hoursCard(uid)}${!self && (S.admin || S.sup) ? `<h2>سجل الحركات</h2>${ledgerTable(uid, S.admin)}` : ''}
     <h2>التعاميم والإقرارات الموقعة</h2>${sigs.length ? `<div class="list">${sigs.map(sigRowCard).join('')}</div>` : '<div class="empty">لا توجد تعاميم موقعة بعد.</div>'}
-    ${self ? `<div class="row"><button class="btn" data-act="go" data-v="history">سجلي: الفحوصات والبلاغات</button></div>${nameCard()}` : ''}</div>`;
+    ${self ? `${mySigCard()}<div class="row"><button class="btn" data-act="go" data-v="history">سجلي: الفحوصات والبلاغات</button></div>${nameCard()}` : ''}</div>`;
 }
 function sigRowCard(x){
   const c = S.circs.find(k => k.id===x.circ);
@@ -2768,6 +2771,9 @@ async function editorPdf(o){
       y += lh; if(b.k==='li' && i===0){ ctx.beginPath(); ctx.arc(rtl ? X - 10 : X + 10, y - 9, 6, 0, Math.PI*2); ctx.fill(); }
       ctx.fillText(lines[i], rtl ? X - ind : X + ind, y); }
   }
+  if(o.issuerSig){ const im = await loadImg(o.issuerSig); await ensure(230); y += 40; const bw = 330, bh = im ? bw * im.height / im.width : 0, ix = rtl ? M : W - M - bw;
+    ctx.textAlign = rtl ? 'left' : 'right'; const tx = rtl ? M : W - M; ctx.fillStyle = '#56656F'; ctx.font = font(400, 22); ctx.fillText(tr('صادر عن'), tx, y + 4);
+    if(im) ctx.drawImage(im, ix, y + 14, bw, bh); ctx.fillStyle = '#11283A'; ctx.font = font(700, 26); ctx.fillText(o.issuerName || '', tx, y + 30 + bh); ctx.font = font(400, 22); ctx.fillStyle = '#56656F'; ctx.fillText(o.issuerTitle || '', tx, y + 62 + bh); y += 80 + bh; }
   let sigBox = null;
   if(o.action==='sign'){ const bh = 340; await ensure(bh + 60); y += 40;
     ctx.strokeStyle = '#8EA6B8'; ctx.setLineDash([10,8]); ctx.lineWidth = 2; ctx.strokeRect(M, y, W - 2*M, bh); ctx.setLineDash([]);
@@ -2984,7 +2990,7 @@ Object.assign(ACT, {
   cfUid(b){ const f = S.ui.cf, v = b.dataset.v; f.uids = b.checked ? Array.from(new Set(f.uids.concat([v]))) : f.uids.filter(x => x!==v); render(); },
   cfReset(){ S.ui.cf = null; ['cfTitle','cfDesc','cfBody','cfDeadline','cfIssue'].forEach(k => S.ui[k] = ''); S.ui.circTab = 'track'; render(); },
   async cfPreview(b){ const w = preWin(); const l = b.textContent; b.disabled = true; b.textContent = 'جارٍ التجهيز…';
-    try { const f = S.ui.cf; const r = await editorPdf({title:(S.ui.cfTitle||'').trim() || '—', body:S.ui.cfBody||'', ref:f.ref || nextRef(), ver:f.ver||1, issueDate:S.ui.cfIssue||today(), deadline:S.ui.cfDeadline||'', action:f.action, kindLabel:tr(CK[f.kind][0])}); showBytes(w, r.bytes); }
+    try { const f = S.ui.cf; const r = await editorPdf({title:(S.ui.cfTitle||'').trim() || '—', body:S.ui.cfBody||'', ref:f.ref || nextRef(), ver:f.ver||1, issueDate:S.ui.cfIssue||today(), deadline:S.ui.cfDeadline||'', action:f.action, kindLabel:tr(CK[f.kind][0]), issuerSig:(S.mySig && S.mySig.png) || '', issuerName:S.myName||'', issuerTitle:'Head of Paramedic'}); showBytes(w, r.bytes); }
     catch(e){ if(w) w.close(); console.error(e); toast('تعذّر تجهيز المعاينة. تأكد من الإنترنت.'); }
     b.disabled = false; b.textContent = l; },
   async cfPublish(b){
@@ -2995,7 +3001,7 @@ Object.assign(ACT, {
     try {
       const ref = f.ref || nextRef(), ver = f.ver || 1, issueDate = S.ui.cfIssue || today(), deadline = S.ui.cfDeadline || '';
       let bytes, sigBox = null, pages = 0;
-      if(f.src==='editor'){ const r = await editorPdf({title, body:S.ui.cfBody||'', ref, ver, issueDate, deadline, action:f.action, kindLabel:tr(CK[f.kind][0])}); bytes = r.bytes; sigBox = r.sigBox; pages = r.pages; }
+      if(f.src==='editor'){ const r = await editorPdf({title, body:S.ui.cfBody||'', ref, ver, issueDate, deadline, action:f.action, kindLabel:tr(CK[f.kind][0]), issuerSig:(S.mySig && S.mySig.png) || '', issuerName:S.myName||'', issuerTitle:'Head of Paramedic'}); bytes = r.bytes; sigBox = r.sigBox; pages = r.pages; }
       else { bytes = f.pdfBytes; try { const L = await needPdfLib(); pages = (await L.PDFDocument.load(bytes.slice(), {ignoreEncryption:true})).getPageCount(); } catch(e){ toast('ملف PDF غير صالح أو محمي.'); throw e; } }
       const id = S.db.collection('circulars').doc().id, hash = await sha256(bytes);
       const n = await putChunks('cdocs', id, bytes, {circ:id});
@@ -3023,7 +3029,8 @@ Object.assign(ACT, {
     printDoc(w, `${tr('تقرير الالتزام بالتوقيع')} — ${c.title}`, `<p><b>${esc(c.ref)} · v${c.ver||1}</b> · ${esc(tr((CK[c.kind]||[''])[0]))} · ${esc(tr('تاريخ الإصدار'))} ${esc(c.issueDate)}${c.deadline ? ' · ' + esc(tr('الموعد النهائي')) + ' ' + esc(c.deadline) : ''}</p>
       <div class="sum"><div>${tr('المستهدفون')}<b>${s.total}</b></div><div>${tr('الموقعون')}<b class="ok">${s.signed}</b></div><div>${tr('المتبقون')}<b class="warn">${s.remaining}</b></div><div>${tr('متأخر')}<b class="bad">${s.late}</b></div><div>${tr('نسبة الاكتمال')}<b>${s.pct}%</b></div></div>
       <table><thead><tr>${Object.keys(rows[0]||{'الموظف':1}).map(k => `<th>${esc(tr(k))}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${Object.entries(r).map(([k,v]) => `<td class="${k==='الحالة' ? cls(v) : ''}">${esc(tr(String(v)))}</td>`).join('')}</tr>`).join('')}</tbody></table>
-      <p>${esc(tr('بصمة المستند الأصلي SHA-256'))}: <span style="font-family:monospace">${esc(c.fileHash||'—')}</span></p>`, true);
+      <p>${esc(tr('بصمة المستند الأصلي SHA-256'))}: <span style="font-family:monospace">${esc(c.fileHash||'—')}</span></p>
+      ${S.mySig && S.mySig.png ? `<div style="margin-top:18px;text-align:${LANG==='en'?'right':'left'}"><img src="${S.mySig.png}" style="height:60px"><div style="font-weight:700">${esc(S.myName||'')}</div><div style="font-size:11px;color:#56656F">Head of Paramedic</div></div>` : ''}`, true);
     audit('تقرير التزام PDF', c.ref); },
   async circAll(b){ const c = S.circs.find(x => x.id===b.dataset.id); if(!c) return; const l = b.textContent; b.disabled = true; b.textContent = 'جارٍ التجهيز…';
     try { const L = await needPdfLib(), out = await L.PDFDocument.create(); const sigs = circTargets(c).map(id => S.csigMap[c.id+'_'+id]).filter(x => x && x.n).sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ar'));
@@ -3470,7 +3477,7 @@ function lvDraft(){
     address:(S.ui.lvAddr||'').trim(), phone:(S.ui.lvPhone||'').trim(), replacement:(S.ui.lvRepl||'').trim(), empSig: lvCurSig()};
 }
 function lvCurSig(){ const f = lvForm(); if(f.sigMode==='saved') return (S.mySig && S.mySig.png) || ''; if(f.sigMode==='upload') return S.ui.lvUpload || ''; return (S.ui.lvStrokes||[]).length ? sigPng(S.ui.lvStrokes, 600, 200).toDataURL('image/png') : ''; }
-function apCurSig(){ const m = S.ui.apSigMode || (S.mySig ? 'saved' : 'draw'); if(m==='saved') return (S.mySig && S.mySig.png) || ''; return (S.ui.apStrokes||[]).length ? sigPng(S.ui.apStrokes, 600, 200).toDataURL('image/png') : ''; }
+function apCurSig(){ if(S.mySig && S.mySig.png) return S.mySig.png; const m = S.ui.apSigMode || 'draw'; if(m==='saved') return (S.mySig && S.mySig.png) || ''; return (S.ui.apStrokes||[]).length ? sigPng(S.ui.apStrokes, 600, 200).toDataURL('image/png') : ''; }
 function lvCanDecide(x){ return x.status==='pending' && (S.admin || (isSupFor(x.sector) && x.uid !== S.uid)); }
 function lvPendingForMe(){ return (S.leaves||[]).filter(lvCanDecide).length; }
 function sigCtl(mode, setAct, padId, uploadId){
@@ -3482,8 +3489,9 @@ function sigCtl(mode, setAct, padId, uploadId){
 }
 function mySigCard(){
   const has = !!(S.mySig && S.mySig.png);
-  return `<div class="card flat stack" style="gap:8px"><div class="head-line"><h2>توقيعي المحفوظ</h2>${has ? chip('محفوظ في حسابك','ok') : chip('لا يوجد','neutral')}</div>
-    <p class="sub">يُحفظ توقيعك في حسابك فقط، ولا يستطيع أي مستخدم آخر الاطلاع عليه أو استخدامه. يُستخدم في طلباتك القادمة دون إعادة التوقيع.</p>
+  const off = S.admin || S.sup;
+  return `<div class="card flat stack" style="gap:8px"><div class="head-line"><h2>${off ? 'توقيعي الرسمي' : 'توقيعي المحفوظ'}</h2>${has ? chip('محفوظ في حسابك','ok') : chip('لا يوجد','neutral')}</div>
+    <p class="sub">${off ? 'يُضاف تلقائيًا على كل ما تعتمده وتوقّعه في المنصة: نماذج الإجازة، والتعاميم التي تصدرها، وتقارير الالتزام. محفوظ في حسابك فقط ولا يستطيع أي مستخدم آخر استخدامه.' : 'يُحفظ توقيعك في حسابك فقط، ولا يستطيع أي مستخدم آخر الاطلاع عليه أو استخدامه. يُستخدم في طلباتك القادمة دون إعادة التوقيع.'}</p>
     ${has ? `<div class="sigbox"><img src="${S.mySig.png}" alt="توقيعي"></div>` : ''}
     <div class="row"><label class="btn sm">${has ? 'تغيير من صورة' : 'رفع صورة توقيع'}<input type="file" id="mySigFile" accept="image/*" hidden></label>${has ? `<button class="btn sm ghost danger" data-act="mySigDel">${S.ui.confirm==='msd' ? 'تأكيد الحذف' : 'حذف التوقيع'}</button>` : ''}</div></div>`;
 }
@@ -3521,7 +3529,7 @@ function vLeave(){
   if(appr) tabs.push(['pending','بانتظار اعتمادي'], ['archive','الأرشيف']);
   let body;
   if(tab==='new' && !S.admin) body = lvFormView() + mySigCard();
-  else if(tab==='pending' && appr){ const l = (S.leaves||[]).filter(lvCanDecide); body = l.length ? `<div class="list">${l.map(lvCard).join('')}</div>` : '<div class="empty">لا توجد طلبات بانتظار اعتمادك.</div>'; }
+  else if(tab==='pending' && appr){ const l = (S.leaves||[]).filter(lvCanDecide); body = (l.length ? `<div class="list">${l.map(lvCard).join('')}</div>` : '<div class="empty">لا توجد طلبات بانتظار اعتمادك.</div>') + mySigCard(); }
   else if(tab==='archive' && appr) body = lvArchive();
   else { const l = (S.leaves||[]).filter(x => x.uid===S.uid); body = l.length ? `<div class="list">${l.map(lvCard).join('')}</div>` : '<div class="empty">لا توجد طلبات.</div>'; }
   return `<div class="stack">${pageHead('نموذج طلب إجازة','Vacation Request Form')}
@@ -3547,7 +3555,7 @@ function lvDetail(x){
       <div class="seg" role="group">${[['approved','أوافق · Approved'],['delayed','لا أوافق وتؤجل · Not Approved & Delayed'],['returned','إعادة للتعديل']].map(([k,l]) => `<button data-act="apDec" data-v="${k}" aria-pressed="${dec===k}">${l}</button>`).join('')}</div>
       ${dec==='delayed' ? `<label class="f">تؤجل إلى (اختياري)<input type="date" id="apTo" data-bind="apTo" value="${esc(S.ui.apTo||'')}"></label>` : ''}
       <label class="f">${dec==='returned' ? 'ما المطلوب تعديله؟' : 'الأسباب / Reason'}<input type="text" id="apReason" data-bind="apReason" value="${esc(S.ui.apReason||'')}"></label>
-      ${dec!=='returned' ? `<b class="small">توقيعك / Sign.</b>${sigCtl(mode, 'apSig', 'apPad', null)}` : ''}
+      ${dec!=='returned' ? (S.mySig && S.mySig.png ? `<b class="small">توقيعك الرسمي / Sign.</b><div class="sigbox"><img src="${S.mySig.png}" alt="التوقيع الرسمي"></div><span class="small muted">يُضاف توقيعك الرسمي المحفوظ تلقائيًا.</span>` : `<b class="small">توقيعك / Sign.</b>${sigCtl(mode, 'apSig', 'apPad', null)}<span class="small muted">احفظ توقيعك الرسمي من «ملفي» ليُضاف تلقائيًا في كل اعتماد.</span>`) : ''}
       <div class="row"><button class="btn primary" data-act="apSubmit" data-id="${x.id}">${dec==='returned' ? 'إعادة الطلب للموظف' : 'توقيع واعتماد القرار'}</button></div></div>`; }
   return `<div class="stack">${pageHead('نموذج طلب إجازة','Vacation Request', `<button class="btn sm ghost" data-act="lvBack">رجوع</button>`)}
     <div class="row">${chip(st[0], st[1])}<span class="mono small">${esc(x.ref)}</span><span class="small muted">${esc(lvTypeName(x))} · ${x.days} يوم</span></div>
@@ -3660,7 +3668,7 @@ async function sigFromImage(file){
   const r = Math.min(1, 1400 / Math.max(img.width, img.height)), W = Math.round(img.width * r), H = Math.round(img.height * r);
   const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.drawImage(img, 0, 0, W, H);
   const d = x.getImageData(0, 0, W, H), p = d.data; let x0 = W, y0 = H, x1 = 0, y1 = 0;
-  for(let i=0; i<p.length; i+=4){ const l = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2]; const a = l > 175 ? 0 : Math.min(255, (175 - l) * 2.2);
+  for(let i=0; i<p.length; i+=4){ const l = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2]; const a = p[i+3] < 25 ? 0 : l > 175 ? 0 : Math.min(255, (175 - l) * 2.2 * p[i+3] / 255);
     p[i] = 11; p[i+1] = 37; p[i+2] = 69; p[i+3] = a; if(a > 40){ const k = i/4, px = k % W, py = (k / W) | 0; if(px < x0) x0 = px; if(px > x1) x1 = px; if(py < y0) y0 = py; if(py > y1) y1 = py; } }
   if(x1 <= x0 || y1 <= y0) throw new Error('empty');
   x.putImageData(d, 0, 0); const pad = 8, cw = x1 - x0 + pad*2, ch = y1 - y0 + pad*2, s = Math.min(1, 600 / cw, 220 / ch);
@@ -3695,6 +3703,34 @@ function v10Subs(db){
   db.doc('sigs/'+S.uid).onSnapshot(sn => { S.mySig = sn.exists ? sn.data() : null; render(); }, warn('sigs'));
 }
 
+/* ---------- official signature stamp on uploaded schedules ---------- */
+async function sigStampCanvas(){
+  await docFonts(); const W = 640, H = 230, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0,0,W,H); x.strokeStyle = '#0B3A66'; x.lineWidth = 3; x.strokeRect(2,2,W-4,H-4);
+  x.direction = 'rtl'; x.textAlign = 'center'; x.fillStyle = '#0B3A66'; x.font = font(700, 24); x.fillText('اعتماد رئيس القسم · Approved by Head of Paramedic', W/2, 36);
+  const im = await loadImg(S.mySig.png); if(im){ const h = 100, w = Math.min(W - 60, h * im.width / im.height); x.drawImage(im, (W - w)/2, 48, w, w * im.height / im.width); }
+  x.fillStyle = '#14212B'; x.font = font(700, 24); x.fillText(S.myName || '', W/2, 182); x.fillStyle = '#56656F'; x.font = font(400, 20); x.fillText('Head of Paramedic · ' + new Date().toLocaleDateString('en-GB'), W/2, 212);
+  return c;
+}
+async function stampScheduleFile(f){
+  const d = (await S.db.doc('files/' + f.id).get()).data(); if(!d || !d.b64) return f;
+  const stamp = await sigStampCanvas(); let b64, type = f.type;
+  if(/^image\//.test(f.type)){
+    const img = await loadImg(d.b64); if(!img) return f;
+    const W = img.width, sh = Math.round(W * 0.16 * 230/640) , sw = Math.round(W * 0.16 * 1), pad = Math.round(W * 0.02);
+    const c = document.createElement('canvas'); c.width = W; c.height = img.height + sh + pad*2; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(img, 0, 0);
+    const scale = Math.max(sw, Math.round(W*0.32)) / 640, w2 = 640*scale, h2 = 230*scale; c.height = img.height + h2 + pad*2; x.fillStyle = '#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(img, 0, 0); x.drawImage(stamp, pad, img.height + pad, w2, h2);
+    let q = 0.82; b64 = c.toDataURL('image/jpeg', q); while(b64.length > 900000 && q > 0.4){ q -= 0.1; b64 = c.toDataURL('image/jpeg', q); } type = 'image/jpeg';
+  } else if(/pdf/.test(f.type)){
+    const L = await needPdfLib(), pdf = await L.PDFDocument.load(b64ToBytes(d.b64.split(',')[1]), {ignoreEncryption:true});
+    const png = await pdf.embedPng(b64ToBytes(stamp.toDataURL('image/png').split(',')[1])), pages = pdf.getPages(), p = pages[pages.length - 1], {width} = p.getSize();
+    const w = Math.min(190, width * 0.3), h = w * 230/640; p.drawImage(png, {x:16, y:14, width:w, height:h});
+    b64 = 'data:application/pdf;base64,' + bytesToB64(await pdf.save()); if(b64.length > 950000) return f;
+  } else return f;
+  const ref = await S.db.collection('files').add({b64, type, name:f.name, by:S.uid, at:new Date().toISOString()});
+  return {id:ref.id, name:f.name, type, signed:true};
+}
+ACT.schSignTog = b => { S.ui.schSign = b.checked; };
 /* ---------- boot ---------- */
 function startData(){
   const db = S.db;
