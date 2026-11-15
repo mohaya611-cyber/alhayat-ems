@@ -159,6 +159,8 @@ td .tiny{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 .lvs table{min-width:0}.lvs td{padding:3px 5px;border:1px solid #000;text-align:left;font-size:inherit;color:#000}.lvs tr:last-child td{border-bottom:1px solid #000}
 .lvs td.r{text-align:right}.lvs td.c{text-align:center}
 .lvs .en{text-transform:none;letter-spacing:0;color:#000;font-size:inherit;font-weight:400;display:block;margin:0}.lvs .ar{color:#000}
+.stamp-area{position:relative;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}.stamp-area>img:first-child{display:block;width:100%;height:auto}
+.stamp-box{position:absolute;cursor:grab;touch-action:none;box-shadow:0 0 0 3px rgba(214,58,76,.75);border-radius:4px;user-select:none;-webkit-user-select:none}
 .lvhost{position:relative;width:100%;overflow:hidden;border-radius:8px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 .sigbox{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;justify-content:center}.sigbox img{max-height:90px;max-width:100%}
 .bar.full{width:100%;max-width:none;height:8px}
@@ -520,7 +522,7 @@ function vSchedule(){
       <label class="f">ملاحظات على المناوبات<textarea id="schNote" data-bind="schNote" placeholder="تبديلات، مناوبات احتياط، تعليمات خاصة">${esc(S.ui.schNote||'')}</textarea></label>
       <div class="photo-in"><label class="btn" for="schFileIn">${f ? 'تغيير الملف' : 'اختيار ملف الجدول (PDF أو صورة)'}</label><input type="file" id="schFileIn" accept="application/pdf,image/*" data-upload="sched">
         ${S.ui.uploading.sched ? '<span class="muted small">جارٍ الرفع…</span>' : f ? `<span class="small">${esc(f.name)}</span>` : '<span class="muted small">ملف Excel: احفظه PDF أو صورة أولًا. حجم PDF الأقصى 650 كيلوبايت، والصور تُصغَّر تلقائيًا.</span>'}</div>
-      ${S.mySig && S.mySig.png ? `<label class="row small" style="gap:8px"><input type="checkbox" data-act="schSignTog" ${S.ui.schSign !== false ? 'checked' : ''}> إضافة توقيعي الرسمي على الجدول (اعتماد رئيس القسم)</label>` : `<span class="small muted">لإضافة توقيعك على الجداول، احفظ توقيعك الرسمي من «ملفي».</span>`}
+      ${S.mySig && S.mySig.png ? `<label class="row small" style="gap:8px"><input type="checkbox" data-act="schSignTog" ${S.ui.schSign !== false ? 'checked' : ''}> إضافة توقيعي الرسمي على الجدول (اعتماد رئيس القسم)</label>${f && S.ui.schSign !== false ? stampPlacer(f) : ''}` : `<span class="small muted">لإضافة توقيعك على الجداول، احفظ توقيعك الرسمي من «ملفي».</span>`}
       <div class="row"><button class="btn primary" data-act="pubSched" ${f && (S.ui.schMonth||'').trim() ? '' : 'disabled'}>نشر الجدول وإشعار الفريق</button></div></div>`;
   }
   const show = s => {
@@ -2280,7 +2282,7 @@ document.addEventListener('change', async e => {
   S.ui.uploading[key] = true; render();
   try {
     const res = await uploadFile(file, key==='recf' ? 'recfiles' : key==='rosc' ? 'roscfiles' : 'files');
-    if(key==='sched') S.ui.schFile = {id:res.id, name:file.name, type:res.contentType};
+    if(key==='sched'){ S.ui.schFile = {id:res.id, name:file.name, type:res.contentType}; S.ui.stPos = null; S.ui.schPages = 0; }
     else if(key==='rep') S.ui.repPhoto = res.id;
     else if(key==='rosc'){ S.ui.ro = S.ui.ro || {}; S.ui.ro.sheet = {id:res.id, name:file.name, type:res.contentType}; }
     else if(key==='recf'){ S.ui.recFiles = (S.ui.recFiles||[]).concat([{id:res.id, name:file.name, type:res.contentType}]); }
@@ -3694,7 +3696,7 @@ function padInit(id, key){
   c.addEventListener('pointermove', e => { if(!cur) return; e.preventDefault(); cur.push(pos(e)); redraw(); });
   const up = () => { cur = null; }; c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up); c.addEventListener('pointerleave', up);
 }
-function v10After(){ padInit('lvPad', 'lvStrokes'); padInit('apPad', 'apStrokes'); lvMount(); }
+function v10After(){ padInit('lvPad', 'lvStrokes'); padInit('apPad', 'apStrokes'); lvMount(); stampDragInit(); }
 function v10Subs(db){
   const docs = q => q.docs.map(d => Object.assign({id:d.id}, d.data())), warn = k => e => console.warn(k, e && e.code);
   const merge = part => q => { S._leaves = S._leaves || {}; S._leaves[part] = docs(q); const m = {}; Object.values(S._leaves).flat().forEach(x => m[x.id] = x); S.leaves = Object.values(m).sort((a,b) => a.at < b.at ? 1 : -1); render(); };
@@ -3714,23 +3716,60 @@ async function sigStampCanvas(){
 }
 async function stampScheduleFile(f){
   const d = (await S.db.doc('files/' + f.id).get()).data(); if(!d || !d.b64) return f;
-  const stamp = await sigStampCanvas(); let b64, type = f.type;
+  const stamp = await sigStampCanvas(), pos = Object.assign({x:0.03, y:0.8, w:0.3, page:-1}, S.ui.stPos || {}); let b64, type = f.type;
   if(/^image\//.test(f.type)){
     const img = await loadImg(d.b64); if(!img) return f;
-    const W = img.width, sh = Math.round(W * 0.16 * 230/640) , sw = Math.round(W * 0.16 * 1), pad = Math.round(W * 0.02);
-    const c = document.createElement('canvas'); c.width = W; c.height = img.height + sh + pad*2; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(img, 0, 0);
-    const scale = Math.max(sw, Math.round(W*0.32)) / 640, w2 = 640*scale, h2 = 230*scale; c.height = img.height + h2 + pad*2; x.fillStyle = '#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(img, 0, 0); x.drawImage(stamp, pad, img.height + pad, w2, h2);
-    let q = 0.82; b64 = c.toDataURL('image/jpeg', q); while(b64.length > 900000 && q > 0.4){ q -= 0.1; b64 = c.toDataURL('image/jpeg', q); } type = 'image/jpeg';
+    const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    const w = pos.w * img.width, h = w * 230/640; x.drawImage(stamp, pos.x * img.width, pos.y * img.height, w, h);
+    let q = 0.85; b64 = c.toDataURL('image/jpeg', q); while(b64.length > 900000 && q > 0.4){ q -= 0.1; b64 = c.toDataURL('image/jpeg', q); } type = 'image/jpeg';
   } else if(/pdf/.test(f.type)){
     const L = await needPdfLib(), pdf = await L.PDFDocument.load(b64ToBytes(d.b64.split(',')[1]), {ignoreEncryption:true});
-    const png = await pdf.embedPng(b64ToBytes(stamp.toDataURL('image/png').split(',')[1])), pages = pdf.getPages(), p = pages[pages.length - 1], {width} = p.getSize();
-    const w = Math.min(190, width * 0.3), h = w * 230/640; p.drawImage(png, {x:16, y:14, width:w, height:h});
+    const png = await pdf.embedPng(b64ToBytes(stamp.toDataURL('image/png').split(',')[1])), pages = pdf.getPages();
+    const p = pages[pos.page >= 0 && pos.page < pages.length ? pos.page : pages.length - 1], {width, height} = p.getSize();
+    const w = pos.w * width, h = w * 230/640; p.drawImage(png, {x: pos.x * width, y: height - pos.y * height - h, width: w, height: h});
     b64 = 'data:application/pdf;base64,' + bytesToB64(await pdf.save()); if(b64.length > 950000) return f;
   } else return f;
   const ref = await S.db.collection('files').add({b64, type, name:f.name, by:S.uid, at:new Date().toISOString()});
   return {id:ref.id, name:f.name, type, signed:true};
 }
-ACT.schSignTog = b => { S.ui.schSign = b.checked; };
+/* ---------- choose where the stamp goes ---------- */
+const stampPrev = {};
+async function loadStampPrev(f, page){
+  const k = f.id + '|' + page; if(stampPrev[k]) return; stampPrev[k] = {status:'loading'};
+  try {
+    const d = (await S.db.doc('files/' + f.id).get()).data(); let url, pages = 1;
+    if(/^image\//.test(f.type)) url = d.b64;
+    else { const pj = await needPdfJs(), doc = await pj.getDocument({data: b64ToBytes(d.b64.split(',')[1])}).promise; pages = doc.numPages;
+      const pg = await doc.getPage(page >= 0 && page < pages ? page + 1 : pages), v1 = pg.getViewport({scale:1}), vp = pg.getViewport({scale: 900 / v1.width});
+      const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0,0,cv.width,cv.height);
+      await pg.render({canvasContext:cx, viewport:vp}).promise; url = cv.toDataURL('image/jpeg', 0.85); }
+    if(!S.stampImg) S.stampImg = (await sigStampCanvas()).toDataURL('image/png');
+    stampPrev[k] = {status:'ok', url, pages}; if(S.ui.schPages !== pages){ S.ui.schPages = pages; }
+  } catch(e){ console.error(e); stampPrev[k] = {status:'err'}; }
+  render();
+}
+function stampPlacer(f){
+  const pos = S.ui.stPos = Object.assign({x:0.03, y:0.8, w:0.3, page:-1}, S.ui.stPos || {}), k = f.id + '|' + pos.page, pv = stampPrev[k];
+  if(!pv) setTimeout(() => loadStampPrev(f, pos.page), 0);
+  const pages = S.ui.schPages || 1;
+  return `<div class="stack" style="gap:8px"><b class="small">مكان التوقيع: اسحب الختم بإصبعك إلى المكان المناسب</b>
+    ${/pdf/.test(f.type) && pages > 1 ? `<label class="f small">الصفحة<select data-v7="stPage">${Array.from({length:pages}, (_,i) => `<option value="${i}" ${(pos.page < 0 ? pages - 1 : pos.page)===i ? 'selected' : ''}>صفحة ${i+1}${i===pages-1 ? ' (الأخيرة)' : ''}</option>`).join('')}</select></label>` : ''}
+    ${!pv || pv.status==='loading' ? '<div class="empty">جارٍ تجهيز المعاينة…</div>' : pv.status==='err' ? '<div class="empty">تعذّرت المعاينة. سيوضع الختم أسفل يسار الصفحة.</div>' :
+      `<div id="stampArea" class="stamp-area"><img src="${pv.url}" alt="الجدول" draggable="false"><img id="stampBox" class="stamp-box" src="${S.stampImg}" alt="الختم" draggable="false" style="left:${pos.x*100}%;top:${pos.y*100}%;width:${pos.w*100}%"></div>
+      <label class="f small">حجم الختم<input type="range" min="12" max="60" value="${Math.round(pos.w*100)}" data-v7="stSize"></label>`}</div>`;
+}
+function stampDragInit(){
+  const a = document.getElementById('stampArea'), bx = document.getElementById('stampBox'); if(!a || !bx || bx.dataset.init) return; bx.dataset.init = '1';
+  let st = null;
+  bx.addEventListener('pointerdown', e => { e.preventDefault(); try { bx.setPointerCapture(e.pointerId); } catch(_){} const r = a.getBoundingClientRect(); st = {r, dx: e.clientX - bx.getBoundingClientRect().left, dy: e.clientY - bx.getBoundingClientRect().top}; });
+  bx.addEventListener('pointermove', e => { if(!st) return; e.preventDefault(); const r = st.r, p = S.ui.stPos, bw = bx.offsetWidth / r.width, bh = bx.offsetHeight / r.height;
+    p.x = Math.min(1 - bw, Math.max(0, (e.clientX - st.dx - r.left) / r.width)); p.y = Math.min(1 - bh, Math.max(0, (e.clientY - st.dy - r.top) / r.height));
+    bx.style.left = (p.x*100) + '%'; bx.style.top = (p.y*100) + '%'; });
+  const up = () => { st = null; }; bx.addEventListener('pointerup', up); bx.addEventListener('pointercancel', up);
+}
+V7IN.stSize = t => { const p = S.ui.stPos; p.w = (+t.value)/100; const bx = document.getElementById('stampBox'); if(bx){ bx.style.width = (p.w*100) + '%'; } };
+V7IN.stPage = t => { S.ui.stPos.page = +t.value; render(); };
+ACT.schSignTog = b => { S.ui.schSign = b.checked; render(); };
 /* ---------- boot ---------- */
 function startData(){
   const db = S.db;
