@@ -159,7 +159,7 @@ td .tiny{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 .lvs table{min-width:0}.lvs td{padding:3px 5px;border:1px solid #000;text-align:left;font-size:inherit;color:#000}.lvs tr:last-child td{border-bottom:1px solid #000}
 .lvs td.r{text-align:right}.lvs td.c{text-align:center}
 .lvs .en{text-transform:none;letter-spacing:0;color:#000;font-size:inherit;font-weight:400;display:block;margin:0}.lvs .ar{color:#000}
-.btn[href]{text-decoration:none}
+.btn[href]{text-decoration:none}.sd-box.on{box-shadow:0 0 0 3px #1F8EF1,0 0 0 6px rgba(31,142,241,.3)}
 .stamp-area{position:relative;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}.stamp-area>img:first-child{display:block;width:100%;height:auto}
 .stamp-box{position:absolute;cursor:grab;touch-action:none;box-shadow:0 0 0 3px rgba(214,58,76,.75);border-radius:4px;user-select:none;-webkit-user-select:none}
 .lvhost{position:relative;width:100%;overflow:hidden;border-radius:8px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.25)}
@@ -278,7 +278,7 @@ const FIREBASE_CONFIG = /*CONFIG_START*/{"apiKey":"AIzaSyDAAagIzTQb8CRn1p76PkDC6
 const DEFAULT_CONFIG = {"ambulances": ["AMB-01", "AMB-02", "AMB-03"], "cpr": ["BVM Adult (Ambu Bag)", "BVM Pediatric (Ambu Bag)", "Laryngoscope Set (Intubation Kit)", "ETT (Endotracheal Tubes)", "Epinephrine (Adrenaline)", "LMA Adult", "LMA Pediatric", "IV Cannulas (All Sizes)", "Adhesive Tape", "AED Pads", "AED (Automated External Defibrillator)", "Syringe 5 mL", "Syringe 10 mL", "Gauze", "Gloves", "IV Set (Infusion Set)"], "meds": [{"name": "باراسيتامول Paracetamol", "qty": 3}, {"name": "دكستروز 10% Dextrose", "qty": 2}, {"name": "نورمال سلاين Normal Saline", "qty": 2}, {"name": "أدينوسين Adenosine", "qty": 3}, {"name": "أسبرين Aspirin", "qty": 2}, {"name": "ديكلوفيناك Diclofenac IM", "qty": 3}, {"name": "أدرينالين Adrenaline", "qty": 5}, {"name": "سالبيوتامول Salbutamol", "qty": 2}, {"name": "بيكربونات الصوديوم Sodium Bicarbonate", "qty": 2}], "paramedic": [{"name": "Tourniquet", "qty": 2}, {"name": "قفازات", "qty": 10}, {"name": "أزواج قفازات معقمة", "qty": 2}, {"name": "رباط شاش 4*4", "qty": 1}, {"name": "رباط شاش 4*7", "qty": 1}, {"name": "رباط مثلث", "qty": 2}, {"name": "شاش", "qty": 1}, {"name": "قسطرة وريدية 24", "qty": 3}, {"name": "I/V sets", "qty": 3}, {"name": "محلول ملحي", "qty": 1}, {"name": "محلول دكستروز 5%", "qty": 1}, {"name": "بلاستر", "qty": 1}, {"name": "مسحات كحولية", "qty": 1}, {"name": "Aluminum rescue blanket", "qty": 1}, {"name": "بطانية حروق", "qty": 1}, {"name": "سماعة طبيب", "qty": 1}, {"name": "جهاز قياس ضغط الدم للكبار", "qty": 1}, {"name": "جهاز قياس ضغط الدم للصغار", "qty": 1}, {"name": "مقص ضمادات", "qty": 1}, {"name": "قاطع خواتم", "qty": 1}, {"name": "Glass Perforator", "qty": 1}], "vehicleItems": ["مستوى الوقود", "الإطارات", "الأنوار والإشارات", "المكيف", "البطارية", "جهاز الشفط", "أسطوانات الأكسجين", "النقالة", "الكرسي المتحرك", "نظافة السيارة"]};
 const S = { db:null, user:null, assets:true, uid:null, myName:'', admin:false, canWrite:true, ready:false, noDb:false, swaps:[], pathways:[], checkouts:[], records:[], rosc:[], mchecks:[], maint:false, schedCfg:null, myPref:null, rosters:[], prefsAll:[], draft:null, proposals:null, users:{}, allowed:[], authMode:'login', authErr:'', authBusy:false, gate:null,
   config:null, configLoaded:false, schedules:[], anns:[], acks:{}, insp:[], reports:[], audit:[],
-  view:'home', walog:[], leaves:[], mySig:null, rostersRaw:[], rchanges:[], extras:[], tbreqs:[], staff:[], linkreqs:[], circs:[], csigs:[], cviews:[], csigMap:{}, cviewMap:{}, myLinkReq:null, sup:false, mySector:'', draft:null, bagType:'cpr', names:{}, asked:new Set(), seen:[], ui:{ adminTab:'ready', repFilter:'open', uploading:{} } };
+  view:'home', sdocs:[], walog:[], leaves:[], mySig:null, rostersRaw:[], rchanges:[], extras:[], tbreqs:[], staff:[], linkreqs:[], circs:[], csigs:[], cviews:[], csigMap:{}, cviewMap:{}, myLinkReq:null, sup:false, mySector:'', draft:null, bagType:'cpr', names:{}, asked:new Set(), seen:[], ui:{ adminTab:'ready', repFilter:'open', uploading:{} } };
 
 const TYPES = {vehicle:'السيارة', cpr:'شنطة CPR', meds:'شنطة الأدوية', paramedic:'شنطة المسعف', golf:'عربة القولف'};
 const TYPES_EN = {vehicle:'Ambulance', cpr:'CPR Bag', meds:'Medication Bag', paramedic:'Paramedic Bag'};
@@ -530,7 +530,7 @@ function vSchedule(){
     const file = s.file ? (/^image\//.test(s.fileType||'') ? `<img class="sched-img" data-file="${s.file}" alt="جدول ${esc(s.month)}">` : `<a class="btn" href="#" data-file="${s.file}" target="_blank" rel="noopener">فتح الجدول (${esc(s.fileName||'PDF')})</a>`) : '';
     return `<div class="card stack"><div class="head-line"><div><h2>${esc(s.month)}</h2><span class="muted small">نُشر ${fmtDT(s.publishedAt)} · ${esc(nm(s.by))}</span></div>${s===cur?chip('الجدول الحالي','ok'):''}</div>
       ${s.note ? `<p style="margin:0;white-space:pre-wrap" translate="no">${esc(s.note)}</p>` : ''}${file}
-      ${S.admin ? `<div class="row"><button class="btn sm ghost danger" data-act="delSched" data-id="${s.id}">${S.ui.confirm==='sch'+s.id?'تأكيد حذف الجدول':'حذف الجدول'}</button></div>` : ''}</div>`;
+      ${S.admin ? `<div class="row">${S.mySig && S.mySig.png ? `<button class="btn sm" data-act="schSignEdit" data-id="${s.id}">${s.signed ? 'تعديل مكان التوقيع' : 'إضافة توقيعي'}</button>` : ''}<button class="btn sm ghost danger" data-act="delSched" data-id="${s.id}">${S.ui.confirm==='sch'+s.id?'تأكيد حذف الجدول':'حذف الجدول'}</button></div>` : ''}</div>`;
   };
   const archive = S.schedules.slice(1);
   return `<div class="stack">${pageHead('جدول المناوبات','Duty Schedule')}
@@ -722,7 +722,7 @@ function vHistory(){
 function vAdmin(){
   if(!S.admin) return '<div class="empty">هذه الصفحة للمسؤول فقط.</div>';
   const t = S.ui.adminTab;
-  const tabs = [['ready','الجاهزية اليومية'],['alerts','التنبيهات'],['stats','الإحصائيات'],['records','سجل الموظفين'],['adPathways','المسارات'],['adRosc','حالات ROSC'],['adCheckouts','ساعات الخروج'],['staffDir','قاعدة الموظفين'],['balances','الأرصدة والأوفر تايم'],['smart','الجدولة الذكية'],['mchecksAd','فحوصات الصيانة'],['team','الفريق'],['lists','القوائم'],['export','تصدير Excel'],['reset','تصفير الشهر'],['waLog','سجل الواتساب'],['audit','سجل التدقيق']].map(([k,l]) => `<button data-act="adminTab" data-v="${k}" aria-pressed="${t===k}">${l}</button>`).join('');
+  const tabs = [['ready','الجاهزية اليومية'],['alerts','التنبيهات'],['stats','الإحصائيات'],['records','سجل الموظفين'],['adPathways','المسارات'],['adRosc','حالات ROSC'],['adCheckouts','ساعات الخروج'],['staffDir','قاعدة الموظفين'],['balances','الأرصدة والأوفر تايم'],['smart','الجدولة الذكية'],['mchecksAd','فحوصات الصيانة'],['team','الفريق'],['lists','القوائم'],['export','تصدير Excel'],['reset','تصفير الشهر'],['signDocs','توقيع المستندات'],['waLog','سجل الواتساب'],['audit','سجل التدقيق']].map(([k,l]) => `<button data-act="adminTab" data-v="${k}" aria-pressed="${t===k}">${l}</button>`).join('');
   let body = '';
   if(t==='ready'){
     const d = S.ui.readyDate || today();
@@ -737,6 +737,7 @@ function vAdmin(){
       ${meds.length ? `<div class="tbl-wrap"><table><thead><tr><th>السيارة</th><th>الدواء</th><th>الحالة</th><th>الكمية</th><th>الصلاحية</th><th>آخر فحص</th></tr></thead><tbody>${meds.map(m=>`<tr><td>${esc(m.amb)}</td><td><b>${esc(m.it.name)}</b></td><td>${chip(ST[m.it.status][0],ST[m.it.status][1])}</td><td class="num">${m.it.qty}/${m.it.req}</td><td>${esc(expLabel(m.it.exp))}</td><td>${fmtDT(m.insp.at)}<span class="tiny">${esc(nm(m.insp.by))}</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لا تنبيهات أدوية.</div>'}
       <h2>نواقص الشنط</h2>${bags.length ? `<div class="tbl-wrap"><table><thead><tr><th>السيارة</th><th>الشنطة</th><th>العنصر</th><th>الحالة</th><th>آخر فحص</th></tr></thead><tbody>${bags.map(b=>`<tr><td>${esc(b.amb)}</td><td>${TYPES[b.type]}</td><td><b>${esc(b.it.name)}</b>${b.it.note?`<span class="tiny">${esc(b.it.note)}</span>`:''}</td><td>${chip(ST[b.it.status][0],ST[b.it.status][1])}</td><td>${fmtDT(b.insp.at)}<span class="tiny">${esc(nm(b.insp.by))}</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لا نواقص في الشنط.</div>'}
       <h2>بلاغات عالية الأولوية</h2>${hi.length ? `<div class="list">${hi.map(r=>`<div class="card flat row"><span class="grow"><b>${esc(r.item)}</b> <span class="muted small">· ${esc(r.ambulance)} · ${fmtDT(r.at)}</span></span>${chip(PRI[r.priority][0],PRI[r.priority][1])}${chip(RST[r.status][0],RST[r.status][1])}</div>`).join('')}</div>` : '<div class="empty">لا بلاغات عالية الأولوية مفتوحة.</div>'}`;
+  } else if(t==='signDocs'){ body = vSignDocs();
   } else if(t==='waLog'){ body = vWaLog();
   } else if(t==='staffDir'){ body = vStaffDir();
   } else if(t==='balances'){ body = vBalances();
@@ -2223,7 +2224,7 @@ const ACT = {
   async pubSched(b){
     b.disabled = true; let f = S.ui.schFile;
     try { if(S.mySig && S.mySig.png && S.ui.schSign !== false){ b.textContent = 'جارٍ إضافة التوقيع…'; f = await stampScheduleFile(f); }
-      await S.db.collection('schedules').add({month:S.ui.schMonth.trim(), note:(S.ui.schNote||'').trim(), file:f.id, fileName:f.name, fileType:f.type, signed: !!f.signed, publishedAt:new Date().toISOString(), by:S.uid});
+      const orig = S.ui.schFile; await S.db.collection('schedules').add({month:S.ui.schMonth.trim(), note:(S.ui.schNote||'').trim(), file:f.id, fileName:f.name, fileType:f.type, signed: !!f.signed, origFile: orig.id, origType: orig.type, stampPos: f.signed ? Object.assign({x:0.03, y:0.8, w:0.3, page:-1}, S.ui.stPos || {}) : null, publishedAt:new Date().toISOString(), by:S.uid});
       audit('نشر جدول مناوبات', S.ui.schMonth.trim()); Object.assign(S.ui, {schMonth:'', schNote:'', schFile:null}); render(); toast('تم نشر الجدول'); } catch(e){ b.disabled = false; failMsg(e); }
   },
   expRange(b){
@@ -2284,7 +2285,8 @@ document.addEventListener('change', async e => {
   S.ui.uploading[key] = true; render();
   try {
     const res = await uploadFile(file, key==='recf' ? 'recfiles' : key==='rosc' ? 'roscfiles' : 'files');
-    if(key==='sched'){ S.ui.schFile = {id:res.id, name:file.name, type:res.contentType}; S.ui.stPos = null; S.ui.schPages = 0; }
+    if(key==='sdoc'){ sdNew({id:res.id, name:file.name, type:res.contentType}); }
+    else if(key==='sched'){ S.ui.schFile = {id:res.id, name:file.name, type:res.contentType}; S.ui.stPos = null; S.ui.schPages = 0; }
     else if(key==='rep') S.ui.repPhoto = res.id;
     else if(key==='rosc'){ S.ui.ro = S.ui.ro || {}; S.ui.ro.sheet = {id:res.id, name:file.name, type:res.contentType}; }
     else if(key==='recf'){ S.ui.recFiles = (S.ui.recFiles||[]).concat([{id:res.id, name:file.name, type:res.contentType}]); }
@@ -3702,7 +3704,7 @@ function padInit(id, key){
   c.addEventListener('pointermove', e => { if(!cur) return; e.preventDefault(); cur.push(pos(e)); redraw(); });
   const up = () => { cur = null; }; c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up); c.addEventListener('pointerleave', up);
 }
-function v10After(){ padInit('lvPad', 'lvStrokes'); padInit('apPad', 'apStrokes'); lvMount(); stampDragInit(); }
+function v10After(){ padInit('lvPad', 'lvStrokes'); padInit('apPad', 'apStrokes'); lvMount(); stampDragInit(); sdDragInit(); }
 function v10Subs(db){
   const docs = q => q.docs.map(d => Object.assign({id:d.id}, d.data())), warn = k => e => console.warn(k, e && e.code);
   const merge = part => q => { S._leaves = S._leaves || {}; S._leaves[part] = docs(q); const m = {}; Object.values(S._leaves).flat().forEach(x => m[x.id] = x); S.leaves = Object.values(m).sort((a,b) => a.at < b.at ? 1 : -1); render(); };
@@ -3854,6 +3856,95 @@ function v11Subs(db){ const warn = k => e => console.warn(k, e && e.code);
   if(S.admin) db.collection('walog').onSnapshot(q => { S.walog = q.docs.map(d => Object.assign({id:d.id}, d.data())); render(); }, warn('walog'));
   else if(S.sup) db.collection('walog').where('by','==',S.uid).onSnapshot(q => { S.walog = q.docs.map(d => Object.assign({id:d.id}, d.data())); render(); }, warn('walog')); }
 
+/* ===================== v12: sign any document — place, resize, re-edit anytime, export PDF ===================== */
+const sdPrev = {};
+let sdSigImgs = null;
+async function sdStampImgs(){ if(!sdSigImgs) sdSigImgs = {stamp:(await sigStampCanvas()).toDataURL('image/png'), sig:S.mySig.png}; return sdSigImgs; }
+async function sdLoadPage(file, page){
+  const k = file.id + '|' + page; if(sdPrev[k]) return; sdPrev[k] = {status:'loading'};
+  try { const d = (await S.db.doc('files/' + file.id).get()).data(); let url, pages = 1, ratio;
+    if(/^image\//.test(file.type)){ url = d.b64; const im = await loadImg(url); ratio = im.height / im.width; }
+    else { const pj = await needPdfJs(), doc = await pj.getDocument({data: b64ToBytes(d.b64.split(',')[1])}).promise; pages = doc.numPages;
+      const pg = await doc.getPage(Math.min(page, pages - 1) + 1), v1 = pg.getViewport({scale:1}), vp = pg.getViewport({scale: 1000 / v1.width});
+      const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height; const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0,0,cv.width,cv.height);
+      await pg.render({canvasContext:cx, viewport:vp}).promise; url = cv.toDataURL('image/jpeg', 0.85); ratio = vp.height / vp.width; }
+    await sdStampImgs(); sdPrev[k] = {status:'ok', url, pages, ratio};
+    const sd = S.ui.sd; if(sd){ sd.pages = pages; if(sd.placements.some(p => p.page < 0)){ sd.placements.forEach(p => { if(p.page < 0) p.page = pages - 1; }); if(sd.page !== pages - 1){ sd.page = pages - 1; } } }
+  } catch(e){ console.error(e); sdPrev[k] = {status:'err'}; }
+  render();
+}
+function sdNew(origFile, extra){ S.ui.sd = Object.assign({origFile, placements:[], page:0, pages:1, sel:-1, name:(origFile && origFile.name) || 'مستند'}, extra||{}); sdSigImgs = null; }
+function vSignDocs(){
+  if(!(S.mySig && S.mySig.png)) return `<div class="stack"><div class="banner warn"><span>احفظ توقيعك الرسمي أولًا من «ملفي ← توقيعي الرسمي» لتتمكن من توقيع المستندات.</span><button class="btn sm" data-act="go" data-v="profile">ملفي</button></div></div>`;
+  const sd = S.ui.sd;
+  if(!sd) return `<div class="stack"><p class="sub">ارفع أي ملف (PDF أو صورة)، وضع توقيعك في المكان الذي تختاره وفي أي صفحة، ثم احفظه PDF موقّعًا. يمكنك الرجوع وتعديل مكان التوقيع في أي وقت.</p>
+    <div class="photo-in"><label class="btn primary" for="sdFileIn">${S.ui.uploading && S.ui.uploading.sdoc ? 'جارٍ الرفع…' : 'رفع مستند للتوقيع (PDF أو صورة)'}</label><input type="file" id="sdFileIn" accept="application/pdf,image/*" data-upload="sdoc"></div>
+    <h2>المستندات الموقعة</h2>${(S.sdocs||[]).length ? `<div class="list">${S.sdocs.map(d => `<div class="card flat row"><span class="grow"><b>${esc(d.name)}</b><span class="tiny">${(d.placements||[]).length} توقيع · آخر تعديل ${fmtDT(d.updatedAt || d.at)}${d.schedId ? ' · جدول منشور' : ''}</span></span>
+      <button class="btn sm" data-act="sdEdit" data-id="${d.id}">تعديل التوقيع</button><button class="btn sm" data-act="sdDl" data-id="${d.id}">تنزيل PDF</button><button class="btn sm ghost danger" data-act="sdDel" data-id="${d.id}">${S.ui.confirm==='sdd'+d.id ? 'تأكيد' : 'حذف'}</button></div>`).join('')}</div>` : '<div class="empty">لا توجد مستندات موقعة بعد.</div>'}</div>`;
+  const f = sd.origFile, pg = sd.page, k = f.id + '|' + pg, pv = sdPrev[k]; if(!pv) setTimeout(() => sdLoadPage(f, pg), 0);
+  const here = sd.placements.map((p,i) => [p,i]).filter(([p]) => p.page===pg), sel = sd.placements[sd.sel];
+  const imgs = sdSigImgs || {};
+  return `<div class="stack"><div class="row"><button class="btn sm ghost" data-act="sdClose">رجوع</button><b class="grow">${esc(sd.name)}</b>${sd.id ? chip('تعديل مستند موقّع','info') : ''}${sd.schedId ? chip('جدول منشور','ok') : ''}</div>
+    <p class="sub">اضغط «إضافة توقيع» ثم اسحبه بإصبعك للمكان المناسب. اضغط على أي توقيع لتحديده وتغيير حجمه أو حذفه.</p>
+    <div class="row">${sd.pages > 1 ? `<label class="f small" style="flex-direction:row;align-items:center;gap:8px">الصفحة<select data-v7="sdPage">${Array.from({length:sd.pages}, (_,i) => `<option value="${i}" ${pg===i?'selected':''}>${i+1} من ${sd.pages}${sd.placements.some(p => p.page===i) ? ' ✓' : ''}</option>`).join('')}</select></label>` : ''}
+      <button class="btn" data-act="sdAdd" data-v="stamp">+ ختم الاعتماد</button><button class="btn" data-act="sdAdd" data-v="sig">+ توقيع فقط</button></div>
+    ${!pv || pv.status==='loading' ? '<div class="empty">جارٍ تجهيز المعاينة…</div>' : pv.status==='err' ? '<div class="empty">تعذّر عرض الملف.</div>' :
+      `<div id="sdArea" class="stamp-area"><img src="${pv.url}" alt="" draggable="false">${here.map(([p,i]) => `<img class="stamp-box sd-box${sd.sel===i ? ' on' : ''}" data-i="${i}" src="${p.mode==='sig' ? imgs.sig : imgs.stamp}" alt="" draggable="false" style="left:${p.x*100}%;top:${p.y*100}%;width:${p.w*100}%">`).join('')}</div>`}
+    ${sel && sel.page===pg ? `<div class="row"><label class="f small grow">حجم التوقيع المحدد<input type="range" min="8" max="70" value="${Math.round(sel.w*100)}" data-v7="sdSize"></label><button class="btn sm ghost danger" data-act="sdRemove">حذف التوقيع المحدد</button></div>` : ''}
+    <div class="row"><button class="btn primary" data-act="sdSave" ${sd.placements.length ? '' : 'disabled'}>${sd.schedId ? 'حفظ وتحديث الجدول المنشور' : 'حفظ المستند الموقّع'}</button>${sd.id ? `<button class="btn" data-act="sdDl" data-id="${sd.id}">تنزيل PDF</button>` : ''}</div></div>`;
+}
+function sdDragInit(){
+  const a = document.getElementById('sdArea'); if(!a || a.dataset.init) return; a.dataset.init = '1';
+  let st = null;
+  a.addEventListener('pointerdown', e => { const bx = e.target.closest('.sd-box'); if(!bx) return; e.preventDefault(); const i = +bx.dataset.i;
+    if(S.ui.sd.sel !== i){ S.ui.sd.sel = i; a.querySelectorAll('.sd-box').forEach(x => x.classList.toggle('on', x===bx)); }
+    try { bx.setPointerCapture(e.pointerId); } catch(_){} const r = a.getBoundingClientRect(), br = bx.getBoundingClientRect(); st = {bx, i, r, dx:e.clientX - br.left, dy:e.clientY - br.top, moved:false}; });
+  a.addEventListener('pointermove', e => { if(!st) return; e.preventDefault(); st.moved = true; const r = st.r, p = S.ui.sd.placements[st.i], bw = st.bx.offsetWidth / r.width, bh = st.bx.offsetHeight / r.height;
+    p.x = Math.min(1 - bw, Math.max(0, (e.clientX - st.dx - r.left) / r.width)); p.y = Math.min(1 - bh, Math.max(0, (e.clientY - st.dy - r.top) / r.height));
+    st.bx.style.left = (p.x*100) + '%'; st.bx.style.top = (p.y*100) + '%'; });
+  const up = () => { if(st){ st = null; render(); } }; a.addEventListener('pointerup', up); a.addEventListener('pointercancel', up);
+}
+async function sdBuild(sd){
+  const d = (await S.db.doc('files/' + sd.origFile.id).get()).data(), L = await needPdfLib(), imgs = await sdStampImgs();
+  let pdf;
+  if(/^image\//.test(sd.origFile.type)){ pdf = await L.PDFDocument.create(); const im = await loadImg(d.b64), W = im.width * 0.75, H = im.height * 0.75;
+    const emb = /png/.test(d.b64.slice(0,30)) ? await pdf.embedPng(b64ToBytes(d.b64.split(',')[1])) : await pdf.embedJpg(b64ToBytes(d.b64.split(',')[1]));
+    pdf.addPage([W, H]).drawImage(emb, {x:0, y:0, width:W, height:H}); }
+  else pdf = await L.PDFDocument.load(b64ToBytes(d.b64.split(',')[1]), {ignoreEncryption:true});
+  const embs = {stamp: await pdf.embedPng(b64ToBytes(imgs.stamp.split(',')[1])), sig: await pdf.embedPng(b64ToBytes(imgs.sig.split(',')[1]))};
+  const sigIm = await loadImg(imgs.sig), sigRatio = sigIm ? sigIm.height / sigIm.width : 0.3, pages = pdf.getPages();
+  sd.placements.forEach(p => { const pg = pages[Math.min(p.page, pages.length - 1)], {width, height} = pg.getSize(), w = p.w * width, h = w * (p.mode==='sig' ? sigRatio : 230/640);
+    pg.drawImage(embs[p.mode==='sig' ? 'sig' : 'stamp'], {x: p.x * width, y: height - p.y * height - h, width: w, height: h}); });
+  pdf.setCreator('Al Hayat EMS'); pdf.setModificationDate(new Date());
+  return await pdf.save();
+}
+Object.assign(ACT, {
+  sdClose(){ S.ui.sd = null; render(); },
+  sdAdd(b){ const sd = S.ui.sd; const nOn = sd.placements.filter(p => p.page===sd.page).length; sd.placements.push({page:sd.page, x:0.06 + (nOn % 3) * 0.08, y:Math.max(0.05, 0.75 - nOn * 0.12), w: b.dataset.v==='sig' ? 0.22 : 0.3, mode:b.dataset.v}); sd.sel = sd.placements.length - 1; render(); },
+  sdRemove(){ const sd = S.ui.sd; if(sd.sel >= 0){ sd.placements.splice(sd.sel, 1); sd.sel = -1; render(); } },
+  sdEdit(b){ const d = (S.sdocs||[]).find(x => x.id===b.dataset.id); if(!d) return; sdNew(d.origFile, {id:d.id, name:d.name, placements:JSON.parse(JSON.stringify(d.placements||[])), schedId:d.schedId||null}); S.view = 'admin'; S.ui.adminTab = 'signDocs'; render(); window.scrollTo(0,0); },
+  async sdSave(b){ const sd = S.ui.sd; if(!sd.placements.length) return; const l = b.textContent; b.disabled = true; b.textContent = 'جارٍ إنشاء الملف…';
+    try { const bytes = await sdBuild(sd), b64 = 'data:application/pdf;base64,' + bytesToB64(bytes);
+      if(b64.length > 1000000){ toast('الملف الناتج كبير جدًا للحفظ. جرّب ملفًا أصغر.'); b.disabled = false; b.textContent = l; return; }
+      const fr = await S.db.collection('files').add({b64, type:'application/pdf', name:sd.name.replace(/\.[^.]+$/,'') + '_signed.pdf', by:S.uid, at:new Date().toISOString()}), now = new Date().toISOString();
+      const rec = {name:sd.name, origFile:sd.origFile, signedFile:fr.id, placements:sd.placements, updatedAt:now, by:S.uid, schedId:sd.schedId||null};
+      if(sd.id) await S.db.doc('sdocs/' + sd.id).update(rec); else { rec.at = now; const r = await S.db.collection('sdocs').add(rec); sd.id = r.id; }
+      if(sd.schedId) await S.db.doc('schedules/' + sd.schedId).update({file:fr.id, fileType:'application/pdf', signed:true, sdoc:sd.id});
+      audit('توقيع مستند', `${sd.name} · ${sd.placements.length} توقيع`); toast(sd.schedId ? 'تم الحفظ وتحديث الجدول المنشور' : 'تم حفظ المستند الموقّع');
+    } catch(e){ console.error(e); toast('تعذّر إنشاء الملف. تأكد من الإنترنت.'); }
+    b.disabled = false; b.textContent = l; render(); },
+  async sdDl(b){ const d = (S.sdocs||[]).find(x => x.id===b.dataset.id); if(!d) return; try { const f = (await S.db.doc('files/' + d.signedFile).get()).data(); saveBytes(b64ToBytes(f.b64.split(',')[1]), d.name.replace(/\.[^.]+$/,'') + '_signed.pdf'); } catch(e){ failMsg(e); } },
+  async sdDel(b){ const id = b.dataset.id; if(S.ui.confirm !== 'sdd'+id){ S.ui.confirm = 'sdd'+id; render(); return; } S.ui.confirm = null; try { await S.db.doc('sdocs/' + id).delete(); } catch(e){ failMsg(e); } },
+  async schSignEdit(b){ const s = S.schedules.find(x => x.id===b.dataset.id); if(!s) return;
+    const ex = (S.sdocs||[]).find(d => d.schedId===s.id);
+    if(ex) return ACT.sdEdit({dataset:{id:ex.id}});
+    sdNew({id:s.origFile || s.file, name:s.fileName || s.month, type:s.origType || s.fileType}, {name:(s.fileName || s.month), schedId:s.id, placements: s.origFile && s.stampPos ? [{page:(s.stampPos.page ?? -1), x:s.stampPos.x, y:s.stampPos.y, w:s.stampPos.w, mode:'stamp'}] : []});
+    S.view = 'admin'; S.ui.adminTab = 'signDocs'; render(); window.scrollTo(0,0); }
+});
+V7IN.sdPage = t => { S.ui.sd.page = +t.value; S.ui.sd.sel = -1; render(); };
+V7IN.sdSize = t => { const sd = S.ui.sd, p = sd.placements[sd.sel]; if(!p) return; p.w = (+t.value)/100; const bx = document.querySelector(`.sd-box[data-i="${sd.sel}"]`); if(bx) bx.style.width = (p.w*100) + '%'; };
+function v12Subs(db){ if(S.admin) db.collection('sdocs').onSnapshot(q => { S.sdocs = q.docs.map(d => Object.assign({id:d.id}, d.data())).sort((a,b) => (a.updatedAt||a.at) < (b.updatedAt||b.at) ? 1 : -1); render(); }, e => console.warn('sdocs', e && e.code)); }
+
 /* ---------- boot ---------- */
 function startData(){
   const db = S.db;
@@ -3881,7 +3972,7 @@ function startData(){
   if(S.admin) list('records','at',1000,'records');
   if(S.admin){ list('audit','at',100,'audit'); db.collection('allowed').onSnapshot(q => { S.allowed = q.docs.map(d => d.id); render(); }, err); }
   db.collection('acks').onSnapshot(q => { const a = {}; q.docs.forEach(d => a[d.id] = d.data()); S.acks = a; render(); }, err);
-  v7Subs(db); v8Subs(db); v10Subs(db); v11Subs(db);
+  v7Subs(db); v8Subs(db); v10Subs(db); v11Subs(db); v12Subs(db);
 }
 function init(){
   if(LANG === 'en'){ const app = document.getElementById('app'); app.dir = 'ltr'; app.lang = 'en'; document.documentElement.dir = 'ltr'; document.documentElement.lang = 'en'; document.title = 'Al Hayat EMS'; }
