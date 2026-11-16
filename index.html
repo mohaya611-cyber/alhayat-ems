@@ -161,6 +161,7 @@ td .tiny{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 .lvs .en{text-transform:none;letter-spacing:0;color:#000;font-size:inherit;font-weight:400;display:block;margin:0}.lvs .ar{color:#000}
 .btn[href]{text-decoration:none}.sd-box.on{box-shadow:0 0 0 3px #1F8EF1,0 0 0 6px rgba(31,142,241,.3)}
 .stamp-area{position:relative;width:100%;background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;touch-action:none}.stamp-area>img:first-child{display:block;width:100%;height:auto}
+.fb-check{width:34px;height:34px;flex:none;border-radius:8px;border:2px solid #7A1F2B;background:#fff;color:#fff;font-size:20px;font-weight:700;line-height:1;cursor:pointer}.fb-check[aria-pressed=true]{background:#7A1F2B}.fb-item.on{box-shadow:inset 0 0 0 2px #7A1F2B;background:#FBF4F5}
 .stamp-box{position:absolute;cursor:grab;touch-action:none;box-shadow:0 0 0 3px rgba(214,58,76,.75);border-radius:4px;user-select:none;-webkit-user-select:none}
 .lvhost{position:relative;width:100%;overflow:hidden;border-radius:8px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 .sigbox{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;display:flex;justify-content:center}.sigbox img{max-height:90px;max-width:100%}
@@ -722,7 +723,7 @@ function vHistory(){
 function vAdmin(){
   if(!S.admin) return '<div class="empty">هذه الصفحة للمسؤول فقط.</div>';
   const t = S.ui.adminTab;
-  const tabs = [['ready','الجاهزية اليومية'],['alerts','التنبيهات'],['stats','الإحصائيات'],['records','سجل الموظفين'],['adPathways','المسارات'],['adRosc','حالات ROSC'],['adCheckouts','ساعات الخروج'],['staffDir','قاعدة الموظفين'],['balances','الأرصدة والأوفر تايم'],['smart','الجدولة الذكية'],['mchecksAd','فحوصات الصيانة'],['team','الفريق'],['lists','القوائم'],['export','تصدير Excel'],['reset','تصفير الشهر'],['signDocs','توقيع المستندات'],['waLog','سجل الواتساب'],['audit','سجل التدقيق']].map(([k,l]) => `<button data-act="adminTab" data-v="${k}" aria-pressed="${t===k}">${l}</button>`).join('');
+  const tabs = [['ready','الجاهزية اليومية'],['alerts','التنبيهات'],['stats','الإحصائيات'],['records','سجل الموظفين'],['adPathways','المسارات'],['adRosc','حالات ROSC'],['adCheckouts','ساعات الخروج'],['staffDir','قاعدة الموظفين'],['balances','الأرصدة والأوفر تايم'],['smart','الجدولة الذكية'],['mchecksAd','فحوصات الصيانة'],['team','الفريق'],['lists','القوائم'],['export','تصدير Excel'],['reset','تصفير الشهر'],['files','الملفات'],['signDocs','توقيع المستندات'],['waLog','سجل الواتساب'],['audit','سجل التدقيق']].map(([k,l]) => `<button data-act="adminTab" data-v="${k}" aria-pressed="${t===k}">${l}</button>`).join('');
   let body = '';
   if(t==='ready'){
     const d = S.ui.readyDate || today();
@@ -737,6 +738,7 @@ function vAdmin(){
       ${meds.length ? `<div class="tbl-wrap"><table><thead><tr><th>السيارة</th><th>الدواء</th><th>الحالة</th><th>الكمية</th><th>الصلاحية</th><th>آخر فحص</th></tr></thead><tbody>${meds.map(m=>`<tr><td>${esc(m.amb)}</td><td><b>${esc(m.it.name)}</b></td><td>${chip(ST[m.it.status][0],ST[m.it.status][1])}</td><td class="num">${m.it.qty}/${m.it.req}</td><td>${esc(expLabel(m.it.exp))}</td><td>${fmtDT(m.insp.at)}<span class="tiny">${esc(nm(m.insp.by))}</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لا تنبيهات أدوية.</div>'}
       <h2>نواقص الشنط</h2>${bags.length ? `<div class="tbl-wrap"><table><thead><tr><th>السيارة</th><th>الشنطة</th><th>العنصر</th><th>الحالة</th><th>آخر فحص</th></tr></thead><tbody>${bags.map(b=>`<tr><td>${esc(b.amb)}</td><td>${TYPES[b.type]}</td><td><b>${esc(b.it.name)}</b>${b.it.note?`<span class="tiny">${esc(b.it.note)}</span>`:''}</td><td>${chip(ST[b.it.status][0],ST[b.it.status][1])}</td><td>${fmtDT(b.insp.at)}<span class="tiny">${esc(nm(b.insp.by))}</span></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">لا نواقص في الشنط.</div>'}
       <h2>بلاغات عالية الأولوية</h2>${hi.length ? `<div class="list">${hi.map(r=>`<div class="card flat row"><span class="grow"><b>${esc(r.item)}</b> <span class="muted small">· ${esc(r.ambulance)} · ${fmtDT(r.at)}</span></span>${chip(PRI[r.priority][0],PRI[r.priority][1])}${chip(RST[r.status][0],RST[r.status][1])}</div>`).join('')}</div>` : '<div class="empty">لا بلاغات عالية الأولوية مفتوحة.</div>'}`;
+  } else if(t==='files'){ body = vFiles();
   } else if(t==='signDocs'){ body = vSignDocs();
   } else if(t==='waLog'){ body = vWaLog();
   } else if(t==='staffDir'){ body = vStaffDir();
@@ -3744,6 +3746,143 @@ function padInit(id, key){
   c.addEventListener('pointermove', e => { if(!cur) return; e.preventDefault(); cur.push(pos(e)); redraw(); });
   const up = () => { cur = null; }; c.addEventListener('pointerup', up); c.addEventListener('pointercancel', up); c.addEventListener('pointerleave', up);
 }
+/* ================= v13 · الملفات — كل ملفات PDF + ملف موحّد للإدارة ================= */
+const FB_KINDS = {leave:'نموذج طلب إجازة', csig:'توقيع تعميم', circ:'تعميم', sdoc:'مستند موقّع', sched:'جدول مناوبات'};
+const fbCache = {};
+async function fbFileBytes(fileId){
+  const d = (await S.db.doc('files/' + fileId).get()).data(); if(!d || !d.b64) throw new Error('missing file');
+  const raw = b64ToBytes(d.b64.split(',')[1]);
+  if(/^data:application\/pdf/.test(d.b64) || /pdf/.test(d.type||'')) return raw;
+  const L = await needPdfLib(), pdf = await L.PDFDocument.create(), im = await loadImg(d.b64);
+  const emb = /^data:image\/png/.test(d.b64) ? await pdf.embedPng(raw) : await pdf.embedJpg(raw);
+  let w = 595.28, h = im ? im.height * w / im.width : 841.89; const pg = pdf.addPage([w, Math.max(h, 200)]); pg.drawImage(emb, {x:0, y:0, width:w, height:h});
+  return await pdf.save();
+}
+function fbItems(){
+  const out = [], lvT = k => (LVT.find(t => t[0]===k) || [k, k])[1];
+  (S.leaves||[]).filter(x => x.status !== 'cancelled').forEach(x => {
+    const st = (LVST[x.status]||[x.status])[0], h = x.head || {};
+    let act = `طلب إجازة ${lvT(x.type)}${x.from ? ` من ${x.from} إلى ${x.to||''}` : ''}${x.days ? ` (${x.days} يوم)` : ''} — الحالة: ${st}`;
+    if(h.decision) act += ` · ${h.decision==='approved' ? 'اعتمده' : 'قرّر فيه'} ${h.byName || nm(h.by)} بتاريخ ${(h.at||'').slice(0,10)}`;
+    const sigs = []; if(x.empSig) sigs.push({label:'توقيع الموظف', png:x.empSig}); if(h.sig) sigs.push({label:'توقيع المعتمد · ' + (h.byName || nm(h.by)), png:h.sig});
+    out.push({key:'leave:'+x.id, kind:'leave', title:`نموذج طلب إجازة ${lvT(x.type)} · ${x.ref||''}`, name:x.name || nm(x.uid), empNo:x.empId || '', act, date:x.at||'', sigs, bytes:() => lvPdfBytes(x)});
+  });
+  (S.csigs||[]).filter(x => x.kind==='sign' && x.n).forEach(x => {
+    const at = (typeof tsISO==='function' && tsISO(x.signedAt)) || x.clientAt || '';
+    out.push({key:'csig:'+x.id, kind:'csig', title:`توقيع على التعميم ${x.ref||''} — ${x.title||''}`, name:x.name || nm(x.by), empNo:x.empNo || '', act:`اطّلع ووقّع إلكترونيًا على التعميم ${x.ref||''} (الإصدار ${x.ver||1})${x.late ? ' — بعد الموعد' : ''}`, date:at, sigs: x.sigPng ? [{label:'توقيع الموظف', png:x.sigPng}] : [], bytes:() => sigBytes(x)});
+  });
+  if(S.admin) (S.circs||[]).filter(c => c.fileHash || c.fileN).forEach(c => {
+    const n = (S.csigs||[]).filter(s => s.circ===c.id && s.kind==='sign').length, tg = (c.targetUids||[]).length;
+    out.push({key:'circ:'+c.id, kind:'circ', title:`تعميم ${c.ref||''} — ${c.title||''}`, name:nm(c.by), empNo:'', act:`إصدار تعميم بتاريخ ${c.issueDate||(c.at||'').slice(0,10)} · وقّع ${n} من ${tg||'—'} موظف`, date:c.at||'', sigs:[], bytes:() => getChunks('cdocs', c.id, c.fileN||1)});
+  });
+  (S.sdocs||[]).filter(d => d.signedFile).forEach(d => out.push({key:'sdoc:'+d.id, kind:'sdoc', title:`مستند موقّع — ${d.name||''}`, name:nm(d.by), empNo:'', act:`توقيع واعتماد رئيس القسم على المستند (${(d.placements||[]).length} توقيع)`, date:d.updatedAt||d.at||'', sigs:[], bytes:() => fbFileBytes(d.signedFile)}));
+  (S.schedules||[]).filter(s => s.file).forEach(s => out.push({key:'sched:'+s.id, kind:'sched', title:`جدول المناوبات ${s.month||''}`, name:nm(s.by), empNo:'', act:`نشر جدول مناوبات ${s.month||''}${s.signed ? ' — موقّع ومعتمد' : ''}`, date:s.publishedAt||'', sigs:[], bytes:() => fbFileBytes(s.file)}));
+  return out.sort((a,b) => (a.date||'') < (b.date||'') ? 1 : -1);
+}
+function fbFiltered(){
+  const k = S.ui.fbKind || 'all', q = normAr((S.ui.fbQ||'').trim()), from = S.ui.fbFrom || '', to = S.ui.fbTo || '';
+  return fbItems().filter(i => (k==='all' || i.kind===k) && (!q || normAr(i.title + ' ' + i.name + ' ' + i.empNo + ' ' + i.act).includes(q))
+    && (!from || (i.date||'').slice(0,10) >= from) && (!to || (i.date||'').slice(0,10) <= to));
+}
+function vFiles(){
+  const sel = S.ui.fbSel || (S.ui.fbSel = {}), all = fbItems(), list = fbFiltered(), k = S.ui.fbKind || 'all';
+  const nSel = all.filter(i => sel[i.key]).length, cnt = kk => all.filter(i => kk==='all' || i.kind===kk).length;
+  const chips = [['all','الكل'], ...Object.entries(FB_KINDS)].map(([v,l]) => `<button data-act="fbKind" data-v="${v}" aria-pressed="${k===v}">${l} (${cnt(v)})</button>`).join('');
+  const out = S.fbOut;
+  return `<h2>الملفات</h2><p class="sub">كل ملفات PDF الموجودة في المنصة. حدّد ما تريد ثم اضغط «إنشاء ملف PDF موحّد» — تكون الصفحة الأولى صفحة توضيحية للإجراءات (اسم الموظف، رقمه الوظيفي، الإجراء، وتوقيعاته)، ثم النماذج والمستندات كاملة بعدها.</p>
+  <div class="subtabs">${chips}</div>
+  <input type="search" id="fbQ" data-bind="fbQ" placeholder="بحث بالاسم أو الرقم الوظيفي أو رقم المرجع" value="${esc(S.ui.fbQ||'')}" style="width:100%">
+  <div class="row">
+    <label class="f small" style="flex-direction:row;align-items:center;gap:6px">من<input type="date" id="fbFrom" data-bind="fbFrom" data-live="1" value="${esc(S.ui.fbFrom||'')}" style="width:auto"></label>
+    <label class="f small" style="flex-direction:row;align-items:center;gap:6px">إلى<input type="date" id="fbTo" data-bind="fbTo" data-live="1" value="${esc(S.ui.fbTo||'')}" style="width:auto"></label></div>
+  <div class="card stack">
+    <div class="row"><b class="grow">المحدد: ${nSel} ملف</b><button class="btn sm" data-act="fbAll">تحديد الظاهر (${list.length})</button><button class="btn sm ghost" data-act="fbNone" ${nSel ? '' : 'disabled'}>إلغاء التحديد</button></div>
+    <label class="f small">عنوان الملف الموحّد<input id="fbTitle" data-bind="fbTitle" value="${esc(S.ui.fbTitle || 'ملف إجراءات قسم الإسعاف')}"></label>
+    <label class="f small">ملاحظة للإدارة (اختياري — تظهر في الصفحة الأولى)<textarea id="fbNote" data-bind="fbNote" rows="2">${esc(S.ui.fbNote||'')}</textarea></label>
+    <div class="row"><button class="btn primary" data-act="fbBuild" ${nSel && !S.ui.fbBusy ? '' : 'disabled'}>${S.ui.fbBusy ? esc(S.ui.fbBusy) : `إنشاء ملف PDF موحّد (${nSel})`}</button>
+      ${out ? `<button class="btn" data-act="fbSave">تنزيل الملف الموحّد</button>${navigator.share ? '<button class="btn" data-act="fbShare">مشاركة (واتساب / بريد)</button>' : ''}<span class="small muted">${esc(out.name)} · ${out.pages} صفحة</span>` : ''}</div></div>
+  ${list.length ? `<div class="list">${list.slice(0, 300).map(i => `<div class="card flat row fb-item${sel[i.key] ? ' on' : ''}">
+      <button class="fb-check" data-act="fbTog" data-k="${esc(i.key)}" aria-pressed="${!!sel[i.key]}" aria-label="تحديد">${sel[i.key] ? '✓' : ''}</button>
+      <span class="grow stack" style="gap:2px"><b>${esc(i.title)}</b><span class="small"><span class="chip" style="background:#F3E6E8;color:#7A1F2B">${FB_KINDS[i.kind]}</span> <span translate="no">${esc(i.name)}</span>${i.empNo ? ` · ${esc(i.empNo)}` : ''} · ${fmtDT(i.date)}</span><span class="tiny muted">${esc(i.act)}</span></span>
+      <button class="btn sm ghost" data-act="fbOne" data-k="${esc(i.key)}">PDF</button></div>`).join('')}</div>${list.length > 300 ? '<p class="small muted">يظهر أول 300 ملف — استخدم البحث أو التاريخ للتضييق.</p>' : ''}` : '<div class="empty">لا توجد ملفات مطابقة.</div>'}`;
+}
+/* ---------- cover pages (drawn on canvas for proper Arabic) ---------- */
+function fbWrap(x, text, maxW){ const words = String(text||'').split(/\s+/), lines = []; let cur = '';
+  words.forEach(w => { const t = cur ? cur + ' ' + w : w; if(x.measureText(t).width > maxW && cur){ lines.push(cur); cur = w; } else cur = t; }); if(cur) lines.push(cur); return lines; }
+async function fbCover(items, meta){
+  await docFonts(); const W = 1588, H = 2246, M = 90, pages = []; let c, x, y;
+  const logo = await loadImg(HOSP_LOGO), imgs = await Promise.all(items.map(i => Promise.all(i.sigs.map(s => loadImg(s.png)))));
+  const headSig = S.mySig && S.mySig.png ? await loadImg(S.mySig.png) : null;
+  const newPage = first => { c = document.createElement('canvas'); c.width = W; c.height = H; x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,W,H); x.direction = 'rtl'; pages.push(c);
+    y = M; if(logo){ const lh = first ? 130 : 80, lw = lh * logo.width / logo.height; x.drawImage(logo, (W - lw)/2, y, lw, lh); y += lh + 24; }
+    x.strokeStyle = '#7A1F2B'; x.lineWidth = 4; x.beginPath(); x.moveTo(M, y); x.lineTo(W - M, y); x.stroke(); y += 30; };
+  const txt = (s, sz, w, col, al) => { x.font = font(w||400, sz); x.fillStyle = col || '#14212B'; x.textAlign = al || 'right'; x.fillText(s, al==='center' ? W/2 : al==='left' ? M : W - M, y); };
+  newPage(true);
+  y += 30; txt(meta.title, 52, 700, '#0B3A66', 'center'); y += 56;
+  txt('صفحة توضيحية للإجراءات المرفقة · Summary of enclosed actions', 28, 400, '#56656F', 'center'); y += 60;
+  const info = [['الجهة', 'قسم الإسعاف — مستشفى الحياة، المدينة المنورة'], ['أعدّه', `${S.myName || ''} — رئيس قسم الإسعاف`], ['تاريخ الإعداد', new Date().toLocaleString('ar-SA-u-ca-gregory-nu-latn', {dateStyle:'long', timeStyle:'short'})], ['عدد المستندات', `${items.length} مستند · ${meta.total} صفحة (منها ${meta.coverN} صفحة توضيحية)`]];
+  info.forEach(([k, v]) => { x.font = font(700, 30); x.fillStyle = '#0B3A66'; x.textAlign = 'right'; x.fillText(k + ':', W - M, y); x.font = font(400, 30); x.fillStyle = '#14212B'; x.fillText(v, W - M - 230, y); y += 48; });
+  if(meta.note){ y += 10; x.font = font(700, 30); x.fillStyle = '#7A1F2B'; x.textAlign = 'right'; x.fillText('ملاحظة:', W - M, y); x.font = font(400, 30); x.fillStyle = '#14212B';
+    fbWrap(x, meta.note, W - 2*M - 160).slice(0, 6).forEach(l => { x.fillText(l, W - M - 160, y); y += 44; }); y += 4; }
+  y += 20;
+  items.forEach((it, n) => {
+    x.font = font(400, 27); const actL = fbWrap(x, it.act, W - 2*M - 60).slice(0, 4), sigH = it.sigs.length ? 190 : 0, bh = 70 + 44 + actL.length * 40 + sigH + 30;
+    if(y + bh > H - 140){ newPage(false); }
+    x.fillStyle = n % 2 ? '#FBF7F7' : '#F5F8FB'; x.fillRect(M, y, W - 2*M, bh); x.strokeStyle = '#D5DCE3'; x.lineWidth = 2; x.strokeRect(M, y, W - 2*M, bh);
+    x.fillStyle = '#7A1F2B'; x.fillRect(W - M - 10, y, 10, bh);
+    let yy = y + 50; x.textAlign = 'right'; x.font = font(700, 32); x.fillStyle = '#0B3A66'; x.fillText(`${n + 1}. ${it.title}`, W - M - 30, yy);
+    x.textAlign = 'left'; x.font = font(400, 24); x.fillStyle = '#56656F'; x.fillText(`صفحة ${it.page}${it.pages > 1 ? '–' + (it.page + it.pages - 1) : ''}`, M + 24, yy); x.textAlign = 'right';
+    yy += 46; x.font = font(700, 28); x.fillStyle = '#14212B'; x.fillText(`${(it.kind==='leave' || it.kind==='csig') ? 'الموظف' : 'بواسطة'}: ${it.name}${it.empNo ? '   ·   الرقم الوظيفي: ' + it.empNo : ''}   ·   ${FB_KINDS[it.kind]}`, W - M - 30, yy);
+    yy += 42; x.font = font(400, 27); actL.forEach(l => { x.fillText(l, W - M - 30, yy); yy += 40; });
+    if(sigH){ let sx = W - M - 30; it.sigs.forEach((s, j) => { const im = imgs[n][j], bw = 420, bhh = 150; sx -= bw;
+        x.fillStyle = '#fff'; x.fillRect(sx, yy, bw, bhh); x.strokeStyle = '#C9D2DA'; x.strokeRect(sx, yy, bw, bhh);
+        if(im){ const r = Math.min((bw - 20) / im.width, (bhh - 20) / im.height); const iw = im.width * r, ih = im.height * r; x.drawImage(im, sx + (bw - iw)/2, yy + (bhh - ih)/2, iw, ih); }
+        x.font = font(400, 22); x.fillStyle = '#56656F'; x.textAlign = 'center'; x.fillText(s.label, sx + bw/2, yy + bhh + 28); x.textAlign = 'right'; sx -= 30; }); }
+    y += bh + 22;
+  });
+  if(headSig){ if(y + 260 > H - 120) newPage(false); y += 20; x.textAlign = 'center'; x.font = font(700, 28); x.fillStyle = '#0B3A66'; x.fillText('اعتماد رئيس القسم', M + 260, y);
+    const sh = 130, sw = Math.min(420, sh * headSig.width / headSig.height); x.drawImage(headSig, M + 260 - sw/2, y + 14, sw, sw * headSig.height / headSig.width);
+    x.font = font(700, 26); x.fillStyle = '#14212B'; x.fillText(S.myName || '', M + 260, y + 180); x.font = font(400, 22); x.fillStyle = '#56656F'; x.fillText('Head of Paramedic', M + 260, y + 212); }
+  pages.forEach((p, i) => { const cx = p.getContext('2d'); cx.direction = 'rtl'; cx.textAlign = 'center'; cx.font = font(400, 22); cx.fillStyle = '#8A97A2';
+    cx.fillText(`Al Hayat EMS · صفحة توضيحية ${i + 1} من ${pages.length}`, W/2, H - 60); });
+  return pages;
+}
+async function fbCoverCount(items){ // dry layout to know how many cover pages
+  const meta = {title:'', note:S.ui.fbNote||'', total:0, coverN:0}; items.forEach(i => { i.page = 0; i.pages = 1; }); return (await fbCover(items, meta)).length; }
+async function fbBuildPdf(items){
+  const L = await needPdfLib(), docs = [];
+  for(let i = 0; i < items.length; i++){ S.ui.fbBusy = `جارٍ تجهيز ${i + 1} من ${items.length}…`; render();
+    const it = items[i]; let b = fbCache[it.key]; if(!b){ b = await it.bytes(); fbCache[it.key] = b; }
+    const d = await L.PDFDocument.load(b, {ignoreEncryption:true}); docs.push(d); it.pages = d.getPageCount(); }
+  S.ui.fbBusy = 'جارٍ إنشاء الصفحة التوضيحية…'; render();
+  const coverN = await fbCoverCount(items.map(i => Object.assign({}, i)));
+  let p = coverN + 1; items.forEach(it => { it.page = p; p += it.pages; });
+  const total = p - 1, covers = await fbCover(items, {title:(S.ui.fbTitle || 'ملف إجراءات قسم الإسعاف').trim(), note:(S.ui.fbNote||'').trim(), total, coverN});
+  const out = await L.PDFDocument.create(), hf = await out.embedFont(L.StandardFonts.Helvetica);
+  for(const cv of covers){ const jpg = await out.embedJpg(b64ToBytes(cv.toDataURL('image/jpeg', 0.9).split(',')[1])); const pg = out.addPage([595.28, 841.89]); pg.drawImage(jpg, {x:0, y:0, width:595.28, height:841.89}); }
+  for(let i = 0; i < docs.length; i++){ const pgs = await out.copyPages(docs[i], docs[i].getPageIndices());
+    pgs.forEach((pg, j) => { out.addPage(pg); const {width} = pg.getSize(), s = `Al Hayat EMS  ·  Doc ${i + 1}/${docs.length}  ·  Page ${items[i].page + j}/${total}`;
+      pg.drawText(s, {x: width - 12 - hf.widthOfTextAtSize(s, 7), y: 6, size: 7, font: hf, color: L.rgb(0.45, 0.5, 0.55)}); }); }
+  out.setTitle((S.ui.fbTitle || 'ملف إجراءات قسم الإسعاف').trim()); out.setAuthor(S.myName || ''); out.setCreator('Al Hayat EMS');
+  return {bytes: await out.save(), pages: total};
+}
+Object.assign(ACT, {
+  fbKind(b){ S.ui.fbKind = b.dataset.v; render(); },
+  fbTog(b){ const s = S.ui.fbSel || (S.ui.fbSel = {}), k = b.dataset.k; if(s[k]) delete s[k]; else s[k] = 1; S.fbOut = null; render(); },
+  fbAll(){ const s = S.ui.fbSel || (S.ui.fbSel = {}); fbFiltered().slice(0, 300).forEach(i => s[i.key] = 1); S.fbOut = null; render(); },
+  fbNone(){ S.ui.fbSel = {}; S.fbOut = null; render(); },
+  async fbOne(b){ const it = fbItems().find(i => i.key===b.dataset.k); if(!it) return; b.disabled = true;
+    try { const bytes = fbCache[it.key] || (fbCache[it.key] = await it.bytes()); saveBytes(bytes, it.title.replace(/[\\/:*?"<>|]+/g, '-') + '.pdf'); } catch(e){ console.error(e); toast('تعذّر تجهيز الملف. تأكد من الإنترنت.'); } b.disabled = false; },
+  async fbBuild(){ const sel = S.ui.fbSel || {}, ord = Object.keys(FB_KINDS), items = fbItems().filter(i => sel[i.key]).sort((a, b) => ord.indexOf(a.kind) - ord.indexOf(b.kind) || ((a.date||'') < (b.date||'') ? 1 : -1)); if(!items.length) return;
+    try { const r = await fbBuildPdf(items); const nm2 = `${(S.ui.fbTitle || 'ملف إجراءات قسم الإسعاف').trim().replace(/[\\/:*?"<>|]+/g, '-')}_${today()}.pdf`;
+      S.fbOut = {bytes:r.bytes, pages:r.pages, name:nm2}; audit('إنشاء ملف PDF موحّد', `${items.length} مستند · ${r.pages} صفحة`); toast('تم إنشاء الملف الموحّد'); saveBytes(r.bytes, nm2);
+    } catch(e){ console.error(e); toast('تعذّر إنشاء الملف الموحّد. تأكد من الإنترنت ثم أعد المحاولة.'); }
+    S.ui.fbBusy = ''; render(); },
+  fbSave(){ if(S.fbOut) saveBytes(S.fbOut.bytes, S.fbOut.name); },
+  async fbShare(){ const o = S.fbOut; if(!o) return; const f = new File([o.bytes], o.name, {type:'application/pdf'});
+    try { if(navigator.canShare && !navigator.canShare({files:[f]})){ saveBytes(o.bytes, o.name); return; } await navigator.share({files:[f], title:o.name}); } catch(e){ if(e && e.name !== 'AbortError') saveBytes(o.bytes, o.name); } },
+});
+
 function v10After(){ padInit('lvPad', 'lvStrokes'); padInit('apPad', 'apStrokes'); lvMount(); lvDragInit(); stampDragInit(); sdDragInit(); }
 function v10Subs(db){
   const docs = q => q.docs.map(d => Object.assign({id:d.id}, d.data())), warn = k => e => console.warn(k, e && e.code);
